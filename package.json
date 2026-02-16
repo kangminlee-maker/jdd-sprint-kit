@@ -4,7 +4,7 @@
   "description": "Judgment-Driven Development toolkit for BMad Method",
   "type": "module",
   "bin": {
-    "bmad-sprint-kit": "./bin/cli.js"
+    "bmad-sprint-kit": "bin/cli.js"
   },
   "scripts": {
     "prepublishOnly": "node scripts/build-templates.js"
