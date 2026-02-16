@@ -22,7 +22,7 @@ From `/sprint` command (Phase 0 Smart Launcher):
 - `sprint_input_path`: Path to `specs/{feature_name}/inputs/sprint-input.md` (SSOT)
 - `goals`: Array of 3-5 extracted goals
 - `complexity`: `simple` / `medium` / `complex`
-- `flags`: `{ force_cp1_review: bool }` (JP1 C등급 Brief 경고 배너. 필드명은 Phase C에서 변경 예정)
+- `flags`: `{ force_jp1_review: bool }` (JP1 C등급 Brief 경고 배너)
 - `document_project_path`: (Optional) Path to document-project output directory (null if not available)
 - `brownfield_topology`: Detected topology (`standalone` / `co-located` / `msa` / `monorepo`)
 - (Optional) Previous Sprint feedback for re-execution
@@ -63,11 +63,10 @@ Task 호출 시 `model: "sonnet"` 파라미터로 명시한다. 미지정 시 �
    - `sprint_input_path`: `specs/{feature_name}/inputs/sprint-input.md`
    - `goals`: Array of 3-5 extracted goals
    - `complexity`: `simple` / `medium` / `complex`
-   - `flags`: `{ force_cp1_review: bool }`
+   - `flags`: `{ force_jp1_review: bool }`
 2. Set budget: simple=20, medium=40, complex=60 max_turns per sub-agent
 3. Ensure `specs/{feature_name}/planning-artifacts/` directory exists
-4. If `force_cp1_review` flag → JP1에서 C등급 Brief 경고 배너 표시
-   (필드명은 Phase C에서 `force_jp1_review`로 변경 예정)
+4. If `force_jp1_review` flag → JP1에서 C등급 Brief 경고 배너 표시
 5. Initialize Sprint Log: Create `specs/{feature_name}/sprint-log.md` with Timeline table header + Decisions Made + Issues Encountered sections
 6. Record Sprint start time for adaptive time estimation
 7. Display initial progress with complexity-based time estimate from sprint-input.md
@@ -418,7 +417,7 @@ readiness.md에서 다음 데이터를 추출하여 배너를 생성한다:
 ⚠ 요구사항 추적 {N}/{M} | ⚠ AI 추론 항목 {N}개 | ✓ 기존 시스템 위험 없음 | ✓ 구조 검증 통과
 ```
 
-`force_cp1_review: true`인 경우 추가 경고:
+`force_jp1_review: true`인 경우 추가 경고:
 ```
 ⚠ Brief 등급 C — AI 추론 비율이 높을 수 있습니다. 꼼꼼히 확인하세요.
 ```

@@ -15,7 +15,7 @@ description: "Brief 하나로 Specs + Full-stack Deliverables 자동 생성 (Aut
 
 ## Purpose
 
-사용자 Brief 하나로 Specs + Full-stack Deliverables를 자동 생성한다. 2개의 Checkpoint에서 사람이 확인.
+사용자 Brief 하나로 Specs + Full-stack Deliverables를 자동 생성한다. 2개의 Judgment Point에서 사람이 확인.
 
 ## When to Use
 
@@ -67,9 +67,29 @@ Full: specs/{feature-name}/inputs/brief.md를 먼저 작성하세요.
 **Case 2: Feature Name** (`/sprint tutor-exclusion`)
 1. feature_name 검증: `/^[a-z0-9][a-z0-9-]*$/`
    - 검증 실패 시 에러: "feature_name은 영문 소문자, 숫자, 하이픈만 사용 가능합니다."
-2. `specs/{feature_name}/inputs/` 존재 확인
-3. `specs/{feature_name}/inputs/brief.md` 존재 확인
-4. 없으면 행동 가이드 포함 에러:
+
+2. **BMad 산출물 감지** (Case 2에서만):
+   `_bmad-output/planning-artifacts/` 디렉토리를 확인한다.
+   다음 3개 파일이 **모두** 존재하면 BMad 산출물로 판정:
+   - `prd.md`
+   - `architecture.md`
+   - `epics.md` 또는 `epics-and-stories.md`
+
+   BMad 산출물 발견 시:
+   ```
+   BMad planning artifacts가 발견되었습니다 (_bmad-output/planning-artifacts/).
+   이미 기획이 완료된 상태입니다.
+
+   [1] /specs {feature_name}으로 바로 진행 (권장)
+   [2] Sprint Auto Pipeline로 처음부터 실행
+   ```
+
+   [1] 선택 시: `/specs {feature_name}` 안내 후 종료 (사용자가 직접 실행)
+   [2] 선택 시: 정상 진행 (기존 Case 2 로직)
+
+3. `specs/{feature_name}/inputs/` 존재 확인
+4. `specs/{feature_name}/inputs/brief.md` 존재 확인
+5. 없으면 행동 가이드 포함 에러:
    ```
    Sprint을 시작하려면 먼저 Brief를 준비하세요:
 
@@ -79,7 +99,7 @@ Full: specs/{feature-name}/inputs/brief.md를 먼저 작성하세요.
    3. (선택) 참고 자료를 같은 폴더에 추가 (회의록, 분석 보고서 등)
    4. 다시 실행: /sprint {feature_name}
    ```
-5. 있으면 → Step 0b로 진행 (전체 분석)
+6. 있으면 → Step 0b로 진행 (전체 분석)
 
 #### Step 0b: inputs/ 스캔 + 방어 제한
 
@@ -116,7 +136,7 @@ brief.md를 읽고 품질을 판정한다.
 
 **C등급 처리**:
 - AskUserQuestion으로 옵션 제시:
-  - [1] 그래도 진행 → `force_cp1_review: true` 플래그 설정
+  - [1] 그래도 진행 → `force_jp1_review: true` 플래그 설정
   - [2] Brief 보완 → 다음 5가지 관점에서 질문 생성:
     1. 핵심 기능과 배경 (어떤 문제가 있어서, 어떤 기능을 만들려 하는가?)
     2. 사용자 시나리오 (어떤 상황에서 사용하는가?)
@@ -124,7 +144,7 @@ brief.md를 읽고 품질을 판정한다.
     4. 우선순위 (꼭 필요한 것 vs 있으면 좋은 것)
     5. 예외 상황 (실패/에러 시 기대 동작)
     답변을 brief.md 하단에 `## 보완 답변` 섹션으로 추가 → 재판정
-- **재판정 제한**: 보완 질문은 최대 2회까지. 2회 후에도 C등급이면 `force_cp1_review: true`로 자동 진행.
+- **재판정 제한**: 보완 질문은 최대 2회까지. 2회 후에도 C등급이면 `force_jp1_review: true`로 자동 진행.
 
 #### Step 0d: 참고 자료 분석 + sprint-input.md 생성
 
@@ -157,7 +177,8 @@ brief.md를 읽고 품질을 판정한다.
    - 5개 초과: 핵심 3개만 포함, 나머지는 "다음 Sprint 후보"
 4. **모순 감지**: Brief와 참고 자료 간 모순 발견 시 Detected Contradictions에 기록 (자동 해결 안 함)
 5. **sprint-input.md 작성**: `specs/{feature_name}/inputs/sprint-input.md`에 SSOT 생성
-6. **인과 사슬(Causal Chain) 추출**:
+6. **tracking_source 설정**: `tracking_source: brief` — Sprint 경로는 항상 BRIEF-N 기반 추적
+7. **인과 사슬(Causal Chain) 추출**:
    Core Brief + Reference Materials에서 기능 요청의 배경을 구조화한다.
 
    **Layer 구조**:
@@ -361,11 +382,11 @@ AskUserQuestion으로 계층화된 확인 화면을 제시한다.
 
 ### 주의사항 (해당 시에만, 요약 1줄 + 상세는 sprint-input.md 참조)
 - ⚠️ Brief 등급 B: 세부사항을 AI가 추론합니다
-- ⚠️ Brief 등급 C: Brief가 불충분합니다. CP1에서 강제 리뷰가 예정되어 있습니다.
+- ⚠️ Brief 등급 C: Brief가 불충분합니다. JP1에서 강제 리뷰가 예정되어 있습니다.
 - ⚠️ 모순 {N}건 감지 (sprint-input.md 참조)
 - ⚠️ Brownfield 소스 접속 불가: {source명}
 - ⚠️ 참고 자료 {N}개 중 {M}개 스킵 (제한 초과 또는 미지원 형식)
-- ⚠️ 인과 사슬 미확정: AI 추론으로 진행합니다. CP1에서 반드시 확인이 필요합니다.
+- ⚠️ 인과 사슬 미확정: AI 추론으로 진행합니다. JP1에서 반드시 확인이 필요합니다.
 
 ### 발견된 추가 요구사항 (해당 시에만)
 - [DISC-01] {내용} (source: {filename}) — Sprint 범위 포함
@@ -409,7 +430,7 @@ Task(subagent_type: "general-purpose", run_in_background: true)
       sprint_input_path: specs/{feature_name}/inputs/sprint-input.md
       goals: {goals array from sprint-input.md}
       complexity: {complexity from sprint-input.md}
-      flags: { force_cp1_review: {true/false} }
+      flags: { force_jp1_review: {true/false} }
       document_project_path: {document_project_path from sprint-input.md, or null}
       brownfield_topology: {brownfield_topology from sprint-input.md}"
 ```
@@ -424,7 +445,7 @@ Auto Sprint이 다음을 자동 수행:
 3. 매 단계 Scope Gate 검증
 4. Specs 4-file 생성 (@deliverable-generator specs-only)
 
-→ **Checkpoint 1**: Specs 리뷰 (태스크 구조, Entropy, File Ownership)
+→ **Judgment Point 1**: Specs 리뷰 (태스크 구조, Entropy, File Ownership)
 - **승인** → Phase 2 진행
 - **피드백** → 해당 단계부터 재실행
 - **중단** → 종료
@@ -433,7 +454,7 @@ Auto Sprint이 다음을 자동 수행:
 5. Full-stack Deliverables 생성 (@deliverable-generator deliverables-only)
 6. Sprint Output Package 조립
 
-→ **Checkpoint 2**: Sprint Output 리뷰 (프로토타입 + 명세)
+→ **Judgment Point 2**: Sprint Output 리뷰 (프로토타입 + 명세)
 - **승인** → `/parallel` 실행 (병렬 구현)
 - **피드백** → Deliverables 재생성 또는 Specs 수정
 - **중단** → 종료

@@ -12,7 +12,7 @@ description: "Native Teams + Git Worktree로 태스크 병렬 실행"
 
 ## When to Use
 
-Specs + Deliverables 생성 완료 후. CP2 승인 후 실행.
+Specs + Deliverables 생성 완료 후. JP2 승인 후 실행.
 
 ## Inputs
 
