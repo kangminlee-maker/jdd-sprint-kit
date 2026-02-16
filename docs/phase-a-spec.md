@@ -1,3 +1,40 @@
+# Phase A 구현 명세 — 프로토콜 + 가이드 반영
+
+> **상태**: 완료 (2026-02-16)
+> **대상 파일**: `.claude/rules/bmad-sprint-guide.md`, `.claude/rules/bmad-sprint-protocol.md`
+> **상위 문서**: `docs/jdd-implementation-scope.md`, `docs/judgment-driven-development.md`
+
+---
+
+## 확정된 설계 결정
+
+### 네이밍
+- 사용자 대면 문서에서는 **Sprint / Guided / Direct** 사용 (기존 용어 유지)
+- Bottom-up / Top-down은 설계 철학 문서(`judgment-driven-development.md`)에서만 사용
+- CP1/CP2 → **JP1/JP2** (Judgment Point)로 전환
+
+### 3경로 MECE 설계
+- 분류 기준: **입력 상태** (사용자가 가진 것)
+- 구조화된 산출물 있음 → Direct
+- 비정형 자료 있음 → Sprint
+- 탐색 필요 → Guided
+- 크로스오버 노트로 유연성 제공
+
+### Brief 추적
+- 면제가 아니라 **소스 적응**
+- `brief_sentences` 있으면 → BRIEF-N 기반 추적 (Sprint 경로)
+- `brief_sentences` 없으면 → PRD Success Criteria 기반 추적 (Guided/Direct 경로)
+- 어느 경로든 JP1에서 "원래 의도 ↔ FR 매핑 테이블" 제시
+
+---
+
+## 파일 1: `.claude/rules/bmad-sprint-guide.md`
+
+### 전체 교체 (112줄 → ~130줄)
+
+현재 파일을 아래 내용으로 전체 교체한다.
+
+```markdown
 # Sprint Kit — BMad Method 실행 확장팩
 
 > AI가 만들고, 사람이 판단한다. 사람의 입력이 만들기의 품질을 높이고, 사람의 판단이 방향을 결정한다.
@@ -129,3 +166,98 @@ BMad 12단계 (사람-AI 대화):
 │       └── preview/                    # React + Prism 프로토타입
 └── src/                                # 소스 코드
 ```
+```
+
+---
+
+## 파일 2: `.claude/rules/bmad-sprint-protocol.md`
+
+### 부분 수정 (107줄 → ~140줄)
+
+#### 수정 1: CP→JP 용어 전환 (5곳)
+
+| 줄 | 현재 | 변경 |
+|---|------|------|
+| L17 | 변경 없음 | 변경 없음 |
+| L31 | `**CP1**` | `**JP1**` |
+| L40 | `**CP1**` | `**JP1**` |
+| L41 | `**CP1**` | `**JP1**` |
+| L73 | `CP1/CP2 Readiness` | `JP1/JP2 Readiness` |
+| L74 | `Layer 0 자동 승인 판정용` | `Layer 0 자동 승인 판정용` (변경 없음) |
+
+#### 수정 2: Brief 추적 플로우 — 소스 적응 로직 추가 (L41 뒤에 삽입)
+
+```markdown
+### Brief 추적 소스 결정
+
+추적 소스는 sprint-input.md의 `brief_sentences` 필드로 자동 결정된다:
+
+| 조건 | 추적 소스 | 경로 |
+|------|----------|------|
+| `brief_sentences`가 존재하고 비어있지 않음 | BRIEF-N 기반 추적 | Sprint 경로 |
+| `brief_sentences`가 없거나 빈 배열 | PRD Success Criteria > Measurable Outcomes | Guided / Direct 경로 |
+
+어느 경우든:
+- PRD의 각 FR이 추적 소스에 매핑되는지 확인한다
+- JP1에서 "원래 의도 ↔ FR 매핑 테이블"을 제시한다
+- 매핑되지 않은 추적 소스 항목은 경고로 표시한다
+```
+
+#### 수정 3: 핸드오프 규칙 보완 (L86 뒤에 삽입)
+
+```markdown
+### BMad Guided 경로 → Sprint 실행
+
+BMad 12단계 산출물이 `_bmad-output/planning-artifacts/`에 있는 경우:
+1. `/specs` 실행 시 해당 경로를 자동 탐색하여 `specs/{feature}/planning-artifacts/`로 배치
+2. `sprint-input.md`가 없어도 `/specs` 실행 가능
+3. goals는 PRD의 Success Criteria > Measurable Outcomes에서 추출
+4. Brownfield 스캔은 `/specs` 내에서 정상 실행
+```
+
+#### 수정 4: JP 판단 기준 섹션 신규 추가 (문서 끝에 추가)
+
+```markdown
+## Judgment Point 판단 기준
+
+JP는 기술적 품질 게이트가 아니라 프로덕트 전문가의 고객 관점 판단 시점이다.
+`docs/judgment-driven-development.md` 원칙 4 (Customer-Lens Judgment Points) 참조.
+
+### JP1: "고객에게 필요한 제품인가?"
+
+- **판단 대상**: 요구사항, 사용자 시나리오, 기능 범위, 우선순위
+- **제시 형식**: 고객 여정 서사 + 원래 의도 ↔ FR 매핑 + 구조적 체크리스트
+- **응답**: Confirm / Comment (→ 재생성) / Redirect (→ 방향 전환)
+
+### JP2: "고객이 원하는 경험인가?"
+
+- **판단 대상**: 프로토타입, 화면 흐름, 인터랙션
+- **제시 형식**: 동작하는 프로토타입 + 핵심 시나리오 가이드
+- **응답**: Confirm / Comment (→ 재생성) / Redirect to JP1 (→ 요구사항 재검토)
+
+### 역방향 루프
+
+JP2에서 "요구사항 자체가 잘못됐다"고 판단되면 JP1으로 돌아간다.
+이는 실패가 아니라, 구체적 결과물이 촉진한 정상적인 발견 프로세스다 (원칙 3: Regeneration Over Modification).
+```
+
+---
+
+## 변경하지 않는 부분
+
+| 섹션 | 파일 | 이유 |
+|------|------|------|
+| Brownfield 데이터 플로우 | protocol L7~19 | 기존 파이프라인 유효 |
+| Causal Chain 전파 | protocol L21~32 | JP 용어만 교체, 구조 유지 |
+| specs 파일 패턴 | protocol L43~76 | 디렉토리 구조 변경 없음 |
+| 파일 소유권 규칙 | protocol L100~107 | 변경 없음 |
+| bmad-mcp-search.md | 별도 파일 | Phase A 대상 아님 |
+
+---
+
+## 구현 순서
+
+1. `bmad-sprint-guide.md` 전체 교체
+2. `bmad-sprint-protocol.md` 4개 수정 적용
+3. 두 파일 간 용어 일관성 확인 (JP1/JP2, Sprint/Guided/Direct)
+4. 기존 파이프라인 호환성 확인 (변경하지 않는 부분이 깨지지 않는지)

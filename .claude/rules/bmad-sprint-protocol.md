@@ -28,7 +28,7 @@ Causal Chain은 선택 사항이다. Phase 0에서 사용자가 opt-in한 경우
 | **Product Brief** (Mary) | Layer 1+2 기반 문제 정의 (causal_chain 제공 시) |
 | **PRD** (John) | FR을 core/enabling/supporting으로 분류 (causal_chain 제공 시), core FR이 root_cause에 연결 |
 | **Scope Gate** | causal_alignment 체크 (sprint_input_path 제공 시): FR 분류 검증 + unlinked FR 경고 |
-| **CP1** | Advanced(Layer 3)에서 Causal Chain Alignment + FR Linkage 시각화 (feature_only 아닌 경우에만) |
+| **JP1** | Advanced(Layer 3)에서 Causal Chain Alignment + FR Linkage 시각화 (feature_only 아닌 경우에만) |
 | **Validate** (@judge-business) | core FR 구현이 root_cause를 실제로 해결하는가 검증 (causal_chain 제공 시) |
 
 ## Sprint Phase별 Brief 추적 플로우
@@ -37,8 +37,22 @@ Causal Chain은 선택 사항이다. Phase 0에서 사용자가 opt-in한 경우
 |------|----------------|
 | **Phase 0** (sprint.md) | Brief 문장 분해 + BRIEF-N ID 부여 → sprint-input.md `brief_sentences`에 기록 |
 | **PRD** (John) | 각 FR에 `(source: BRIEF-N / DISC-N / AI-inferred)` 태깅 |
-| **CP1** | Section 1: Brief 문장 ↔ FR 매핑 테이블. 빠진 문장 경고 |
-| **CP1** | Section 2: Brief 외 추가 항목 (참고 자료 발견 vs AI 추론 분리) |
+| **JP1** | Section 1: Brief 문장 ↔ FR 매핑 테이블. 빠진 문장 경고 |
+| **JP1** | Section 2: Brief 외 추가 항목 (참고 자료 발견 vs AI 추론 분리) |
+
+### Brief 추적 소스 결정
+
+추적 소스는 sprint-input.md의 `brief_sentences` 필드로 자동 결정된다:
+
+| 조건 | 추적 소스 | 경로 |
+|------|----------|------|
+| `brief_sentences`가 존재하고 비어있지 않음 | BRIEF-N 기반 추적 | Sprint 경로 |
+| `brief_sentences`가 없거나 빈 배열 | PRD Success Criteria > Measurable Outcomes | Guided / Direct 경로 |
+
+어느 경우든:
+- PRD의 각 FR이 추적 소스에 매핑되는지 확인한다
+- JP1에서 "원래 의도 ↔ FR 매핑 테이블"을 제시한다
+- 매핑되지 않은 추적 소스 항목은 경고로 표시한다
 
 ## specs 파일 패턴
 
@@ -70,8 +84,8 @@ specs/{feature}/
 ├── state-machines/             # XState definitions (해당 시에만)
 ├── decision-log.md             # ADRs + AI reasoning trace
 ├── traceability-matrix.md      # FR → Design → Task → BDD → API 매핑
-├── key-flows.md                # 핵심 사용자 플로우 Step-by-Step (CP2 검증용)
-├── readiness.md                # CP1/CP2 Readiness 데이터 (Layer 0 자동 승인 판정용)
+├── key-flows.md                # 핵심 사용자 플로우 Step-by-Step (JP2 검증용)
+├── readiness.md                # JP1/JP2 Readiness 데이터 (Layer 0 자동 승인 판정용)
 └── preview/                    # React + Prism 프로토타입 (npm run dev)
 ```
 
@@ -83,6 +97,14 @@ BMad Phase 3에서 Implementation Readiness를 통과하면:
 1. `specs/{feature}/planning-artifacts/` 산출물 확인 (PRD, Architecture, Epics)
 2. `/specs` 실행하여 Specs 4-file 생성
 3. Entropy Tolerance 태깅 + 파일 소유권 배정
+
+### BMad Guided 경로 → Sprint 실행
+
+BMad 12단계 산출물이 `_bmad-output/planning-artifacts/`에 있는 경우:
+1. `/specs` 실행 시 해당 경로를 자동 탐색하여 `specs/{feature}/planning-artifacts/`로 배치
+2. `sprint-input.md`가 없어도 `/specs` 실행 가능
+3. goals는 PRD의 Success Criteria > Measurable Outcomes에서 추출
+4. Brownfield 스캔은 `/specs` 내에서 정상 실행
 
 ### Worker 완료 시
 
@@ -104,3 +126,25 @@ PARALLEL 단계에서 파일 충돌을 방지하기 위한 규칙:
 2. Worker는 자신에게 배정된 파일만 수정할 수 있다
 3. 공유 타입/인터페이스 파일은 PARALLEL 시작 전에 생성한다
 4. 공유 파일 수정이 필요하면 팀 리더에게 SendMessage로 요청한다
+
+## Judgment Point 판단 기준
+
+JP는 기술적 품질 게이트가 아니라 프로덕트 전문가의 고객 관점 판단 시점이다.
+`docs/judgment-driven-development.md` 원칙 4 (Customer-Lens Judgment Points) 참조.
+
+### JP1: "고객에게 필요한 제품인가?"
+
+- **판단 대상**: 요구사항, 사용자 시나리오, 기능 범위, 우선순위
+- **제시 형식**: 고객 여정 서사 + 원래 의도 ↔ FR 매핑 + 구조적 체크리스트
+- **응답**: Confirm / Comment (→ 재생성) / Redirect (→ 방향 전환)
+
+### JP2: "고객이 원하는 경험인가?"
+
+- **판단 대상**: 프로토타입, 화면 흐름, 인터랙션
+- **제시 형식**: 동작하는 프로토타입 + 핵심 시나리오 가이드
+- **응답**: Confirm / Comment (→ 재생성) / Redirect to JP1 (→ 요구사항 재검토)
+
+### 역방향 루프
+
+JP2에서 "요구사항 자체가 잘못됐다"고 판단되면 JP1으로 돌아간다.
+이는 실패가 아니라, 구체적 결과물이 촉진한 정상적인 발견 프로세스다 (원칙 3: Regeneration Over Modification).
