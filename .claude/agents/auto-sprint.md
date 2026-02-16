@@ -25,6 +25,7 @@ From `/sprint` command (Phase 0 Smart Launcher):
 - `flags`: `{ force_jp1_review: bool }` (JP1 C등급 Brief 경고 배너)
 - `document_project_path`: (Optional) Path to document-project output directory (null if not available)
 - `brownfield_topology`: Detected topology (`standalone` / `co-located` / `msa` / `monorepo`)
+- `pre_existing_brownfield_path`: (Optional) Path to pre-existing brownfield-context.md (null if not available). If provided, Brownfield Broad Scan uses this file as base and supplements missing levels only.
 - (Optional) Previous Sprint feedback for re-execution
 
 ## Agent Invocation Convention
@@ -111,6 +112,14 @@ Sprint Log의 Decisions Made 섹션에도 기록.
 ### Step 1: Brownfield Broad Scan
 
 Report progress: "Brownfield Broad Scan 시작"
+
+**pre_existing_brownfield_path가 있는 경우**:
+1. 기존 파일을 `specs/{feature_name}/planning-artifacts/brownfield-context.md`에 복사한다
+2. 파일 내용을 읽어 포함된 레벨을 확인한다
+3. L1+L2가 이미 있으면 → Broad Scan 스킵, "기존 Brownfield Context 활용 (L1+L2)" 보고 후 Step 2로 진행
+4. 누락된 레벨이 있으면 → 아래 스캔을 실행하되, 기존 파일에 누락 레벨만 보충
+
+**pre_existing_brownfield_path가 없는 경우** (또는 레벨 보충 필요 시):
 
 ```
 Task(subagent_type: "general-purpose", model: "sonnet")

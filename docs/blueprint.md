@@ -13,7 +13,7 @@
 
 ```mermaid
 flowchart LR
-    A["1. Brief 입력\n(Phase 0)"] --> B["2. Brownfield\nBroad Scan"]
+    A["1. 자료 입력\n(Phase 0)"] --> B["2. Brownfield\nBroad Scan"]
     B --> C["3. BMad\nAuto-Pipeline"]
     C --> D["4. Brownfield\nTargeted Scan"]
     D --> E["5. Specs 생성"]
@@ -101,7 +101,7 @@ Sprint Kit은 전체 프로세스에서 사람에게 판단을 요청하는 시�
 **Sprint Kit 구현 — inputs/ 디렉토리 + Brownfield Scanner**:
 - `specs/{feature}/inputs/`: 회의록, 참고자료, 기존 문서를 넣는 곳
 - Brownfield Scanner: 기존 시스템(API, DB, UI)의 맥락을 MCP + 로컬 코드베이스에서 자동 수집
-- Brief: 사용자가 제공하는 최소한의 방향 설정
+- Brief: 사용자가 직접 작성하거나, AI가 참고자료에서 자동 생성
 
 프로덕트 팀의 킥오프 미팅 회의록이 있다면, 이것을 inputs/에 넣는 것만으로 AI의 PRD 첫 생성 품질이 크게 높아진다.
 
@@ -336,23 +336,38 @@ Sprint Kit의 원본 정의는 `.claude/`에 있다. 다른 AI IDE도 지원한�
 /sprint tutor-exclusion
 ```
 
-방법 2의 경우, 사전에 `specs/tutor-exclusion/inputs/`에 brief.md + 참고 자료를 배치한다.
+방법 2의 경우, `specs/tutor-exclusion/inputs/`에 자료를 배치한다. **brief.md는 필수가 아니다** — 회의록이나 참고자료만 넣어도 AI가 Brief를 자동 생성한다.
 
 ### 시스템 내부
+
+**specs/ 기본 구조 확인**:
+`specs/` 폴더가 없으면 자동 생성 + `specs/README.md` 배치.
 
 **진입점 분기**:
 
 | 입력 형태 | 동작 |
 |----------|------|
 | 인라인 Brief (`"..."`) | `specs/{slug}/inputs/brief.md` 자동 생성 → 분석 |
-| feature-name | `specs/{name}/inputs/` 탐색 → BMad 산출물 감지 → 분석 |
+| feature-name | `specs/{name}/` **전체 스캔** → 입력 상태 판정 → 최적 경로 분기 |
 
-**BMad 산출물 감지** (feature-name 진입 시):
-- `_bmad-output/planning-artifacts/`에 BMad 산출물(prd.md 등)이 존재하면 감지
-- 발견 시: "BMad 산출물이 발견되었습니다. `/specs`로 바로 진행하시겠어요?" 안내
-- 사용자 선택에 따라 Direct 경로로 전환 가능
+**전체 스캔** (feature-name 진입 시):
+`specs/{feature}/` 내부를 한 번에 스캔하여 다음을 감지한다:
+- inputs/ 내 파일 목록 (brief.md 존재 여부 구분)
+- brownfield-context.md 존재 여부 + 레벨(L1~L4)
+- planning-artifacts/ 존재 여부 + 완성도
+- BMad 산출물 (`_bmad-output/planning-artifacts/`)
+
+스캔 결과를 사용자에게 요약 보고한 후, 입력 상태에 따라 경로를 분기한다:
+
+| 입력 상태 | 경로 |
+|----------|------|
+| brief.md + 참고자료 | **정상 Sprint** |
+| 참고자료만 (brief.md 없음) | **AI가 Brief 자동 생성** → 정상 Sprint |
+| 기획 산출물 완비 | **Direct 경로 제안** (`/specs` 안내) |
+| 입력 없음 | **에러** (자료 배치 안내) |
 
 **Brief 파싱 + Reference Materials 분석**:
+- brief.md가 없으면 → 참고자료에서 AI가 Brief를 자동 생성 후 `inputs/brief.md`에 저장
 - brief.md 읽기 + inputs/ 내 모든 참고 자료 처리
 - 200줄 이하: 전문 포함 / 200줄 초과: 요약 (Key Points, Constraints, Decisions 추출)
 - 이미지: 파일명 + 설명만 / PDF: 앞 100페이지만
@@ -367,9 +382,10 @@ Sprint Kit의 원본 정의는 `.claude/`에 있다. 다른 AI IDE도 지원한�
 - chain_status: `complete`(전부 확인), `partial`(일부 추론), `feature_only`(미사용)
 
 **Brownfield 상태 감지**:
-1. document-project 산출물 탐색 (`_bmad-output/document-project/` 등)
-2. MCP 서버 접속 테스트
-3. 로컬 코드베이스 빌드 도구 감지 → 토폴로지 판정
+1. **기존 brownfield-context.md 감지**: feature 폴더에 이미 존재하면 레벨 확인 후 재사용 판정
+2. document-project 산출물 탐색 (`_bmad-output/document-project/` 등)
+3. MCP 서버 접속 테스트
+4. 로컬 코드베이스 빌드 도구 감지 → 토폴로지 판정
 
 **tracking_source 설정**:
 - Sprint 경로: `tracking_source: brief` (BRIEF-N 기반 추적)
@@ -383,14 +399,22 @@ Sprint Kit의 원본 정의는 `.claude/`에 있다. 다른 AI IDE도 지원한�
 | **B** (보통) | 기능 1~2, 시나리오 없음 | 확인 시 경고 표시 |
 | **C** (불충분) | 기능 0, 단순 키워드만 | Sprint 비권장 + `force_jp1_review: true` |
 
-### 사용자 시점: 확인 화면
+### 사용자 시점: 스캔 결과 + 확인 화면
 
-Phase 0 완료 후, 사용자에게 분석 결과를 보여주고 확인을 요청한다:
+Phase 0에서 사용자에게 두 번의 정보를 제공한다:
+
+**1. 스캔 결과 요약** (전체 스캔 직후):
+- inputs/ 파일 목록
+- brief.md 존재 여부 (미존재 시 "참고자료에서 생성" 안내)
+- brownfield-context.md 존재 여부 + 레벨
+- planning-artifacts/ 상태
+
+**2. Sprint 시작 확인** (sprint-input.md 생성 후):
 - 추출된 목표 (goals)
-- 입력 파일 처리 결과
-- Brownfield 상태
+- 복잡도 + Brief 등급
+- Brownfield 상태 + 토폴로지
 - 예상 소요 시간
-- (있으면) 모순 감지 경고
+- (있으면) 모순 감지 경고, Discovered Requirements
 
 ### 산출물
 
@@ -406,10 +430,10 @@ sprint-input.md는 Phase 0의 **SSOT**. YAML frontmatter에 모든 메타데이�
 
 | Tier | 조건 | 대응 |
 |------|------|------|
-| **Fallback 1** | 전체 분석 성공 | 정상 진행 |
+| **Fallback 1** | 전체 분석 성공 (brief.md 직접 작성 또는 AI 자동 생성) | 정상 진행 |
 | **Fallback 2** | brief.md만 분석 가능 (참고 자료 실패) | Core Brief만으로 진행, 경고 |
 | **Fallback 3** | inline Brief만 (brief.md 자동 생성) | Brief 원문만으로 진행 |
-| **Fallback 4** | 이해 불가 | Sprint 중단 (sprint-input.md 미생성) |
+| **Fallback 4** | 입력 없음 또는 이해 불가 | Sprint 중단 |
 
 ---
 
@@ -421,6 +445,10 @@ sprint-input.md는 Phase 0의 **SSOT**. YAML frontmatter에 모든 메타데이�
 
 ### 시스템 내부
 
+**기존 brownfield-context.md가 있는 경우**:
+Phase 0에서 감지된 기존 파일을 `planning-artifacts/`에 복사한다. L1+L2가 이미 있으면 Broad Scan을 스킵하고 다음 단계로 진행한다. 누락된 레벨만 보충 스캔한다.
+
+**기존 brownfield-context.md가 없는 경우**:
 @brownfield-scanner가 broad 모드로 실행된다.
 
 **Stage 0: document-project 소비**
@@ -888,7 +916,7 @@ Sprint 파이프라인을 경유하지 않는 별도 경량 경로.
 ```
 specs/{feature}/
 ├── inputs/                          # Phase 0 (사용자 원본 + Sprint Input SSOT, 읽기 전용)
-│   ├── brief.md                     # 사용자 Brief (필수)
+│   ├── brief.md                     # 사용자 Brief (참고자료만 있으면 AI 자동 생성)
 │   ├── *.md / *.pdf / ...           # 참고 자료 (선택)
 │   └── sprint-input.md              # Phase 0 자동 생성 SSOT
 │

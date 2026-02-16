@@ -59,7 +59,7 @@ Causal Chain은 선택 사항이다. Phase 0에서 사용자가 opt-in한 경우
 ```
 specs/{feature}/
 ├── inputs/                     # Phase 0 (사용자 원본 + Sprint Input SSOT, 읽기 전용)
-│   ├── brief.md                # 사용자 Brief (필수)
+│   ├── brief.md                # 사용자 Brief (참고자료만 있으면 AI 자동 생성)
 │   ├── *.md / *.pdf / ...      # 참고 자료 (선택)
 │   └── sprint-input.md         # Phase 0 자동 생성 SSOT (Causal Chain 포함)
 │

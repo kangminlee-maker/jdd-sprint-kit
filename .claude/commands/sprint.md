@@ -68,38 +68,105 @@ Full: specs/{feature-name}/inputs/brief.md를 먼저 작성하세요.
 1. feature_name 검증: `/^[a-z0-9][a-z0-9-]*$/`
    - 검증 실패 시 에러: "feature_name은 영문 소문자, 숫자, 하이픈만 사용 가능합니다."
 
-2. **BMad 산출물 감지** (Case 2에서만):
-   `_bmad-output/planning-artifacts/` 디렉토리를 확인한다.
-   다음 3개 파일이 **모두** 존재하면 BMad 산출물로 판정:
-   - `prd.md`
-   - `architecture.md`
-   - `epics.md` 또는 `epics-and-stories.md`
+2. **specs/ 기본 구조 확인**:
+   - `specs/` 폴더 미존재 시 → 자동 생성 + `specs/README.md` 배치 + "specs/ 폴더를 생성했습니다." 안내
+   - `specs/README.md` 미존재 시 → 자동 생성
+   - README.md 내용: Sprint 사용법 + 폴더 구조 안내 (`specs/README.md` 참조)
 
-   BMad 산출물 발견 시:
+3. **specs/{feature_name}/ 존재 확인**:
+   미존재 시 에러:
    ```
-   BMad planning artifacts가 발견되었습니다 (_bmad-output/planning-artifacts/).
-   이미 기획이 완료된 상태입니다.
+   specs/{feature_name}/ 폴더가 없습니다.
+
+   Sprint을 시작하려면:
+   1. 폴더 생성: mkdir -p specs/{feature_name}/inputs/
+   2. 자료 배치: 회의록, Brief, 참고자료 등을 inputs/에 넣으세요
+   3. 다시 실행: /sprint {feature_name}
+   ```
+
+4. **전체 스캔** — `specs/{feature_name}/` 내부를 한 번에 스캔:
+
+   a. **inputs/ 스캔**:
+      - 파일 목록 수집 (brief.md 존재 여부 구분)
+      - 파일 0개 또는 inputs/ 없음 → `input_status: empty`
+      - brief.md만 → `input_status: brief-only`
+      - brief.md + 참고자료 → `input_status: full`
+      - 참고자료만 (brief.md 없음) → `input_status: references-only`
+
+   b. **brownfield-context.md 감지**:
+      - `specs/{feature_name}/brownfield-context.md` 또는 `specs/{feature_name}/planning-artifacts/brownfield-context.md` 존재 여부
+      - 발견 시 → 레벨(L1~L4) 추정 (파일 내 `## L1`, `## L2` 등 헤딩 기반)
+
+   c. **planning-artifacts/ 감지**:
+      - prd.md, architecture.md, epics-and-stories.md 존재 여부
+      - 3개 모두 존재 → `artifacts_status: complete`
+      - 일부 존재 → `artifacts_status: partial`
+      - 없음 → `artifacts_status: none`
+
+   d. **BMad 산출물 감지** (`_bmad-output/planning-artifacts/`):
+      - prd.md + architecture.md + (epics.md 또는 epics-and-stories.md) 모두 존재 → `bmad_output: found`
+
+5. **스캔 결과 요약 보고**:
+   ```
+   specs/{feature_name}/ 스캔 완료
+
+   inputs/ ({N}개 파일):
+     - {filename1}
+     - {filename2}
+     ...
+
+   brief.md: {존재 / 미존재 → 참고자료에서 생성}
+   brownfield-context.md: {발견 ({레벨}, 기존 파일 활용) / 미발견 → 새로 스캔}
+   planning-artifacts/: {complete ({N}개) / partial ({N}개) / 없음}
+   ```
+
+6. **입력 상태 판정 + 경로 분기**:
+
+   **우선 검사** — 기획 산출물 완비 시:
+   `artifacts_status: complete` 또는 `bmad_output: found`이면:
+   ```
+   기획 산출물이 발견되었습니다.
+   위치: {경로}
 
    [1] /specs {feature_name}으로 바로 진행 (권장)
    [2] Sprint Auto Pipeline로 처음부터 실행
    ```
+   [1] 선택 시: `/specs {feature_name}` 안내 후 종료
+   [2] 선택 시: 아래 input_status 분기로 계속
 
-   [1] 선택 시: `/specs {feature_name}` 안내 후 종료 (사용자가 직접 실행)
-   [2] 선택 시: 정상 진행 (기존 Case 2 로직)
+   **input_status 분기**:
 
-3. `specs/{feature_name}/inputs/` 존재 확인
-4. `specs/{feature_name}/inputs/brief.md` 존재 확인
-5. 없으면 행동 가이드 포함 에러:
+   | input_status | 경로 |
+   |---|---|
+   | full / brief-only | **정상 Sprint** → Step 0b |
+   | references-only | **AI Brief 생성** (Step 0a-brief) → Step 0b |
+   | empty | **에러** (아래 참조) |
+
+   empty 에러:
    ```
-   Sprint을 시작하려면 먼저 Brief를 준비하세요:
+   inputs/에 자료가 없습니다.
 
-   1. 폴더 생성: specs/{feature_name}/inputs/
-   2. Brief 작성: specs/{feature_name}/inputs/brief.md
-      (만들고 싶은 기능을 자유롭게 설명하세요)
-   3. (선택) 참고 자료를 같은 폴더에 추가 (회의록, 분석 보고서 등)
-   4. 다시 실행: /sprint {feature_name}
+   Sprint을 시작하려면 inputs/에 자료를 넣은 후 다시 실행하세요:
+   - Brief, 회의록, 참고자료 등 어떤 형식이든 가능합니다
+   - Brief가 없어도 참고자료만으로 시작할 수 있습니다
    ```
-6. 있으면 → Step 0b로 진행 (전체 분석)
+
+#### Step 0a-brief: AI Brief 생성
+
+`input_status: references-only`인 경우 (brief.md 없지만 참고자료 있음):
+
+1. inputs/ 내 모든 참고자료를 읽는다
+2. 참고자료에서 Brief를 구성한다:
+   - 배경/문제 상황
+   - 만들어야 할 핵심 기능
+   - 사용자 시나리오 (참고자료에 있는 경우)
+   - 제약 조건 (참고자료에 있는 경우)
+3. `specs/{feature_name}/inputs/brief.md`에 저장한다
+4. Brief 생성 원칙:
+   - 참고자료에서 명시적으로 언급된 내용을 충실하게 반영
+   - AI가 문맥에서 추론한 항목은 `(AI-inferred)` 표시
+   - 참고자료에 없는 내용을 창작하지 않음
+5. Step 0b로 진행 (Brief 품질 등급은 Step 0c에서 판정)
 
 #### Step 0b: inputs/ 스캔 + 방어 제한
 
@@ -241,6 +308,21 @@ complexity에 기반한 초기 시간 범위를 sprint-input.md frontmatter에 �
 > 이 수치는 초기 추정값이며, Sprint 실행 데이터가 축적되면 자동 보정됩니다.
 
 #### Step 0f: Brownfield 소스 상태 확인 + 토폴로지 판정
+
+##### Sub-step 0f-0: 기존 brownfield-context.md 활용 판정
+
+Step 0a 스캔에서 brownfield-context.md가 발견된 경우:
+1. 파일 내용을 읽어 포함된 레벨(L1~L4)을 확인한다
+2. sprint-input.md frontmatter에 기록:
+   ```yaml
+   pre_existing_brownfield:
+     path: specs/{feature_name}/brownfield-context.md
+     levels: [L1, L2]  # 감지된 레벨
+   ```
+3. 토폴로지 판정(Sub-step 0f-1 ~ 0f-3)은 정상 실행한다
+4. Auto Sprint Step 1에서 기존 파일을 기반으로 부족한 레벨만 추가 스캔한다
+
+기존 brownfield-context.md가 없으면 → 아래 소스 감지부터 정상 진행.
 
 현재 프로젝트의 Brownfield 소스를 **누적(AND)** 방식으로 감지한다. 모든 소스를 수집한 뒤 합쳐서 brownfield-context.md를 생성한다.
 
@@ -432,7 +514,8 @@ Task(subagent_type: "general-purpose", run_in_background: true)
       complexity: {complexity from sprint-input.md}
       flags: { force_jp1_review: {true/false} }
       document_project_path: {document_project_path from sprint-input.md, or null}
-      brownfield_topology: {brownfield_topology from sprint-input.md}"
+      brownfield_topology: {brownfield_topology from sprint-input.md}
+      pre_existing_brownfield_path: {pre_existing_brownfield.path from sprint-input.md, or null}"
 ```
 
 ---
