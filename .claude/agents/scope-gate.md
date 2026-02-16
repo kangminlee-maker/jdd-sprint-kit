@@ -23,15 +23,29 @@ Structured and evidence-based. Every judgment cites specific artifact sections. 
 
 ## Execution Protocol
 
+### Goals Fallback
+
+goals 배열이 비어있는 경우 (Guided/Direct 경로):
+
+1. `artifact_path`에서 PRD 경로를 추론한다:
+   - artifact_path가 `specs/{feature}/planning-artifacts/` 하위 → 같은 디렉토리의 `prd.md`
+   - artifact_path가 `specs/{feature}/requirements.md` 등 → `specs/{feature}/planning-artifacts/prd.md`
+2. PRD의 **Success Criteria > Measurable Outcomes** 섹션에서 목표 3~5개를 추출한다
+3. 추출한 goals를 Stage 1 커버리지 매핑에 사용한다
+4. sprint-input.md에 역기록하지 않는다 (Scope Gate 내부에서만 사용)
+
+**적용 범위**: goals fallback은 **prd 이후 단계**(prd, architecture, epics, spec)에서만 적용한다.
+product-brief 단계에서 goals가 비어있으면 Stage 1을 SKIP하고 Stage 2-3만 실행한다.
+
 ### Stage 1: Structured Probe (Coverage Mapping)
 
 For each goal in `goals[]`, locate specific items in the artifact that address it:
 
 ```markdown
-| Goal | Covered By | Section/Line | Status |
-|------|-----------|--------------|--------|
-| {goal_1} | {specific item from artifact} | {section reference} | COVERED / UNCOVERED |
-| {goal_2} | ... | ... | ... |
+| Goal | Covered By | Section/Line | Customer Impact | Status |
+|------|-----------|--------------|-----------------|--------|
+| {goal_1} | {specific item from artifact} | {section reference} | {고객에게 미치는 영향 1줄} | COVERED / UNCOVERED |
+| {goal_2} | ... | ... | ... | ... |
 ```
 
 **Verdict**: If ANY goal is UNCOVERED → Stage 1 FAIL.
@@ -113,6 +127,7 @@ With Stage 1-2 results as context, identify issues that structured checks missed
 - **Implicit assumptions**: Unstated dependencies or prerequisites
 - **Edge case gaps**: Scenarios not covered by User Journeys or AC
 - **Domain rule violations**: Brownfield constraints not respected
+- **Customer-facing gaps**: 고객 관점에서 빠진 시나리오나 사용자 경험 단절
 - **Scope creep indicators**: Content unrelated to Sprint goals (>30% of artifact)
 
 **Verdict**: Only CRITICAL issues cause Stage 3 FAIL. Warnings are noted but don't block.
@@ -124,9 +139,9 @@ With Stage 1-2 results as context, identify issues that structured checks missed
 
 ### Stage 1: Structured Probe
 
-| Goal | Covered By | Section | Status |
-|------|-----------|---------|--------|
-| ... | ... | ... | COVERED/UNCOVERED |
+| Goal | Covered By | Section | Customer Impact | Status |
+|------|-----------|---------|-----------------|--------|
+| ... | ... | ... | ... | COVERED/UNCOVERED |
 
 **Stage 1 Verdict**: PASS / FAIL ({N} uncovered goals)
 
@@ -168,6 +183,10 @@ With Stage 1-2 results as context, identify issues that structured checks missed
 
 **Recommendations** (if PASS with warnings):
 1. {recommendation}
+
+**Customer Impact Summary** (항상 포함):
+{Scope Gate 결과를 고객 관점 1~2문장으로 요약}
+예: "고객이 튜터를 차단하는 시나리오가 완전히 커버됨. 단, 차단 해제 시나리오가 누락되어 확인 필요."
 ```
 
 ## Rules

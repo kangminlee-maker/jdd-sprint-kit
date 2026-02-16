@@ -1,6 +1,6 @@
 # Phase B 구현 명세 — Judgment Point 리프레이밍
 
-> **상태**: 설계 확정, 구현 대기
+> **상태**: 완료 (2026-02-16)
 > **대상 파일**: `.claude/agents/auto-sprint.md`, `.claude/agents/scope-gate.md`, `.claude/agents/deliverable-generator.md`
 > **상위 문서**: `docs/jdd-implementation-scope.md`, `docs/judgment-driven-development.md`
 > **선행**: Phase A 완료 (`docs/phase-a-spec.md`)

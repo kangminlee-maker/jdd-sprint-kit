@@ -250,9 +250,9 @@ Phase D (Sprint Kit 리포)
   - CP→JP 용어 전환
 
 ### Phase B: Judgment Point 리프레이밍
-- **상태**: 설계 확정, 구현 대기
-- **시작일**: -
-- **완료일**: -
+- **상태**: 완료
+- **시작일**: 2026-02-16
+- **완료일**: 2026-02-16
 - **변경 파일**: auto-sprint.md, scope-gate.md, deliverable-generator.md
 - **구현 명세**: `docs/phase-b-spec.md`
 - **핵심 결정**:

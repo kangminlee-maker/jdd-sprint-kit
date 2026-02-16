@@ -22,11 +22,14 @@ Progress-oriented. Reports each pipeline stage completion with counts (e.g., "Op
 - `mode`: `"full"` (default), `"specs-only"`, or `"deliverables-only"`
   - **full**: 10-Stage 전체 실행
   - **specs-only**: Stage 1-2만 실행 (/specs 호출 시 — Entity Dictionary + Specs 4-file만 생성)
-  - **deliverables-only**: Stage 3-10만 실행 (/preview 또는 Auto Sprint Checkpoint 1 승인 후 — Specs 4-file이 이미 존재해야 함)
+  - **deliverables-only**: Stage 3-10만 실행 (/preview 또는 Auto Sprint JP1 승인 후 — Specs 4-file이 이미 존재해야 함)
 
 ## Execution Protocol — 10-Stage Pipeline
 
-> **mode="specs-only"** 인 경우 Stage 1-2만 실행하고 Output Summary를 출력한 뒤 종료한다.
+> **mode="specs-only"** 인 경우 Stage 1-2 + JP1 Readiness 생성을 실행한 뒤 종료한다.
+> JP1 Readiness는 Stage 2 완료 직후에 readiness.md의 JP1 데이터 항목을 생성한다.
+> (scenario_summaries, tracking_completeness, ai_inferred_count, side_effect_high_count, customer_impact_changes)
+> scope_gate_summary는 /specs 호출 시 spec 단계 Scope Gate 결과만 포함한다.
 > **mode="deliverables-only"** 인 경우 기존 Specs 4-file + Entity Dictionary를 읽고 Stage 3부터 실행한다.
 
 ### Stage 1: Entity Dictionary
@@ -46,6 +49,23 @@ This dictionary ensures naming consistency across ALL subsequent outputs. Every 
 
 > deliverables-only 모드에서는 이 파일을 먼저 읽고 Stage 3부터 실행한다.
 > 파일이 없으면 PRD + Architecture에서 재구축하되, 기존 Specs 4-file의 명명과 일치시킨다.
+
+### tracking_source 분기 (Stage 2 시작 시)
+
+Sprint Input 경로 결정:
+1. `{planning_artifacts}/../inputs/sprint-input.md` 존재 확인
+2. 존재하면 `tracking_source` 필드를 읽는다
+3. 미존재하면 `tracking_source: success-criteria`로 간주한다
+
+| tracking_source | requirements.md Source 열 | BRIEF-N 매핑 | Entropy 할당 기준 |
+|----------------|--------------------------|-------------|------------------|
+| `brief` | `(source: BRIEF-N / DISC-N / AI-inferred)` 태깅 | 수행 | sprint-input.md complexity + Brief 분석 |
+| `success-criteria` | FR# 직접 사용 (Source 열 생략 가능) | 스킵 | Architecture 기술 결정 + brownfield-context |
+
+**success-criteria 경로 Entropy 할당 기준**:
+- brownfield-context.md에서 언급된 기존 코드 접점이 있는 태스크 → High
+- 다중 조건 AC를 가진 태스크 또는 Architecture에서 복잡한 통합점으로 표시된 태스크 → Medium
+- 나머지 → Low
 
 ### Stage 2: Specs 4-File Generation
 
@@ -114,7 +134,7 @@ Generate `{output_base}/{feature_name}/api-sequences.md`:
 ### Stage 4b: Key Flow Text Generation
 
 PRD의 User Journey 섹션에서 핵심 사용자 플로우를 Step-by-Step 텍스트로 변환한다.
-CP2에서 "생각한대로 동작하는가?" 검증에 사용된다.
+JP2에서 "생각한대로 동작하는가?" 검증에 사용된다.
 
 ```markdown
 ## Key Flows
@@ -130,7 +150,7 @@ CP2에서 "생각한대로 동작하는가?" 검증에 사용된다.
 - PRD User Journey의 각 주요 경로를 1개 플로우로 변환
 - Happy path 우선, 주요 alternative path 포함
 - **Output**: `{output_base}/{feature_name}/key-flows.md`에 저장
-- CP2 Visual Summary에서 이 파일을 참조
+- JP2 Visual Summary에서 이 파일을 참조
 
 ### Stage 5: DBML Schema
 
@@ -264,7 +284,7 @@ Prism mock 서버는 상태를 유지하지 않는다 (매 요청에 동일한 e
    echo "Smoke Test: $PASS/$TOTAL endpoints PASS"
    ```
 3. TypeScript 컴파일 검증: `npx tsc --noEmit`
-4. **실패 시 자동 수정**: 실패 항목별 최대 1회 수정 시도. 재실패 시 Output Summary에 실패 내역 보고 (CP2에서 사람이 확인).
+4. **실패 시 자동 수정**: 실패 항목별 최대 1회 수정 시도. 재실패 시 Output Summary에 실패 내역 보고 (JP2에서 사람이 확인).
 
 Smoke Test 결과를 Output Summary에 포함: `Smoke Test: {N}/{M} endpoints PASS, tsc: PASS/FAIL`
 
@@ -285,17 +305,25 @@ Smoke Test 결과를 Output Summary에 포함: `Smoke Test: {N}/{M} endpoints PA
 5. Prototype: 모든 PRD User Journey에 대응하는 페이지 존재 여부
 6. Preview Prism 호환: `preview/api/openapi.yaml`에 operation-level `security` 블록이 없는지 확인. 존재 시 자동 제거 후 경고 출력.
 7. Prototype 인터랙션: 모든 CUD 액션 컴포넌트에 `onComplete` 콜백이 있고, 부모가 로컬 state를 업데이트하는지 확인. API를 이중 호출하는 컴포넌트가 없는지 확인.
-8. **Readiness 데이터 생성**: CP1/CP2 Visual Summary에서 사용할 Readiness 데이터를 `{output_base}/{feature_name}/readiness.md`에 저장:
-   - Brief 반영 완전성: brief_sentences 중 FR에 매핑되지 않은 문장 수
-   - AI-inferred FR 수: `source: AI-inferred`인 FR 개수 (Layer 0 자동 승인 조건: 0개)
-   - Scope Gate 결과 요약: 전 단계 PASS/FAIL 상태
-   - Brownfield 호환성: 기존 패턴 일치/불일치 수
-   - Side-effect 위험 항목: HIGH 위험도 항목 수
+8. **Readiness 데이터 생성**: JP1/JP2 Visual Summary에서 사용할 Readiness 데이터를 `{output_base}/{feature_name}/readiness.md`에 저장:
+
+   **JP1 데이터** (specs-only 모드에서도 생성):
+   - scenario_summaries: PRD User Journey에서 핵심 시나리오 3~5개를 1~2문장으로 축약.
+     각 시나리오에 관련 FR 번호를 태깅한다.
+     형식: `"고객이 {상황}에서 {행동}하면, 시스템이 {결과}를 제공한다." → FR1, FR3`
+   - tracking_completeness: 추적 소스 (brief_sentences 또는 Success Criteria) 중 FR에 매핑되지 않은 항목 수
+   - ai_inferred_count: `source: AI-inferred`인 FR 개수
+   - scope_gate_summary: 전 단계 PASS/FAIL 상태 (auto-sprint 경유 시에만. /specs 직접 실행 시 spec 단계만 포함)
+   - side_effect_high_count: brownfield-context.md Impact Analysis의 HIGH 위험도 항목 수
+   - customer_impact_changes: brownfield side-effect를 고객 관점 문장으로 번역한 목록.
+     형식: `"기존 '튜터 관리' 화면에서 '차단' 버튼이 추가됩니다"`
+
+   **JP2 데이터** (deliverables-only 모드에서 생성 — 기존과 동일):
    - Smoke Test 결과: N/M endpoints PASS, tsc PASS/FAIL
    - BDD→FR 커버리지: N/M covered
    - Traceability Gap: N개
 
-GAP이 있으면 Output Summary에 명시 (CP2에서 사람이 확인).
+GAP이 있으면 Output Summary에 명시 (JP2에서 사람이 확인).
 
 ## Output Summary
 
