@@ -263,15 +263,24 @@ Phase D (Sprint Kit 리포)
   - force_cp1_review 필드명 Phase B 유지 (Phase C에서 일괄 변경)
 
 ### Phase C: 파이프라인 연결
-- **상태**: 대기 (Phase B 의존)
-- **시작일**: -
-- **완료일**: -
-- **변경 파일**: specs.md, sprint.md
-- **비고**: -
+- **상태**: 완료
+- **시작일**: 2026-02-16
+- **완료일**: 2026-02-16
+- **변경 파일**: specs.md, sprint.md, auto-sprint.md, parallel.md, desktop-notify.sh
+- **구현 명세**: `docs/phase-c-spec.md`
+- **핵심 결정**:
+  - specs.md Step 0 전체 교체 (auto-detect + 3경로 탐색 + sprint-input.md 생성)
+  - sprint.md CP→JP 5곳, force_jp1_review 3곳, tracking_source, BMad 감지 Case 2
+  - auto-sprint.md force_jp1_review 4곳, Phase C 주석 제거
+  - parallel.md JP2, desktop-notify.sh JP1/JP2
 
-### Phase D: 설치 구조 개선
-- **상태**: 대기 (Phase C 의존)
-- **시작일**: -
+### Phase D: Sprint Kit 리포 업데이트
+- **상태**: 진행 중
+- **시작일**: 2026-02-16
 - **완료일**: -
-- **변경 파일**: Sprint Kit 리포 (init.js, README.md, blueprint.md)
-- **비고**: 별도 PR
+- **변경 파일**: sprint-input-format.md, blueprint.md(신규), README.md(신규), CHANGELOG.md(신규)
+- **핵심 작업**:
+  - Template Sync 9개 확인 (Phase C 커밋으로 이미 반영)
+  - sprint-input-format.md: tracking_source, force_jp1, specs-direct 예시 추가
+  - Blueprint 제로베이스 재작성 (5 Parts)
+  - README JDD 통합, CHANGELOG 생성

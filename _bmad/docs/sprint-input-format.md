@@ -70,9 +70,9 @@ validation:
   discovered_requirements: 7
   goals_mapped: 3/3
   contradictions_detected: 1
+tracking_source: brief | success-criteria
 flags:
-  force_cp1_review: false  # C등급 Brief 시 true
-  force_cp1_causal_review: false  # deprecated (P0-2: Causal Chain 선택화). 하위 호환용
+  force_jp1_review: false  # C등급 Brief 시 true
 ---
 ```
 
@@ -82,7 +82,7 @@ flags:
 |------|------|------|
 | `feature` | Y | Feature name (kebab-case) |
 | `generated_at` | Y | 생성 시각 (ISO 8601) |
-| `generated_by` | Y | 항상 `sprint-onboarding-phase-0` |
+| `generated_by` | Y | `sprint-onboarding-phase-0` (Sprint 경로) 또는 `specs-direct` (Direct 경로) |
 | `brief_grade` | Y | Brief 품질 등급 (A/B/C) |
 | `goals` | Y | 추출된 목표 3~5개 |
 | `complexity` | Y | 복잡도 분류 (simple/medium/complex) |
@@ -97,8 +97,8 @@ flags:
 | `causal_chain` | N | 인과 사슬 4계층 + source/evidence + chain_status. 선택 사항 — feature_only일 때 사용자가 opt-in하지 않으면 비어있을 수 있음 |
 | `causal_chain.chain_status` | (causal_chain 존재 시 Y) | `complete`(전부 확인됨), `partial`(일부 추론됨), `feature_only`(사용자가 추가하지 않기로 선택) |
 | `time_estimate` | Y | 복잡도 기반 초기 시간 범위 |
-| `flags.force_cp1_review` | Y | CP1 강제 리뷰 여부 |
-| `flags.force_cp1_causal_review` | N | 더 이상 사용하지 않음 (P0-2: Causal Chain 선택화). 하위 호환용으로 유지하되 무시 |
+| `tracking_source` | Y | Brief 추적 소스. `brief`: BRIEF-N 기반 (Sprint 경로), `success-criteria`: PRD Success Criteria 기반 (Guided/Direct 경로) |
+| `flags.force_jp1_review` | Y | JP1 강제 리뷰 여부 |
 
 ---
 
@@ -149,7 +149,7 @@ flags:
 ```
 
 - Brief에 없지만 참고 자료에서 발견된 요구사항
-- **출처 분류**: "참고 자료에서 발견"과 "AI 추론"을 명시 구분. CP1에서 구분 표시됨
+- **출처 분류**: "참고 자료에서 발견"과 "AI 추론"을 명시 구분. JP1에서 구분 표시됨
 - 5개 이하: 전부 포함 (기본값: Sprint 범위에 포함)
 - 5개 초과: 핵심 3개만 포함, 나머지는 "다음 Sprint 후보"로 별도 표기
 
@@ -191,7 +191,7 @@ flags:
 |------|------|-------------|
 | **A** (충분) | 기능 3+ 언급, 시나리오 1+ 언급, 또는 참고 자료가 보완 | 정상 진행 |
 | **B** (보통) | 기능 1~2 언급, 시나리오 없음 | "Sprint 시작?" 확인 시 경고 표시 |
-| **C** (불충분) | 기능 0, 단순 키워드만 | Sprint 비권장 옵션 제시, 진행 시 `force_cp1_review: true` |
+| **C** (불충분) | 기능 0, 단순 키워드만 | Sprint 비권장 옵션 제시, 진행 시 `force_jp1_review: true` |
 
 ---
 
@@ -274,9 +274,9 @@ validation:
   discovered_requirements: 4
   goals_mapped: 3/3
   contradictions_detected: 0
+tracking_source: brief
 flags:
-  force_cp1_review: false
-  force_cp1_causal_review: false
+  force_jp1_review: false
 ---
 
 # Sprint Input: tutor-exclusion
@@ -363,9 +363,9 @@ validation:
   discovered_requirements: 0
   goals_mapped: 1/1
   contradictions_detected: 0
+tracking_source: brief
 flags:
-  force_cp1_review: false
-  force_cp1_causal_review: false
+  force_jp1_review: false
 ---
 
 # Sprint Input: quick-feature
@@ -375,7 +375,7 @@ flags:
 튜터 차단 기능을 만들어줘
 ```
 
-### 예시 3: C등급 Brief + 모순 감지 + force_cp1_review
+### 예시 3: C등급 Brief + 모순 감지 + force_jp1_review
 
 ```yaml
 ---
@@ -421,9 +421,9 @@ validation:
   discovered_requirements: 2
   goals_mapped: 1/1
   contradictions_detected: 1
+tracking_source: brief
 flags:
-  force_cp1_review: true
-  force_cp1_causal_review: false
+  force_jp1_review: true
 ---
 
 # Sprint Input: tutor-feedback
@@ -454,3 +454,43 @@ flags:
 |---|-----------|---------------|--------|--------|
 | 1 | (기능 미언급) | 5점 만점 별점 + 텍스트 코멘트 | meeting-notes.md | 미해결 |
 ```
+
+### 예시 4: specs-direct (Direct 경로, BMad 산출물 완성 후)
+
+```yaml
+---
+feature: tutor-exclusion
+generated_at: 2026-02-13T18:00:00+09:00
+generated_by: specs-direct
+brief_grade: A
+goals:
+  - "수업 후 튜터 차단 기능 구현"
+  - "차단된 튜터 매칭 제외 필터링"
+  - "차단 관리 UI 제공"
+brief_sentences: []
+causal_chain: null
+time_estimate:
+  initial_range: "60~120분"
+input_files: []
+brownfield_status: configured
+brownfield_topology: standalone
+document_project_path: null
+document_project_status: null
+fallback_tier: 1
+validation:
+  brief_included: false
+  references_processed: 0/0
+  discovered_requirements: 0
+  goals_mapped: 3/3
+  contradictions_detected: 0
+tracking_source: success-criteria
+flags:
+  force_jp1_review: false
+---
+```
+
+- **Direct 경로**: BMad 12단계를 완료하여 planning-artifacts가 이미 존재할 때 `/specs`가 자동 생성
+- `generated_by: specs-direct` — Phase 0 미경유
+- `brief_sentences: []` — Brief 문장 추적 대신 PRD Success Criteria 추적
+- `tracking_source: success-criteria` — JP1에서 PRD Measurable Outcomes 기반 매핑
+- `causal_chain: null` — Direct 경로에서는 인과 사슬 미생성
