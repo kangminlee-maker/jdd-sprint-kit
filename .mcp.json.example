@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "my-backend-docs": {
+      "command": "sh",
+      "args": ["-c", "npx -y @modelcontextprotocol/server-filesystem ~/path/to/backend-docs"]
+    },
+    "my-client-docs": {
+      "command": "sh",
+      "args": ["-c", "npx -y @modelcontextprotocol/server-filesystem ~/path/to/client-docs"]
+    },
+    "my-svc-map": {
+      "command": "sh",
+      "args": ["-c", "npx -y @modelcontextprotocol/server-filesystem path/to/svc-map-data"]
+    }
+  }
+}
