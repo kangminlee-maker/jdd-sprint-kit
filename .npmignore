@@ -1,0 +1,33 @@
+# Source Sprint Kit files (included via templates/)
+.claude/
+_bmad/
+preview-template/
+specs/
+docs/
+
+# Development
+.github/
+scripts/
+.mcp.json
+.mcp.json.example
+CLAUDE.md
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs (npm 배포 제외)
+CHANGELOG.md
+
+# Tests
+tests/
+__tests__/
+coverage/
