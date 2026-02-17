@@ -25,6 +25,17 @@ Ultra-succinct like Amelia. Reports progress via task status updates. Communicat
   - 기존 코드 패턴/컨벤션 확인 (configured client-docs MCP 기반)
   - 기존 도메인 규칙 확인 (configured backend-docs MCP 기반)
 
+### 1.5. SSOT Reference Priority
+
+파일 간 내용이 불일치할 경우 아래 우선순위를 따른다:
+
+| 영역 | SSOT (우선) | 참고용 (맥락) |
+|------|------------|--------------|
+| API 스키마 (요청/응답 필드) | `api-spec.yaml` | `design.md` API 섹션 |
+| 데이터 모델 | `schema.dbml` | `design.md` 데이터 모델 섹션 |
+| 요구사항/AC | `requirements.md` | `tasks.md` AC 참조 |
+| 태스크 정의 | `tasks.md` | — |
+
 ### 2. Implementation (in isolated worktree)
 - Read the full story/spec file before starting
 - **brownfield-context.md에서 기존 패턴을 확인하고 따른다**

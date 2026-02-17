@@ -80,7 +80,7 @@ Create `{output_base}/{feature_name}/`:
 3. **design.md** — Transform Architecture into design format:
    - Component diagram → Module structure
    - Data model → Schema references
-   - API design → Endpoint inventory
+   - API design → Endpoint inventory (요약 수준. API 상세 스키마의 SSOT는 api-spec.yaml)
    - Integration points → Brownfield touchpoints
 4. **tasks.md** — Transform Epics into parallel tasks:
    - Story → Task with entropy tag, file ownership, dependencies
