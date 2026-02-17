@@ -559,6 +559,8 @@ A, P, F 어떤 경로로든 피드백이 발생하면 동일한 메커니즘으�
    ```
 4. **실행**:
    - **[M] 수정반영+전파**: 피드백 항목별로 모든 의존 파일을 양방향(upstream + downstream) 수정 → Scope Gate 검증 → PASS 시 JP 복귀, FAIL 시 누락 항목 표시 + 추가 수정 또는 재생성 전환
+     - JP1 시점: Scope Gate `stage=spec`
+     - JP2 시점: Scope Gate `stage=spec` + `stage=deliverables` (양쪽 모두 실행)
    - **[R] 재생성**: `specs/{feature_name}/planning-artifacts/feedback-log.md`에 피드백 기록 → 해당 Phase부터 파이프라인 재실행 (Scope Gate 포함)
 5. **피드백 기록**: 처리 방식과 무관하게 `feedback-log.md`에 피드백 내용 + 선택한 처리 방식 + 결과를 기록한다
 
@@ -607,13 +609,33 @@ Deliverables에서 메타데이터만 추출하여 3-Section JP2 시각화를 �
 - key-flows.md: 핵심 플로우 텍스트 (deliverable-generator Stage 4b 생성)
 - api-spec.yaml, schema.dbml, bdd-scenarios/: 커버리지 카운트
 - traceability-matrix.md: FR→BDD 매핑
-- readiness.md: Readiness 데이터
+- readiness.md: Readiness 데이터 + jp1_to_jp2_changes (YAML frontmatter)
 - brownfield-context.md: Brownfield 상호작용 정보
 
 출력 형식:
 
 ```markdown
 ## Judgment Point 2: Sprint Complete — {feature_name}
+
+### Section 0: JP1 이후 변경 사항
+
+{jp1_to_jp2_changes가 비어 있거나 없으면}
+JP1 산출물에 변경이 없습니다.
+
+{jp1_to_jp2_changes가 있으면}
+Phase 2 데이터 흐름 검증에서 보완한 항목입니다:
+
+| 변경 | 이유 | 수정 파일 |
+|------|------|----------|
+| {change} | {reason} | {files} |
+
+상세: architecture.md 원본 설계와 비교 가능합니다.
+변경 사항에 동의하지 않으면 [F] Comment를 선택하세요.
+
+{자동 보강 불가 WARN이 있으면}
+⚠ 자동 보강 범위를 초과하는 항목이 있습니다:
+- {WARN 내용}
+→ Phase 1 설계 재검토가 필요할 수 있습니다. [F] Comment를 선택하세요.
 
 ### Section 1: 주요 동작 플로우
 

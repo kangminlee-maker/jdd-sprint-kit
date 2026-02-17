@@ -65,6 +65,21 @@ BMad 12단계 (사람-AI 대화):
 - 아무 자료 없이 빠른 프로토타입만 원하면 → **Sprint**에 한 줄 Brief로 시작
 - BMad 12단계 완료 후 실행 → **Direct**와 동일 (`/specs`가 BMad 산출물을 자동 인식)
 
+**포맷 호환**: 모든 경로의 planning-artifacts는 동일한 BMad 포맷(YAML frontmatter + 워크플로우 섹션)을 사용한다. Sprint Kit이 생성한 산출물은 BMad 워크플로우에서 직접 인식되며, 그 역도 성립한다.
+
+**크로스오버 지원 현황**:
+
+| 전환 | 지원 | 설명 |
+|------|------|------|
+| Guided → Sprint Kit | ✅ | `/specs`가 `_bmad-output/` 자동 감지. "이어서 빠르게" |
+| Sprint Kit → Guided 심화 | ✅ | planning-artifacts를 Guided 에이전트가 읽고 심화. "빠르게 시작, 깊게 탐색" |
+| Sprint Kit → BMad validate | ✅ | planning-artifacts/ 직접 사용 가능 |
+| Sprint Kit → BMad Phase 4 | ⚠ | 자동 변환 미지원. planning-artifacts는 호환되나, tasks.md 고유 정보(DAG, Entropy, File Ownership)는 수동 전달 필요 |
+
+**Sprint Kit 고유 개념**: Entropy Tolerance, File Ownership, DAG 기반 병렬 실행, SSOT Reference Priority는 BMad에 없는 Sprint Kit 전용 개념이다. `/parallel` 실행에 최적화되어 있으며, BMad Phase 4로 전환 시 이 정보는 활용되지 않는다.
+
+**Scope Gate ↔ Implementation Readiness**: Sprint Kit의 매 단계 Scope Gate는 BMad Implementation Readiness보다 촘촘한 검증이다. Scope Gate 전원 PASS이면 BMad Implementation Readiness도 통과할 가능성이 높다. BMad `check-implementation-readiness`를 별도 실행하려면 planning-artifacts/를 직접 참조.
+
 > 소규모 작업은 BMad Quick Flow를 사용: `/quick-spec` → `/dev-story` → `/code-review`
 
 ## BMad 에이전트

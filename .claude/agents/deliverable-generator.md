@@ -152,6 +152,18 @@ JP2에서 "생각한대로 동작하는가?" 검증에 사용된다.
 - **Output**: `{output_base}/{feature_name}/key-flows.md`에 저장
 - JP2 Visual Summary에서 이 파일을 참조
 
+**보강 범위 제한**:
+
+| 변경 유형 | 처리 |
+|----------|------|
+| 기존 엔드포인트에 응답 필드 추가 | 자동 보강 + 변경 로그 기록 |
+| 기존 필드의 타입 변경 | 자동 보강 + 변경 로그 기록 |
+| 쿼리 파라미터 추가 | 자동 보강 + 변경 로그 기록 |
+| 응답 구조 변경 (flat → nested 등) | **중단** — Output Summary에 WARN: "구조 변경이 필요합니다. JP2에서 확인하세요." |
+| 새 엔드포인트 추가 필요 | **중단** — Output Summary에 WARN: "새 엔드포인트가 필요합니다. Phase 1 설계 재검토를 권장합니다." |
+
+자동 보강은 "필드 수준"까지만. "구조 수준" 이상의 변경은 사용자 판단 영역이다.
+
 **API Data Flow Verification** (key-flows 작성 시 필수 확인):
 
 key-flows의 각 플로우에서 후행 API 호출의 요청 필드가 선행 API 호출의 응답에 포함되어 있는지 확인하라.
@@ -161,7 +173,21 @@ key-flows의 각 플로우에서 후행 API 호출의 요청 필드가 선행 AP
 - 각 플로우 내에서 API 호출이 2개 이상 연속되는 경우를 식별한다
 - 후행 API의 요청에 필요한 모든 필드가 선행 API의 응답 또는 이전 Step 누적 응답에서 획득 가능한지 확인한다
 - 사용자 입력(화면에서 직접 입력)으로 제공되는 필드는 제외한다
-- 부족한 필드 발견 시: 해당 API 응답 스키마에 필드를 추가하고, 관련 파일(design.md, api-spec.yaml, types.ts 등)에 일관되게 반영한다
+- 부족한 필드 발견 시:
+  1. 보강 범위 제한 테이블에 따라 자동 보강 가능 여부를 판정한다
+  2. 자동 보강 가능하면:
+     a. 해당 API 응답 스키마에 필드를 추가하고, 관련 파일(design.md, api-spec.yaml, types.ts 등)에 일관되게 반영한다
+     b. 변경 내역을 readiness.md YAML frontmatter의 `jp1_to_jp2_changes`에 기록한다:
+        ```yaml
+        jp1_to_jp2_changes:
+          - change: "{endpoint} 응답에 {field_name}: {type} 추가"
+            flow: "{flow_name}"
+            reason: "후행 API의 요청 필드가 선행 응답에 부재"
+            files_modified: [api-spec.yaml, design.md, preview/src/api/types.ts]
+        ```
+     c. readiness.md가 없으면 생성하고, 있으면 기존 내용을 보존하며 append한다
+  3. 자동 보강 불가(구조/엔드포인트 수준)면:
+     - 변경하지 않고 Output Summary에 WARN으로 기록
 
 ### Stage 5: DBML Schema
 
@@ -306,6 +332,14 @@ Smoke Test 결과를 Output Summary에 포함: `Smoke Test: {N}/{M} endpoints PA
 - 각 Stage 시작 시 Entity Dictionary를 재참조하여 명명 일관성 유지
 - Budget pressure 시 우선순위: specs → API → prototype (Rule 8 유지)
 
+## readiness.md 쓰기 규칙
+
+- **specs-only 모드**: readiness.md를 **생성** (JP1 Data 섹션 작성)
+- **deliverables-only 모드 Stage 4b**: readiness.md가 없으면 **생성**, 있으면 **읽기** → `jp1_to_jp2_changes` **append**
+- **deliverables-only 모드 Self-Validation**: 기존 readiness.md를 **읽기** → JP2 Data 섹션 **append**
+- JP1 Data는 절대 덮어쓰지 않는다
+- readiness.md 포맷: YAML frontmatter(머신 파싱 데이터) + Markdown 본문(사람용 설명, 선택적). sprint-input.md와 동일 패턴.
+
 ## Self-Validation (모든 Stage 완료 후)
 
 다음을 확인하고 Output Summary에 포함:
@@ -334,6 +368,8 @@ Smoke Test 결과를 Output Summary에 포함: `Smoke Test: {N}/{M} endpoints PA
    - Smoke Test 결과: N/M endpoints PASS, tsc PASS/FAIL
    - BDD→FR 커버리지: N/M covered
    - Traceability Gap: N개
+
+10. **JP1→JP2 변경 기록**: Stage 4b에서 자동 보정한 항목 수. readiness.md의 `jp1_to_jp2_changes` 배열 길이와 실제 보정 횟수가 일치하는지 확인. 자동 보강 불가 WARN 건수도 Output Summary에 포함.
 
 GAP이 있으면 Output Summary에 명시 (JP2에서 사람이 확인).
 
