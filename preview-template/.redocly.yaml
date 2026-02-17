@@ -1,0 +1,10 @@
+extends:
+  - recommended
+
+rules:
+  no-unused-components: off        # Sprint별 미사용 schema 허용
+  no-invalid-schema-examples: error # example ↔ schema 일치 검증 (Prism Smoke Test 대체 핵심)
+  security-defined: off            # 프로토타입은 인증 불필요
+  info-license: off                # 프로토타입 스펙에 라이선스 불필요
+  no-server-example.com: off       # localhost 서버 URL 허용
+  operation-4xx-response: off      # 모든 operation에 4xx 필수 아님

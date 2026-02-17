@@ -147,9 +147,13 @@ extends:
 rules:
   no-unused-components: off        # Sprint별 미사용 schema 허용
   no-invalid-schema-examples: error # example ↔ schema 일치 검증 (Prism Smoke Test 대체 핵심)
+  security-defined: off            # 프로토타입은 인증 불필요
+  info-license: off                # 프로토타입 스펙에 라이선스 불필요
+  no-server-example.com: off       # localhost 서버 URL 허용
+  operation-4xx-response: off      # 모든 operation에 4xx 필수 아님
 ```
 
-**핵심**: `no-invalid-schema-examples` 규칙이 OpenAPI spec 내 example 데이터가 해당 schema와 일치하는지 정적으로 검증한다. 이전 Prism Smoke Test가 런타임에 하던 "example이 schema에 맞는가" 검증을 정적 분석으로 대체하는 핵심 규칙이다. 이 설정 파일이 있으므로 `npx redocly lint api/openapi.yaml`만으로 동작하며, CLI 플래그를 기억할 필요가 없다.
+**핵심**: `no-invalid-schema-examples` 규칙이 OpenAPI spec 내 example 데이터가 해당 schema와 일치하는지 정적으로 검증한다. 이전 Prism Smoke Test가 런타임에 하던 "example이 schema에 맞는가" 검증을 정적 분석으로 대체하는 핵심 규칙이다. 프로토타입 환경에 불필요한 규칙(security-defined, info-license 등)은 off로 설정한다. 이 설정 파일이 있으므로 `npx redocly lint api/openapi.yaml`만으로 동작하며, CLI 플래그를 기억할 필요가 없다.
 
 ### 4.3 preview-template/vite.config.ts
 
@@ -273,25 +277,23 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 
 async function boot() {
+  let DevPanelComponent: React.ComponentType = () => null
+
   if (import.meta.env.DEV) {
     const { worker } = await import('./mocks/browser')
     await worker.start({ onUnhandledRequest: 'bypass' })
+    const mod = await import('./components/DevPanel')
+    DevPanelComponent = mod.default
   }
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <BrowserRouter>
         <App />
-        {import.meta.env.DEV && <DevPanel />}
+        {import.meta.env.DEV && <DevPanelComponent />}
       </BrowserRouter>
     </StrictMode>,
   )
-}
-
-// Lazy import DevPanel to avoid production bundle inclusion
-let DevPanel: React.ComponentType = () => null
-if (import.meta.env.DEV) {
-  import('./components/DevPanel').then(m => { DevPanel = m.default })
 }
 
 boot()
@@ -317,9 +319,16 @@ interface Store {
   nextRatingId: number
 }
 
+function deepCopyCount() {
+  return {
+    EN: { ...seedData.count.EN },
+    JP: { ...seedData.count.JP },
+  }
+}
+
 export const store: Store = {
   blocks: [...seedData.blocks],
-  count: { ...seedData.count },
+  count: deepCopyCount(),
   ratings: new Map(),
   nextBlockId: seedData.nextBlockId,
   nextRatingId: seedData.nextRatingId,
@@ -327,7 +336,7 @@ export const store: Store = {
 
 export function resetStore() {
   store.blocks = [...seedData.blocks]
-  store.count = { ...seedData.count }
+  store.count = deepCopyCount()
   store.ratings = new Map()
   store.nextBlockId = seedData.nextBlockId
   store.nextRatingId = seedData.nextRatingId

@@ -114,13 +114,13 @@ Generate `{output_base}/{feature_name}/api-spec.yaml`:
 - Error responses from PRD AC error scenarios
 - Use `$ref` for shared schemas
 - Include `x-entropy` extension for entropy tolerance per endpoint
-- Include example values for Prism mock generation
+- Include example values for MSW seed data generation
 
 **Constraints**:
-- Prefer OpenAPI 3.0.3 compatible patterns for Prism stability
+- Use OpenAPI 3.0.3 or 3.1 (redocly lint supports both)
 - Minimize nullable usage (use required/optional instead)
 - Every endpoint must have at least one 2xx and one 4xx response
-- **Prism 경로 규칙**: `paths`에는 prefix 없는 리소스 경로만 사용한다 (`/exclusions`, `/ratings`). base path(`/api/v1` 등)는 `servers.url`에 기록한다. Prism은 `servers.url`을 무시하고 paths 키 그대로 서빙하므로, paths에 `/api/v1/exclusions` 같은 전체 경로를 넣으면 안 된다.
+- OpenAPI `paths`에는 리소스 경로만 사용한다 (`/exclusions`, `/ratings`). base path(`/api/v1` 등)는 `servers.url`에 기록한다. MSW handler의 BASE 상수가 client.ts의 `BASE_URL + VERSION`과 동일하게 설정되어야 한다.
 
 ### Stage 4: API Sequence Diagrams
 
@@ -246,18 +246,25 @@ Highlight any FR without full coverage chain.
 ### Stage 10: React Prototype
 
 1. Copy `preview-template/` → `{output_base}/{feature_name}/preview/`
-2. Copy `api-spec.yaml` → `preview/api/openapi.yaml` (Prism 호환 변환):
-   - 전역 `security` 블록 제거
-   - 각 operation의 `security` 블록 제거
-   - `components/securitySchemes` 정의는 유지 (문서 참조용, Prism이 강제하지 않음)
-   - Prism은 security를 문자 그대로 강제하므로, security가 남아있으면 모든 요청에 401을 반환한다
+2. Copy `api-spec.yaml` → `preview/api/openapi.yaml` (직접 복사, 변환 없음)
 3. Generate pages based on PRD User Journeys:
    - One page per major screen identified in PRD/Architecture
    - React Router routes in App.tsx
 4. Generate components from Entity Dictionary + Architecture component diagram
-5. Wire API calls through `api/client.ts` using Prism mock endpoints
-   - **경로 정합성**: API 함수의 path 인자는 OpenAPI paths 키와 동일해야 한다 (예: `apiGet('/exclusions')`). `client.ts`의 `BASE_URL`(`/api`) + API 함수의 version prefix(`/v1`) + 리소스 경로(`/exclusions`)가 Vite proxy 매칭 경로(`/api/v1`)와 일치해야 Prism에 올바른 경로가 도달한다.
-6. Implement:
+5. Wire API calls through `api/client.ts` (MSW가 네트워크 레벨에서 인터셉트)
+6. Generate MSW mock layer (`src/mocks/`):
+   a. **seed.ts**: api-spec.yaml의 각 GET 엔드포인트 example에서 초기 데이터 추출
+   b. **store.ts**: seed.ts를 import하여 in-memory store 구성. 각 리소스별 배열 + counter.
+   c. **handlers.ts**: api-spec.yaml의 각 path + method 조합에 대해 MSW handler 생성 (preview-template의 placeholder를 덮어씀):
+      - GET (list): store에서 필터링하여 반환
+      - GET (detail): store에서 ID로 조회, 404 처리
+      - POST (create): store에 추가, 409/422 에러 처리
+      - PUT/PATCH: store에서 업데이트
+      - DELETE: store에서 제거, 404 처리
+      - `POST /__reset` + `GET /__store` + `resetStore()` 함수를 항상 포함
+      - BASE path는 client.ts의 `BASE_URL + VERSION`과 동일하게 설정
+      - 응답 데이터를 타입 명시적으로 구성: `const response: SchemaType = { ... }` — tsc가 스키마 불일치를 잡을 수 있도록
+7. Implement:
    - **Happy path**: Full flow as described in PRD User Journey
    - **Error scenarios**: All PRD AC error cases with appropriate UI feedback
    - **Empty states**: When lists/data are empty
@@ -279,51 +286,51 @@ Highlight any FR without full coverage chain.
 - fetch wrapper from `api/client.ts`
 - No state management library (React state + context sufficient for prototype)
 
-**Prism Stateless 프로토타입 패턴**:
+**MSW Stateful 프로토타입 패턴**:
 
-Prism mock 서버는 상태를 유지하지 않는다 (매 요청에 동일한 example 반환). GET 재요청으로 최신 데이터를 기대하지 않는다. 프로토타입은 다음 패턴으로 로컬 상태를 관리하여 인터랙션 결과를 즉시 반영한다:
+프로토타입은 MSW(Mock Service Worker)를 사용하여 API 상태를 유지한다.
+Spec 검증은 OpenAPI lint(`@redocly/cli`) + `tsc --noEmit`이 담당한다.
 
-1. **초기 데이터**: 페이지 컴포넌트가 mount 시 GET → 로컬 state 초기화
-2. **Create 후**: 액션 컴포넌트가 POST → 성공 시 `onComplete(newItem)` → 부모가 로컬 state 배열에 추가 (GET 재요청 안 함)
-3. **Delete 후**: 액션 컴포넌트가 DELETE → 성공 시 `onComplete(id)` → 부모가 로컬 state에서 해당 항목 제거
-4. **Update 후**: 액션 컴포넌트가 PATCH/PUT → 성공 시 `onComplete(updated)` → 부모가 로컬 state의 해당 필드 업데이트
+1. **초기 데이터**: `mocks/seed.ts`에 OpenAPI examples에서 추출한 seed 데이터 정의
+2. **상태 관리**: `mocks/store.ts`에 in-memory store. CRUD 연산이 store를 변경
+3. **요청 인터셉트**: `mocks/handlers.ts`에 MSW handler. api-spec.yaml의 모든 endpoint를 커버
+4. **플로우 간 연속성**: POST로 생성한 데이터가 GET에서 조회됨 (store 공유)
+5. **리셋**: DevPanel의 "Reset State" 버튼 또는 `POST /__reset` 호출로 store를 seed 상태로 초기화
+6. **디버깅**: DevPanel의 "Show Store" 버튼 또는 `GET /__store`로 현재 store 상태 확인
 
 **API 책임 원칙**:
-- 하나의 API 호출에 대해 하나의 컴포넌트만 책임진다
-- 초기 데이터 로드(GET): 페이지 컴포넌트
-- 사용자 액션(POST/PUT/DELETE): 액션을 트리거하는 컴포넌트
-- 부모는 API를 다시 호출하지 않고, `onComplete` 콜백으로 받은 데이터로 로컬 state만 업데이트한다
+- React 컴포넌트는 실제 서비스와 동일한 코드로 API를 호출한다 (client.ts 무수정)
+- MSW가 네트워크 레벨에서 인터셉트하므로, 컴포넌트는 mock의 존재를 알지 못한다
+- 페이지 간 상태는 store를 통해 자동 공유된다 (전역 React state 불필요)
+- onComplete 콜백을 통한 낙관적 업데이트는 **권장하지만 필수 아님** — MSW가 상태를 관리하므로 GET 재호출만으로도 정확한 결과를 받을 수 있다
 
-이 패턴은 모든 CUD 인터랙션이 있는 페이지에 적용한다. 페이지 간 상태는 공유하지 않는다 (전역 store 불필요, 새로고침 시 초기화 허용).
+**Handler 생성 규칙** (deliverable-generator가 따라야 할 규칙):
+- api-spec.yaml의 모든 path x method 조합에 대해 handler를 생성한다
+- 응답 구조는 api-spec.yaml components/schemas를 정확히 따른다
+- **응답 데이터를 타입 명시적으로 구성한다**: `const response: SchemaType = { ... }` — tsc가 스키마 불일치를 잡을 수 있도록
+- 에러 응답(4xx)은 api-spec.yaml의 에러 example을 사용한다
+- GET list: 쿼리 파라미터 필터링을 지원한다 (OpenAPI parameters 참조)
+- POST create: store에 추가 + ID 자동 채번 + 관련 count 업데이트
+- DELETE: store에서 제거 + 관련 count 감소
+- 교차 엔드포인트 상태: 하나의 엔드포인트 동작이 다른 엔드포인트 조회 결과에 영향을 미치는 경우 (예: 평가+차단 POST → 차단 목록 GET), handler 내에서 store를 직접 조작하여 연동한다
+- `POST /__reset` + `GET /__store` + `resetStore()` 함수를 항상 포함한다
 
-**Smoke Test** (Stage 10 코드 생성 완료 후 실행):
+**Spec Validation** (Stage 10 코드 생성 완료 후 실행):
 
-프로토타입의 기본 동작을 자동 검증한다. Self-Validation(코드 리뷰)과 달리 실제 프로세스를 기동하여 동적 검증한다.
+프로토타입의 스펙 정합성을 자동 검증한다.
 
 1. `cd {output_base}/{feature_name}/preview && npm install`
-2. Prism mock 서버 기동 + API 엔드포인트 검증 (단일 Bash 호출):
+2. OpenAPI spec 문법/구조 + example 검증 (.redocly.yaml 규칙 적용):
    ```bash
-   npx @stoplight/prism-cli mock api/openapi.yaml --port 4010 --host 127.0.0.1 &
-   PRISM_PID=$!
-   sleep 3
-   PASS=0; FAIL=0; TOTAL=0
-   for endpoint in {OpenAPI paths 키 목록}; do
-     TOTAL=$((TOTAL+1))
-     STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4010$endpoint)
-     if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
-       PASS=$((PASS+1))
-     else
-       FAIL=$((FAIL+1))
-       echo "FAIL: $endpoint → $STATUS"
-     fi
-   done
-   kill $PRISM_PID 2>/dev/null
-   echo "Smoke Test: $PASS/$TOTAL endpoints PASS"
+   npx @redocly/cli lint api/openapi.yaml
    ```
-3. TypeScript 컴파일 검증: `npx tsc --noEmit`
+3. Handler ↔ types.ts 스키마 정합성 검증:
+   ```bash
+   npx tsc --noEmit
+   ```
 4. **실패 시 자동 수정**: 실패 항목별 최대 1회 수정 시도. 재실패 시 Output Summary에 실패 내역 보고 (JP2에서 사람이 확인).
 
-Smoke Test 결과를 Output Summary에 포함: `Smoke Test: {N}/{M} endpoints PASS, tsc: PASS/FAIL`
+Spec Validation 결과를 Output Summary에 포함: `Spec Validation: redocly lint PASS/FAIL, tsc: PASS/FAIL`
 
 ## Context Management
 - Stage 3-6 (OpenAPI, Sequences, DBML, BDD)를 먼저 생성하고 파일에 저장
@@ -348,8 +355,10 @@ Smoke Test 결과를 Output Summary에 포함: `Smoke Test: {N}/{M} endpoints PA
 3. BDD: 모든 PRD AC에 대응하는 시나리오 존재 여부
 4. Traceability: GAP이 0인지 확인
 5. Prototype: 모든 PRD User Journey에 대응하는 페이지 존재 여부
-6. Preview Prism 호환: `preview/api/openapi.yaml`에 operation-level `security` 블록이 없는지 확인. 존재 시 자동 제거 후 경고 출력.
-7. Prototype 인터랙션: 모든 CUD 액션 컴포넌트에 `onComplete` 콜백이 있고, 부모가 로컬 state를 업데이트하는지 확인. API를 이중 호출하는 컴포넌트가 없는지 확인.
+6. (reserved)
+7a. **MSW handler 엔드포인트 커버리지**: MSW handler가 api-spec.yaml의 모든 path x method 조합을 커버하는지 확인. handlers.ts에 누락된 endpoint가 있으면 Output Summary에 WARN.
+7b. **BASE 경로 정합성**: handlers.ts의 `BASE` 상수가 client.ts의 `BASE_URL + VERSION`과 동일한지 확인. 불일치 시 **자동 수정** (handlers.ts의 BASE를 client.ts 기준으로 갱신) + Output Summary에 FIX 기록.
+7c. **handler 응답 타입 안전성**: handlers.ts 내 모든 `HttpResponse.json()` 호출에서 응답 데이터가 api/types.ts의 타입으로 명시적 어노테이션되어 있는지 확인. `tsc --noEmit`이 스키마 불일치를 잡을 수 있도록 보장.
 8. **API Data Sufficiency**: key-flows.md의 각 플로우에서 연속 API 호출 간 데이터 충족성 최종 확인. 후행 API 요청 필드가 선행 API 응답에 포함되지 않은 경우 Output Summary에 WARN 표시.
 9. **Readiness 데이터 생성**: JP1/JP2 Visual Summary에서 사용할 Readiness 데이터를 `{output_base}/{feature_name}/readiness.md`에 저장:
 
@@ -365,7 +374,7 @@ Smoke Test 결과를 Output Summary에 포함: `Smoke Test: {N}/{M} endpoints PA
      형식: `"기존 '튜터 관리' 화면에서 '차단' 버튼이 추가됩니다"`
 
    **JP2 데이터** (deliverables-only 모드에서 생성 — 기존과 동일):
-   - Smoke Test 결과: N/M endpoints PASS, tsc PASS/FAIL
+   - Spec Validation 결과: redocly lint PASS/FAIL, tsc PASS/FAIL
    - BDD→FR 커버리지: N/M covered
    - Traceability Gap: N개
 
@@ -394,15 +403,14 @@ After all stages complete, produce a summary:
 | Decisions | decision-log.md | {N} ADRs |
 | Tracing | traceability-matrix.md | {N} FR traced |
 | Preview | preview/ | {N} pages, {N} components |
-| Smoke Test | (dynamic) | {N}/{M} endpoints PASS, tsc: PASS/FAIL |
+| Spec Validation | (dynamic) | redocly lint: PASS/FAIL, tsc: PASS/FAIL |
 
 ### Run Preview
 
 cd {output_base}/{feature_name}/preview
 npm install
 npm run dev
-# → React: http://localhost:5173
-# → Prism Mock API: http://localhost:4010
+# → React + MSW: http://localhost:5173
 
 ### Traceability Gaps
 
@@ -418,4 +426,4 @@ npm run dev
 6. **OpenAPI as single source of truth** — API types, mock server, and documentation all derive from one spec
 7. **Skip XState** if no complex state management identified (don't force it)
 8. **Priority on budget pressure**: specs → API → prototype (in that order)
-9. **Consumer awareness** — 각 Stage의 산출물은 소비자를 인식한다. 소비자의 제약조건을 위반하는 산출물을 생성하지 않는다 (예: Prism이 소비하는 OpenAPI에 security 블록 금지)
+9. **Consumer awareness** — 각 Stage의 산출물은 소비자를 인식한다. 소비자의 제약조건을 위반하는 산출물을 생성하지 않는다 (예: MSW handler의 BASE 상수가 client.ts의 BASE_URL + VERSION과 일치해야 함)
