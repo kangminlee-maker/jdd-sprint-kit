@@ -578,6 +578,23 @@ Task(subagent_type: "general-purpose", model: "sonnet")
   max_turns: {budget}
 ```
 
+### Step 5-G: Scope Gate — Deliverables
+
+```
+Task(subagent_type: "general-purpose", model: "sonnet")
+  prompt: "You are @scope-gate. Read and follow your agent definition at .claude/agents/scope-gate.md.
+    Validate Deliverables.
+    stage: deliverables
+    goals: {goals array}
+    artifact_paths:
+      - specs/{feature_name}/key-flows.md
+      - specs/{feature_name}/api-spec.yaml
+    brownfield_path: specs/{feature_name}/brownfield-context.md
+    sprint_input_path: specs/{feature_name}/inputs/sprint-input.md"
+```
+
+**On FAIL**: Apply Redirect — regenerate deliverables (`mode: deliverables-only`).
+
 ### Step 6: Judgment Point 2 — Sprint Output Review
 
 Deliverables 생성이 완료되면 시각적 요약을 생성하고 인터랙티브 메뉴를 제시한다.
