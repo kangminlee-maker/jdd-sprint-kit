@@ -502,10 +502,10 @@ Brief 수정 후 재시작: brief.md 수정 → /sprint {feature_name}
 
 #### Step 0h → Auto Sprint 런치
 
-Continue 선택 시 `@auto-sprint` 에이전트를 백그라운드로 실행:
+Continue 선택 시 `@auto-sprint` 에이전트를 실행:
 
 ```
-Task(subagent_type: "general-purpose", run_in_background: true)
+Task(subagent_type: "general-purpose")
   prompt: "You are @auto-sprint. Read and follow your agent definition at .claude/agents/auto-sprint.md.
     Input:
       feature_name: {feature_name}
