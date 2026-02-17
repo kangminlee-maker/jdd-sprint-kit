@@ -490,8 +490,7 @@ readiness.md에서 다음 데이터를 추출하여 배너를 생성한다:
 {brownfield가 없거나 greenfield면 "신규 프로젝트입니다. 기존 시스템 영향이 없습니다."}
 ```
 
-> 지금까지의 Sprint 과정에서 방향이 다르다고 느껴지는 부분이 있으셨나요?
-> 있다면 [R] Redirect를 선택하여 피드백을 남겨주세요.
+> 피드백이 있으면 [F] Comment를 선택하세요. 수정반영/재생성 옵션을 cost와 함께 제시합니다.
 
 **IMPORTANT — Section 1~3만 출력한다.** 아래 Advanced 항목은 절대 기본 표시하지 않는다.
 
@@ -515,30 +514,53 @@ AskUserQuestion을 사용하여 5개 옵션을 제시한다:
 | **A** | Advanced Elicitation | 특정 산출물 심층 탐구 (질문 기반) |
 | **P** | Party Mode | 전체 BMad 에이전트 다각적 리뷰 |
 | **C** | Continue | JP1 승인 → Phase 2 (Deliverables) 진행 |
-| **R** | Redirect | 피드백 라우팅 (수정 후 재생성) |
+| **F** | Comment | 피드백 입력 → 영향 분석 → 수정반영/재생성 선택 |
 | **X** | Exit | Sprint 중단 |
 
 #### Step 4c: 메뉴 핸들링
 
 | 선택 | 동작 |
 |------|------|
-| **A** | 사용자에게 탐구 대상(tasks/requirements/design/epics) 질문 → 해당 파일 전문 읽기 → Advanced Elicitation Protocol의 JP1 질문 3~5개 제시 → 피드백 반영 시 `Task(@deliverable-generator)` specs-only 재실행 → Visual Summary 재생성 → 메뉴 복귀 |
-| **P** | Party Mode 워크플로우 호출 (`Skill("bmad:core:workflows:party-mode")`, JP1 산출물 경로 전달) → 토론 요약 → 사용자에게 수용 여부 확인 → 반영 시 재생성 → Visual Summary 재생성 → 메뉴 복귀 |
+| **A** | 사용자에게 탐구 대상(tasks/requirements/design/epics) 질문 → 해당 파일 전문 읽기 → Advanced Elicitation Protocol의 JP1 질문 3~5개 제시 → 피드백 발생 시 **Comment 처리 플로우** 실행 → Visual Summary 재생성 → 메뉴 복귀 |
+| **P** | Party Mode 워크플로우 호출 (`Skill("bmad:core:workflows:party-mode")`, JP1 산출물 경로 전달) → 토론 요약 → 사용자에게 수용 여부 확인 → 수용 시 **Comment 처리 플로우** 실행 → Visual Summary 재생성 → 메뉴 복귀 |
 | **C** | Phase 2 (Step 5) 진행 |
-| **R** | 피드백 라우팅 테이블에 따라 재시작 |
+| **F** | **Comment 처리 플로우** 실행 (아래 참조) → Visual Summary 재생성 → 메뉴 복귀 |
 | **X** | Sprint 중단, 산출물 보존 안내 (`specs/{feature_name}/`는 보존됨) |
 
-**반복 제한**: A/P 선택 합산 최대 3회. 초과 시 경고: "심층 리뷰 3회 완료. [C] Continue 또는 [R] Redirect를 선택하세요."
+**반복 제한**: A/P/F 선택 합산 최대 5회. 초과 시 경고: "리뷰/수정 5회 완료. [C] Continue 또는 [X] Exit을 선택하세요."
 
-**피드백 라우팅 (R 선택 시)**:
+#### Comment 처리 플로우 (A/P/F 공통)
 
-| 피드백 유형 | 재시작 지점 |
-|------------|-----------|
-| 방향 전환 | Sprint 중단 → "brief.md를 수정한 후 `/sprint {feature_name}`으로 재실행하세요" 안내. Phase 0 재실행 필요. |
-| 스코프 변경 | Step 2b (PRD부터) |
-| UX 변경 | Step 2b (PRD부터) |
-| 기술 변경 | Step 2c (Architecture부터) |
-| 태스크 구조 변경 | Step 3 (Specs 재생성) |
+A, P, F 어떤 경로로든 피드백이 발생하면 동일한 메커니즘으로 처리한다:
+
+1. **피드백 수집**: 수정할 내용을 정리한다
+   - A: Advanced Elicitation에서 사용자가 지적한 항목
+   - P: Party Mode에서 사용자가 수용한 발견 사항
+   - F: 사용자가 직접 입력한 자유 텍스트
+2. **영향 분석**: 피드백의 영향 범위를 산출한다
+   - 수정반영 시: 변경 대상 파일 목록 (upstream planning-artifacts/ + downstream specs/ + deliverables) + 예상 소요 시간
+   - 재생성 시: 재생성 범위 참조 테이블 (`bmad-sprint-protocol.md`) 기준 재시작 Phase + 예상 소요 시간
+3. **옵션 제시**: AskUserQuestion으로 cost 기반 선택지를 제시한다
+   ```
+   수정 사항:
+     - {항목 1}
+     - {항목 2}
+
+   처리 방식을 선택하세요:
+
+   [M] 수정반영+전파
+       대상: {N}개 파일 ({파일 목록})
+       예상: ~{M}분
+       전파 완료 후 Scope Gate 검증 실행
+
+   [R] 재생성
+       범위: {Phase X}부터 재실행
+       예상: ~{M}분
+   ```
+4. **실행**:
+   - **[M] 수정반영+전파**: 피드백 항목별로 모든 의존 파일을 양방향(upstream + downstream) 수정 → Scope Gate 검증 → PASS 시 JP 복귀, FAIL 시 누락 항목 표시 + 추가 수정 또는 재생성 전환
+   - **[R] 재생성**: `specs/{feature_name}/planning-artifacts/feedback-log.md`에 피드백 기록 → 해당 Phase부터 파이프라인 재실행 (Scope Gate 포함)
+5. **피드백 기록**: 처리 방식과 무관하게 `feedback-log.md`에 피드백 내용 + 선택한 처리 방식 + 결과를 기록한다
 
 ### Step 5: Deliverables Generation
 
@@ -624,8 +646,7 @@ npm install && npm run dev
 - Mock API: http://localhost:4010
 ```
 
-> 지금까지의 Sprint 과정에서 방향이 다르다고 느껴지는 부분이 있으셨나요?
-> 있다면 [R] Redirect를 선택하여 피드백을 남겨주세요.
+> 피드백이 있으면 [F] Comment를 선택하세요. 수정반영/재생성 옵션을 cost와 함께 제시합니다.
 
 #### Step 6b: A/P/C 메뉴
 
@@ -636,20 +657,20 @@ AskUserQuestion을 사용하여 5개 옵션을 제시한다 (JP1과 동일 구�
 | **A** | Advanced Elicitation | Deliverables 심층 탐구 (API Spec, BDD, Prototype 초점) |
 | **P** | Party Mode | 전체 BMad 에이전트 다각적 리뷰 |
 | **C** | Continue | JP2 승인 → Execute (병렬 구현) 진행 |
-| **R** | Redirect | 피드백 라우팅 (Deliverables 재생성 또는 JP1로 돌아가기) |
+| **F** | Comment | 피드백 입력 → 영향 분석 → 수정반영/재생성 선택 |
 | **X** | Exit | Sprint 중단 |
 
 #### Step 6c: 메뉴 핸들링
 
 | 선택 | 동작 |
 |------|------|
-| **A** | 사용자에게 탐구 대상(api-spec/bdd/prototype/schema) 질문 → 해당 파일 전문 읽기 → Advanced Elicitation Protocol의 JP2 질문 3~5개 제시 → 피드백 반영 시 `Task(@deliverable-generator)` deliverables-only 재실행 → Visual Summary 재생성 → 메뉴 복귀 |
-| **P** | Party Mode 워크플로우 호출 (`Skill("bmad:core:workflows:party-mode")`, JP2 산출물 경로 전달) → 토론 요약 → 사용자에게 수용 여부 확인 → 반영 시 재생성 → Visual Summary 재생성 → 메뉴 복귀 |
+| **A** | 사용자에게 탐구 대상(api-spec/bdd/prototype/schema) 질문 → 해당 파일 전문 읽기 → Advanced Elicitation Protocol의 JP2 질문 3~5개 제시 → 피드백 발생 시 **Comment 처리 플로우** 실행 → Visual Summary 재생성 → 메뉴 복귀 |
+| **P** | Party Mode 워크플로우 호출 (`Skill("bmad:core:workflows:party-mode")`, JP2 산출물 경로 전달) → 토론 요약 → 사용자에게 수용 여부 확인 → 수용 시 **Comment 처리 플로우** 실행 → Visual Summary 재생성 → 메뉴 복귀 |
 | **C** | Execute (병렬 구현) 진행 |
-| **R** | 피드백 라우팅 테이블에 따라 재시작 |
+| **F** | **Comment 처리 플로우** 실행 (Step 4c 참조) → Visual Summary 재생성 → 메뉴 복귀 |
 | **X** | Sprint 중단, 산출물 보존 안내 (`specs/{feature_name}/`는 보존됨) |
 
-**반복 제한**: A/P 선택 합산 최대 3회. 초과 시 경고: "심층 리뷰 3회 완료. [C] Continue 또는 [R] Redirect를 선택하세요."
+**반복 제한**: A/P/F 선택 합산 최대 5회. 초과 시 경고: "리뷰/수정 5회 완료. [C] Continue 또는 [X] Exit을 선택하세요."
 
 ## Conductor Roles
 
@@ -716,37 +737,42 @@ AskUserQuestion을 사용하여 5개 옵션을 제시한다 (JP1과 동일 구�
 
 ## Feedback Re-execution
 
-피드백이 발생한 Judgment Point에 따라 재시작 지점이 달라진다.
+JP에서 Comment 처리 플로우가 실행되면 사용자가 선택한 방식(수정반영 또는 재생성)에 따라 처리한다.
 
-### Feedback Injection Protocol
-피드백 수신 시:
-1. 피드백 텍스트를 `specs/{feature_name}/planning-artifacts/feedback-log.md`에 append
-2. 재시작 단계의 에이전트 호출 시 피드백을 프롬프트에 포함:
+### 수정반영+전파 실행 프로토콜
+
+사용자가 [M] 수정반영+전파를 선택한 경우:
+
+1. 피드백 항목을 `specs/{feature_name}/planning-artifacts/feedback-log.md`에 기록
+2. 각 피드백 항목에 대해 영향 받는 파일을 양방향으로 순회하며 수정:
+   - **upstream** (specs → planning-artifacts): 해당 개념이 표현된 planning-artifacts 파일 수정
+   - **downstream** (planning-artifacts → specs → deliverables): 해당 개념이 표현된 specs/deliverables 파일 수정
+3. 전체 수정 완료 후 Scope Gate 검증 실행:
+   ```
+   Task(@scope-gate) stage: spec (수정된 specs 파일 검증)
+   ```
+4. Scope Gate PASS → JP 메뉴 복귀 (Visual Summary 재생성)
+5. Scope Gate FAIL → 누락 항목 표시 + 사용자에게 추가 수정 또는 재생성 전환 제안
+
+### 재생성 실행 프로토콜
+
+사용자가 [R] 재생성을 선택한 경우:
+
+1. 피드백 텍스트를 `specs/{feature_name}/planning-artifacts/feedback-log.md`에 기록
+2. 기존 산출물은 백업 후 덮어쓰기 (이전 버전 보존)
+3. 재시작 단계의 에이전트 호출 시 피드백을 프롬프트에 포함:
    ```
    "이전 산출물에 대해 다음 피드백이 있었다:
    <feedback>{user feedback text}</feedback>
    이 피드백을 반영하여 산출물을 재생성하라."
    ```
-3. 기존 산출물은 백업 후 덮어쓰기 (이전 버전 보존)
+4. 해당 Phase부터 파이프라인 재실행 (각 단계 Scope Gate 포함)
+5. 재실행 완료 후 JP 메뉴 복귀 (Visual Summary 재생성)
 
-### Judgment Point 1 피드백 (Specs 단계)
+### 방향 전환 (Sprint 중단)
 
-| 피드백 유형 | 재시작 지점 |
-|------------|-----------|
-| 방향 전환 | Sprint 중단 → 사용자에게 "brief.md를 수정한 후 `/sprint {feature_name}`으로 재실행하세요" 안내. Phase 0 재실행 필요 (auto-sprint 내부에서 불가). |
-| 스코프 변경 | Step 2b (PRD부터) |
-| UX 변경 | Step 2b (PRD부터) |
-| 기술 변경 | Step 2c (Architecture부터) |
-| 태스크 구조 변경 | Step 3 (Specs 재생성) |
-
-### Judgment Point 2 피드백 (Sprint Output 단계)
-
-| 피드백 유형 | 재시작 지점 |
-|------------|-----------|
-| 요구사항 재검토 | Step 2b (PRD부터, JP1 재통과) — "만들려는 것 자체를 다시 생각해야 합니다" |
-| 설계 수정 필요 | Step 2 (해당 BMad 단계부터, JP1 재통과) |
-| 명세/API 조정 | Step 5 (Deliverables만 재생성) |
-| 프로토타입 조정 | Step 5 (Deliverables만 재생성) |
+피드백이 "만들려는 것 자체를 바꿔야 한다" 수준인 경우, 재생성 옵션에서 "Sprint 중단 + brief.md 수정 후 재시작"을 안내한다.
+이는 auto-sprint 내부에서 Phase 0를 재실행할 수 없기 때문이다.
 
 ## Advanced Elicitation Protocol
 

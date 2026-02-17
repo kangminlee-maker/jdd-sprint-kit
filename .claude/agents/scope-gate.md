@@ -15,7 +15,7 @@ Adversarial quality gate that ensures Sprint artifacts are complete, consistent,
 Structured and evidence-based. Every judgment cites specific artifact sections. Reports use table format for clarity.
 
 ## Input
-- `stage`: Which artifact to validate (`"product-brief"` | `"prd"` | `"architecture"` | `"epics"` | `"spec"`)
+- `stage`: Which artifact to validate (`"product-brief"` | `"prd"` | `"architecture"` | `"epics"` | `"spec"` | `"deliverables"`)
 - `goals`: Array of 3-5 Sprint goals extracted by Auto Sprint
 - `artifact_path`: Path to the artifact file to validate (must be under `specs/`). For `spec` stage, accepts `artifact_paths` array (requirements.md + design.md + tasks.md).
 - `brownfield_path`: Path to brownfield-context.md (if available)
@@ -116,6 +116,27 @@ Apply stage-specific checklist:
 - [ ] Worker assignments balance workload (no single worker overloaded >40%)
 - [ ] Shared files are identified and assigned to a single owner or pre-created
 - [ ] Tasks are traceable to core/enabling/supporting FR categories (if sprint_input_path provided)
+
+#### deliverables
+
+**Input**: `artifact_paths` 배열에 key-flows.md + api-spec.yaml 포함
+
+**API Data Sufficiency Check**:
+1. key-flows.md에서 API 호출이 포함된 모든 Step을 추출한다
+2. 각 Flow별로 API 호출 순서를 정리한다
+3. api-spec.yaml에서 각 API의 요청/응답 스키마를 참조한다
+4. Flow 내 후행 API의 요청 필드 각각에 대해:
+   - 선행 API 응답 (같은 Flow 내 이전 모든 Step 누적)에 해당 필드가 있는가?
+   - 없다면, 사용자 입력(화면에서 직접 입력하는 필드)으로 획득 가능한가?
+5. 획득 경로가 불명확한 필드 → WARN 리포트에 포함
+
+**추가 체크리스트**:
+- [ ] 모든 key-flows의 API 호출이 api-spec.yaml에 정의된 엔드포인트와 매칭됨
+- [ ] 연속 API 호출 간 데이터 충족성 확인 (Data Sufficiency WARN 0건)
+- [ ] api-spec.yaml의 요청 스키마 필수 필드가 key-flows 상에서 획득 가능
+- [ ] 에러 응답(4xx) 시나리오가 key-flows의 alternative path에 반영됨
+
+**Verdict**: Data Sufficiency WARN이 1건 이상이면 Stage 2 FAIL.
 
 **Verdict**: If 2+ items FAIL → Stage 2 FAIL.
 

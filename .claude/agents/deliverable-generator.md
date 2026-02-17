@@ -152,6 +152,17 @@ JP2에서 "생각한대로 동작하는가?" 검증에 사용된다.
 - **Output**: `{output_base}/{feature_name}/key-flows.md`에 저장
 - JP2 Visual Summary에서 이 파일을 참조
 
+**API Data Flow Verification** (key-flows 작성 시 필수 확인):
+
+key-flows의 각 플로우에서 후행 API 호출의 요청 필드가 선행 API 호출의 응답에 포함되어 있는지 확인하라.
+부족한 필드가 있으면 해당 API의 응답 스키마(api-spec.yaml)를 보강하라.
+
+구체적으로:
+- 각 플로우 내에서 API 호출이 2개 이상 연속되는 경우를 식별한다
+- 후행 API의 요청에 필요한 모든 필드가 선행 API의 응답 또는 이전 Step 누적 응답에서 획득 가능한지 확인한다
+- 사용자 입력(화면에서 직접 입력)으로 제공되는 필드는 제외한다
+- 부족한 필드 발견 시: 해당 API 응답 스키마에 필드를 추가하고, 관련 파일(design.md, api-spec.yaml, types.ts 등)에 일관되게 반영한다
+
 ### Stage 5: DBML Schema
 
 Generate `{output_base}/{feature_name}/schema.dbml`:
@@ -305,7 +316,8 @@ Smoke Test 결과를 Output Summary에 포함: `Smoke Test: {N}/{M} endpoints PA
 5. Prototype: 모든 PRD User Journey에 대응하는 페이지 존재 여부
 6. Preview Prism 호환: `preview/api/openapi.yaml`에 operation-level `security` 블록이 없는지 확인. 존재 시 자동 제거 후 경고 출력.
 7. Prototype 인터랙션: 모든 CUD 액션 컴포넌트에 `onComplete` 콜백이 있고, 부모가 로컬 state를 업데이트하는지 확인. API를 이중 호출하는 컴포넌트가 없는지 확인.
-8. **Readiness 데이터 생성**: JP1/JP2 Visual Summary에서 사용할 Readiness 데이터를 `{output_base}/{feature_name}/readiness.md`에 저장:
+8. **API Data Sufficiency**: key-flows.md의 각 플로우에서 연속 API 호출 간 데이터 충족성 최종 확인. 후행 API 요청 필드가 선행 API 응답에 포함되지 않은 경우 Output Summary에 WARN 표시.
+9. **Readiness 데이터 생성**: JP1/JP2 Visual Summary에서 사용할 Readiness 데이터를 `{output_base}/{feature_name}/readiness.md`에 저장:
 
    **JP1 데이터** (specs-only 모드에서도 생성):
    - scenario_summaries: PRD User Journey에서 핵심 시나리오 3~5개를 1~2문장으로 축약.
