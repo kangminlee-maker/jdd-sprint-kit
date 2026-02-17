@@ -1,0 +1,113 @@
+// EduTalk Tutor Exclusion - Database Schema
+// Generated for: test-tutor-excl
+
+// [BROWNFIELD] existing - Referenced tables
+Table users {
+  id bigint [pk, note: 'GENERATED ALWAYS AS IDENTITY']
+  role varchar(20) [not null, note: 'STUDENT, TUTOR, ADMIN']
+  email varchar(255) [not null]
+  name varchar(100) [not null]
+  created_at timestamptz [not null, default: `NOW()`]
+  updated_at timestamptz [not null, default: `NOW()`]
+
+  Note: 'Existing users table. Students and tutors share this table with role distinction.'
+}
+
+// [BROWNFIELD] existing - Referenced tables
+Table lessons {
+  id bigint [pk, note: 'GENERATED ALWAYS AS IDENTITY']
+  student_id bigint [not null, ref: > users.id]
+  tutor_id bigint [not null, ref: > users.id]
+  language_type varchar(4) [not null, note: 'EN, JP']
+  status varchar(20) [not null, note: 'SCHEDULED, IN_PROGRESS, FINISH, CANCELLED']
+  scheduled_at timestamptz [not null]
+  created_at timestamptz [not null, default: `NOW()`]
+  updated_at timestamptz [not null, default: `NOW()`]
+
+  Note: 'Existing lessons table. Only FINISH status lessons are eligible for rating.'
+}
+
+// [BROWNFIELD] existing - Referenced tables
+Table tutor_profiles {
+  id bigint [pk, note: 'GENERATED ALWAYS AS IDENTITY']
+  user_id bigint [not null, ref: > users.id]
+  photo_url varchar(500)
+  is_active boolean [not null, default: true, note: 'false for resigned/long-term leave tutors']
+  languages varchar(4)[] [not null, note: 'Array of EN, JP']
+  created_at timestamptz [not null, default: `NOW()`]
+  updated_at timestamptz [not null, default: `NOW()`]
+
+  Note: 'Existing tutor profiles. is_active flag used for inactive tutor labeling.'
+}
+
+// [NEW] - Post-lesson rating data
+Table lesson_ratings {
+  id bigint [pk, note: 'GENERATED ALWAYS AS IDENTITY']
+  lesson_id bigint [not null, ref: > lessons.id, note: 'One rating per lesson (UNIQUE)']
+  student_id bigint [not null, ref: > users.id]
+  tutor_id bigint [not null, ref: > users.id]
+  language_type varchar(4) [not null, note: 'EN, JP']
+  star_rating smallint [not null, note: 'CHECK (star_rating BETWEEN 1 AND 5)']
+  positive_reasons text[] [note: 'Positive reason codes for 3-5 star ratings']
+  negative_reasons text[] [note: 'Negative reason codes for 1-2 star ratings']
+  created_at timestamptz [not null, default: `NOW()`]
+  updated_at timestamptz [not null, default: `NOW()`]
+
+  indexes {
+    lesson_id [unique, name: 'uq_lesson_ratings_lesson']
+    student_id [name: 'idx_lesson_ratings_student']
+    tutor_id [name: 'idx_lesson_ratings_tutor']
+  }
+
+  Note: 'New table for post-lesson star ratings with reason codes. Separate from existing lesson_feedbacks (NPS).'
+}
+
+// [NEW] - Tutor block records
+Table tutor_blocks {
+  id bigint [pk, note: 'GENERATED ALWAYS AS IDENTITY']
+  student_id bigint [not null, ref: > users.id]
+  tutor_id bigint [not null, ref: > users.id]
+  language_type varchar(4) [not null, note: 'EN, JP']
+  block_source varchar(20) [not null, note: 'RATING_POPUP, LESSON_DETAIL, MANAGEMENT_PAGE']
+  lesson_id bigint [ref: > lessons.id, note: 'Trigger lesson (nullable)']
+  is_active boolean [not null, default: true, note: 'Soft delete flag']
+  blocked_at timestamptz [not null, default: `NOW()`]
+  released_at timestamptz [note: 'Set on unblock']
+  created_at timestamptz [not null, default: `NOW()`]
+  updated_at timestamptz [not null, default: `NOW()`]
+
+  indexes {
+    (student_id, language_type) [name: 'idx_tutor_blocks_student_active', note: 'WHERE is_active = TRUE']
+    tutor_id [name: 'idx_tutor_blocks_tutor']
+    (student_id, tutor_id, language_type) [unique, name: 'uq_tutor_blocks_active', note: 'WHERE is_active = TRUE']
+  }
+
+  Note: 'New table for tutor blocks. Max 5 active blocks per language per student. Soft delete preserves history.'
+}
+
+// [NEW] - Rating popup display tracking
+Table rating_popup_tracking {
+  id bigint [pk, note: 'GENERATED ALWAYS AS IDENTITY']
+  student_id bigint [not null, ref: > users.id, note: 'One record per student (UNIQUE)']
+  last_shown_date date [not null, note: 'Last popup shown date (KST midnight reset)']
+  last_shown_lesson_id bigint [not null, ref: > lessons.id]
+  created_at timestamptz [not null, default: `NOW()`]
+  updated_at timestamptz [not null, default: `NOW()`]
+
+  indexes {
+    student_id [unique, name: 'uq_popup_tracking_student']
+  }
+
+  Note: 'New table tracking when the rating popup was last shown to each student. Ensures once-per-day limit.'
+}
+
+// [BROWNFIELD] existing - Referenced for matching engine
+Table schedules {
+  id bigint [pk]
+  student_id bigint [not null, ref: > users.id]
+  tutor_id bigint [not null, ref: > users.id]
+  language_type varchar(4) [not null]
+  scheduled_at timestamptz [not null]
+
+  Note: 'Existing schedules table. Matching engine reads tutor_blocks to filter available tutors.'
+}

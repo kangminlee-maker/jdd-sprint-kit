@@ -1,0 +1,547 @@
+openapi: 3.0.3
+info:
+  title: EduTalk Tutor Exclusion API
+  description: Post-lesson rating and tutor block management APIs for the EduTalk platform.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:4010
+    description: Prism Mock Server
+  - url: https://api.edutalk.com/api/v1
+    description: Production
+
+paths:
+  /lessons/unrated:
+    get:
+      operationId: getUnratedLesson
+      summary: Get most recent unrated lesson with popup eligibility
+      description: Returns the most recent unrated lesson for the authenticated student and whether the rating popup should be shown today.
+      tags:
+        - Ratings
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+            maximum: 1
+      responses:
+        "200":
+          description: Unrated lesson found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnratedLessonResponse"
+              example:
+                lesson:
+                  id: 12345
+                  tutor_name: "Sarah Johnson"
+                  tutor_photo: "https://cdn.edutalk.com/tutors/sarah.jpg"
+                  language_type: "EN"
+                  scheduled_at: "2026-02-17T10:00:00+09:00"
+                popup_eligible: true
+        "204":
+          description: No unrated lessons exist
+
+  /lessons/{lessonId}/ratings:
+    post:
+      operationId: submitRating
+      summary: Submit a lesson rating
+      description: Submit a star rating with optional reasons and optional tutor block for a completed lesson.
+      tags:
+        - Ratings
+      parameters:
+        - name: lessonId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitRatingRequest"
+            example:
+              star_rating: 1
+              negative_reasons:
+                - ONE_SIDED_TALK
+                - NO_CORRECTION
+              block_tutor: true
+      responses:
+        "201":
+          description: Rating created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RatingResponse"
+              example:
+                id: 1001
+                lesson_id: 12345
+                star_rating: 1
+                block_created: true
+                block_id: 501
+                created_at: "2026-02-17T15:30:00+09:00"
+        "409":
+          description: Lesson already has a rating
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "ALREADY_RATED"
+                message: "This lesson already has a rating"
+        "403":
+          description: Student did not participate in this lesson
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "FORBIDDEN"
+                message: "You are not a participant of this lesson"
+        "422":
+          description: Block limit exceeded (when block_tutor is true)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlockLimitExceededError"
+              example:
+                error: "BLOCK_LIMIT_EXCEEDED"
+                message: "Maximum block limit reached for this language"
+                details:
+                  current: 5
+                  max: 5
+                  management_url: "/my/tutor-management"
+
+  /tutor-blocks:
+    get:
+      operationId: listTutorBlocks
+      summary: List blocked tutors
+      description: Returns the list of blocked tutors for the authenticated student, optionally filtered by language.
+      tags:
+        - Blocks
+      parameters:
+        - name: language_type
+          in: query
+          schema:
+            type: string
+            enum:
+              - EN
+              - JP
+      responses:
+        "200":
+          description: Blocked tutor list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlockListResponse"
+              example:
+                blocks:
+                  - id: 501
+                    tutor_id: 201
+                    tutor_name: "James Miller"
+                    tutor_photo: "https://cdn.edutalk.com/tutors/james.jpg"
+                    language_type: "EN"
+                    blocked_at: "2026-02-10T14:00:00+09:00"
+                    last_lesson_at: "2026-02-10T10:00:00+09:00"
+                    tutor_is_active: true
+                  - id: 502
+                    tutor_id: 202
+                    tutor_name: "Emily Davis"
+                    tutor_photo: "https://cdn.edutalk.com/tutors/emily.jpg"
+                    language_type: "EN"
+                    blocked_at: "2026-02-05T09:00:00+09:00"
+                    last_lesson_at: "2026-01-28T10:00:00+09:00"
+                    tutor_is_active: false
+                  - id: 503
+                    tutor_id: 203
+                    tutor_name: "Michael Chen"
+                    tutor_photo: "https://cdn.edutalk.com/tutors/michael.jpg"
+                    language_type: "EN"
+                    blocked_at: "2026-01-20T11:00:00+09:00"
+                    last_lesson_at: "2026-01-20T10:00:00+09:00"
+                    tutor_is_active: true
+                count:
+                  EN:
+                    current: 3
+                    max: 5
+                  JP:
+                    current: 0
+                    max: 5
+    post:
+      operationId: blockTutor
+      summary: Block a tutor
+      description: Create a tutor block to exclude the tutor from future matching results.
+      tags:
+        - Blocks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlockTutorRequest"
+            example:
+              tutor_id: 204
+              language_type: "EN"
+              block_source: "LESSON_DETAIL"
+              lesson_id: 12346
+      responses:
+        "201":
+          description: Tutor blocked successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlockResponse"
+              example:
+                id: 504
+                tutor_id: 204
+                language_type: "EN"
+                blocked_at: "2026-02-17T16:00:00+09:00"
+        "409":
+          description: Tutor already blocked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "ALREADY_BLOCKED"
+                message: "This tutor is already blocked"
+        "422":
+          description: Block limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlockLimitExceededError"
+              example:
+                error: "BLOCK_LIMIT_EXCEEDED"
+                message: "Maximum block limit reached for this language"
+                details:
+                  current: 5
+                  max: 5
+                  management_url: "/my/tutor-management"
+
+  /tutor-blocks/{blockId}:
+    delete:
+      operationId: unblockTutor
+      summary: Unblock a tutor (soft delete)
+      description: Release a tutor block. The tutor will return to the matching pool. Block history is preserved.
+      tags:
+        - Blocks
+      parameters:
+        - name: blockId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Tutor unblocked successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnblockResponse"
+              example:
+                id: 501
+                released_at: "2026-02-17T16:30:00+09:00"
+        "404":
+          description: Block not found or already released
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "BLOCK_NOT_FOUND"
+                message: "Block record not found or already released"
+        "403":
+          description: Not the block owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "NOT_BLOCK_OWNER"
+                message: "You can only manage your own blocks"
+
+components:
+  schemas:
+    UnratedLessonResponse:
+      type: object
+      required:
+        - lesson
+        - popup_eligible
+      properties:
+        lesson:
+          $ref: "#/components/schemas/LessonSummary"
+        popup_eligible:
+          type: boolean
+          description: Whether the rating popup should be shown today
+
+    LessonSummary:
+      type: object
+      required:
+        - id
+        - tutor_name
+        - tutor_photo
+        - language_type
+        - scheduled_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        tutor_name:
+          type: string
+        tutor_photo:
+          type: string
+          format: uri
+        language_type:
+          type: string
+          enum:
+            - EN
+            - JP
+        scheduled_at:
+          type: string
+          format: date-time
+
+    SubmitRatingRequest:
+      type: object
+      required:
+        - star_rating
+      properties:
+        star_rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        positive_reasons:
+          type: array
+          items:
+            type: string
+            enum:
+              - CLEAR_EXPLANATION
+              - GOOD_PRONUNCIATION
+              - FRIENDLY_ATMOSPHERE
+              - HELPFUL_CORRECTION
+              - GOOD_PACE
+          description: Required for 3-5 star ratings
+        negative_reasons:
+          type: array
+          items:
+            type: string
+            enum:
+              - ONE_SIDED_TALK
+              - POOR_PRONUNCIATION
+              - NO_CORRECTION
+              - UNCOMFORTABLE
+              - SLOW_PACE
+              - FAST_PACE
+          description: Required for 1-2 star ratings
+        block_tutor:
+          type: boolean
+          default: false
+          description: Whether to block the tutor (only valid for 1-2 star ratings)
+
+    RatingResponse:
+      type: object
+      required:
+        - id
+        - lesson_id
+        - star_rating
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        lesson_id:
+          type: integer
+          format: int64
+        star_rating:
+          type: integer
+        block_created:
+          type: boolean
+          description: Whether a tutor block was created along with the rating
+        block_id:
+          type: integer
+          format: int64
+          description: The ID of the created block (present when block_created is true)
+        created_at:
+          type: string
+          format: date-time
+
+    BlockTutorRequest:
+      type: object
+      required:
+        - tutor_id
+        - language_type
+        - block_source
+      properties:
+        tutor_id:
+          type: integer
+          format: int64
+        language_type:
+          type: string
+          enum:
+            - EN
+            - JP
+        block_source:
+          type: string
+          enum:
+            - RATING_POPUP
+            - LESSON_DETAIL
+            - MANAGEMENT_PAGE
+        lesson_id:
+          type: integer
+          format: int64
+          description: The lesson that triggered the block (optional)
+
+    BlockResponse:
+      type: object
+      required:
+        - id
+        - tutor_id
+        - language_type
+        - blocked_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        tutor_id:
+          type: integer
+          format: int64
+        language_type:
+          type: string
+          enum:
+            - EN
+            - JP
+        blocked_at:
+          type: string
+          format: date-time
+
+    BlockListResponse:
+      type: object
+      required:
+        - blocks
+        - count
+      properties:
+        blocks:
+          type: array
+          items:
+            $ref: "#/components/schemas/BlockedTutor"
+        count:
+          type: object
+          properties:
+            EN:
+              $ref: "#/components/schemas/BlockCount"
+            JP:
+              $ref: "#/components/schemas/BlockCount"
+
+    BlockedTutor:
+      type: object
+      required:
+        - id
+        - tutor_id
+        - tutor_name
+        - tutor_photo
+        - language_type
+        - blocked_at
+        - last_lesson_at
+        - tutor_is_active
+      properties:
+        id:
+          type: integer
+          format: int64
+        tutor_id:
+          type: integer
+          format: int64
+        tutor_name:
+          type: string
+        tutor_photo:
+          type: string
+          format: uri
+        language_type:
+          type: string
+          enum:
+            - EN
+            - JP
+        blocked_at:
+          type: string
+          format: date-time
+        last_lesson_at:
+          type: string
+          format: date-time
+        tutor_is_active:
+          type: boolean
+          description: Whether the tutor is currently active (not resigned/on leave)
+
+    BlockCount:
+      type: object
+      required:
+        - current
+        - max
+      properties:
+        current:
+          type: integer
+        max:
+          type: integer
+          default: 5
+
+    UnblockResponse:
+      type: object
+      required:
+        - id
+        - released_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        released_at:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+    BlockLimitExceededError:
+      type: object
+      required:
+        - error
+        - message
+        - details
+      properties:
+        error:
+          type: string
+          enum:
+            - BLOCK_LIMIT_EXCEEDED
+        message:
+          type: string
+        details:
+          type: object
+          required:
+            - current
+            - max
+            - management_url
+          properties:
+            current:
+              type: integer
+            max:
+              type: integer
+            management_url:
+              type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
