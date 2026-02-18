@@ -130,7 +130,7 @@ PARALLEL 단계에서 파일 충돌을 방지하기 위한 규칙:
 ## Judgment Point 판단 기준
 
 JP는 기술적 품질 게이트가 아니라 프로덕트 전문가의 고객 관점 판단 시점이다.
-`docs/judgment-driven-development.md` 원칙 4 (Customer-Lens Judgment Points) 참조.
+`docs/judgment-driven-development.md` Customer-Lens Judgment Points 참조.
 
 ### JP1: "고객에게 필요한 제품인가?"
 

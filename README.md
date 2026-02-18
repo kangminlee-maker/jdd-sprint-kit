@@ -201,7 +201,7 @@ Codex에서는 `$sprint`, `$specs`, `$preview`, `$parallel`, `$validate`로 Spri
 | 문서 | 내용 |
 |------|------|
 | [Blueprint](docs/blueprint.md) | 전체 아키텍처 + Sprint 상세 따라가기 |
-| [Judgment-Driven Development](docs/judgment-driven-development.md) | 설계 철학 6원칙 |
+| [Judgment-Driven Development](docs/judgment-driven-development.md) | 설계 철학 + 설계 판단 |
 | [Architecture](docs/bmad-sprint-v2-architecture.md) | 시스템 아키텍처 상세 |
 | [BMad Method](https://github.com/nicholasgriffintn/bmad-method) | AI 역할극 프레임워크 (외부) |
 
