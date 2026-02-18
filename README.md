@@ -1,31 +1,31 @@
 # BMAD Sprint Kit
 
-**"한 줄의 기획서가 동작하는 프로토타입이 된다."**
+**"A single-line brief becomes a working prototype."**
 
-BMad Method 기반 Judgment-Driven Development 실행 확장팩. AI가 만들고, 사람이 판단한다. 사용자의 입력(회의록, 참고자료, 기존 시스템 맥락)으로 AI의 첫 생성 품질을 높이고, 고객 관점의 판단 시점(JP1, JP2)에서만 사람의 시간을 사용한다.
+Judgment-Driven Development execution extension built on BMad Method. AI builds, humans judge. User inputs (meeting notes, references, existing system context) raise AI's first-generation quality, and human time is spent only at customer-lens judgment points (JP1, JP2).
 
-> 설계 철학: [Judgment-Driven Development](docs/judgment-driven-development.md)
-> 전체 아키텍처와 Sprint 상세 따라가기: [Blueprint](docs/blueprint.md)
+> Design philosophy: [Judgment-Driven Development](docs/judgment-driven-development.md)
+> Full architecture and Sprint walkthrough: [Blueprint](docs/blueprint.md)
 
 ---
 
-## 전체 흐름
+## Overall Flow
 
 ```mermaid
 flowchart LR
-    A["1. Brief 입력"] --> B["2. 기존 시스템 파악\n(Brownfield Scan)"]
-    B --> C["3. 설계\n(BMAD Auto-Pipeline)"]
-    C --> D["4. 명세 변환\n(Specs 생성)"]
-    D --> JP1{{"JP1\n고객에게 필요한\n제품인가?"}}
-    JP1 -->|승인| E["5. 산출물 생성\n(Deliverables)"]
-    JP1 -->|수정| C
-    E --> JP2{{"JP2\n고객이 원하는\n경험인가?"}}
-    JP2 -->|승인| F["6. 병렬 구현\n(Parallel)"]
-    JP2 -->|수정| E
-    JP2 -.->|요구사항 재검토| JP1
-    F --> G["7. 검증\n(Validate)"]
-    G -->|통과| H["완료"]
-    G -->|실패 반복| CB["방향 전환\n(Circuit Breaker)"]
+    A["1. Brief Input"] --> B["2. Existing System\n(Brownfield Scan)"]
+    B --> C["3. Planning\n(BMAD Auto-Pipeline)"]
+    C --> D["4. Specs\n(Specs Generation)"]
+    D --> JP1{{"JP1\nIs this the right\nproduct?"}}
+    JP1 -->|Approve| E["5. Deliverables\n(Deliverables Gen)"]
+    JP1 -->|Revise| C
+    E --> JP2{{"JP2\nIs this the right\nexperience?"}}
+    JP2 -->|Approve| F["6. Parallel\n(Implementation)"]
+    JP2 -->|Revise| E
+    JP2 -.->|Re-examine requirements| JP1
+    F --> G["7. Validate"]
+    G -->|Pass| H["Done"]
+    G -->|Repeated failure| CB["Course Correction\n(Circuit Breaker)"]
     CB --> C
 
     style JP1 fill:#FFD700,stroke:#333
@@ -33,221 +33,221 @@ flowchart LR
     style CB fill:#FF6B6B,stroke:#333
 ```
 
-사람이 개입하는 지점은 딱 **2곳**(JP1, JP2)이며, 나머지는 AI가 자율적으로 진행한다. JP2에서 요구사항 자체의 문제를 발견하면 JP1으로 돌아간다 — 이것은 실패가 아니라 구체적 결과물이 촉진한 정상적인 발견이다.
+Human involvement happens at exactly **2 points** (JP1, JP2) — everything else runs autonomously. If JP2 reveals issues with the requirements themselves, it loops back to JP1 — this is not a failure, but a normal discovery prompted by concrete deliverables.
 
 ---
 
-## 무엇이 만들어지는가
+## What Gets Generated
 
-Sprint 1회 실행으로 다음 산출물이 자동 생성된다:
+A single Sprint run auto-generates the following artifacts:
 
-- **설계 문서 3종** — 요구사항(requirements.md), 설계(design.md), 태스크(tasks.md)
-- **OpenAPI 3.1 YAML** — API 명세 + MSW Mock + Specmatic 계약 테스트
-- **DBML 스키마** — 데이터베이스 설계 (dbdiagram.io에서 ERD 확인 가능)
-- **BDD/Gherkin 시나리오** — Given-When-Then 형식 수용 테스트
-- **React + MSW 프로토타입** — `npm run dev`로 즉시 클릭해볼 수 있는 시제품
+- **3 spec documents** — requirements.md, design.md, tasks.md
+- **OpenAPI 3.1 YAML** — API specification + MSW Mock + Specmatic contract tests
+- **DBML schema** — Database design (viewable as ERD on dbdiagram.io)
+- **BDD/Gherkin scenarios** — Given-When-Then acceptance tests
+- **React + MSW prototype** — Clickable prototype via `npm run dev`
 
 ---
 
-## 빠른 시작
+## Quick Start
 
-### 사전 요구사항
+### Prerequisites
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
 - Node.js 18+
 - Git, GitHub CLI (`gh`)
 - [BMad Method](https://github.com/nicholasgriffintn/bmad-method) (`npx bmad-method install`)
 
-### 설치
+### Installation
 
 ```bash
 npx bmad-sprint-kit init
 ```
 
-Interactive 마법사가 환경을 감지하고 Sprint Kit 파일을 설치한다.
+An interactive wizard detects your environment and installs Sprint Kit files.
 
-### (선택) MCP 설정
+### (Optional) MCP Setup
 
-기존 시스템 데이터를 연동하려면 MCP 서버를 구성한다:
+To connect existing service data, configure MCP servers:
 
 ```bash
 cp .mcp.json.example .mcp.json
-# .mcp.json 편집: 로컬 경로를 자신의 환경에 맞게 수정
+# Edit .mcp.json: update local paths for your environment
 ```
 
-### 첫 Sprint 실행
+### First Sprint Run
 
 ```bash
-# Claude Code에서 실행
-/sprint "만들고 싶은 기능 설명"
+# In Claude Code
+/sprint "Describe the feature you want to build"
 ```
 
-### 튜토리얼 — MCP 없이 바로 체험
+### Tutorial — Try Without MCP
 
-Sprint Kit의 전체 파이프라인을 체험해보려면, 포함된 예제 프로젝트를 사용한다:
+To experience the full Sprint Kit pipeline, use the included example project:
 
 ```bash
-# Claude Code에서 실행
+# In Claude Code
 /sprint test-tutor-excl
 ```
 
-가상의 EduTalk 서비스에 "튜터 차단" 기능을 추가하는 시나리오다. `specs/test-tutor-excl/inputs/`에 회의록 4건이 준비되어 있고, `brownfield-context.md`가 MCP 스캔 결과를 대체한다. MCP 설정 없이 바로 실행할 수 있다.
+This is a scenario for adding a "tutor exclusion" feature to a fictional EduTalk service. 4 meeting notes are prepared in `specs/test-tutor-excl/inputs/`, and `brownfield-context.md` substitutes for MCP scan results. No MCP setup required.
 
 ---
 
-## 경로 선택
+## Route Selection
 
-사용자의 입력 상태에 따라 3가지 경로를 제공한다. 모든 경로는 같은 파이프라인으로 합류한다.
+3 routes are available based on your input readiness. All routes converge into the same pipeline.
 
 ```
 [Input + Brownfield + BMad] → [Specs] → JP1 → [Deliverables] → JP2 → [Execute]
 
-Sprint:   |←──────────────── 전체 자동 ────────────────────────→|
-Guided:   |←── BMad 대화 ──→|←────────── 자동 ──────────────────→|
-Direct:                      |←── 자동 ────────────────────────→|
+Sprint:   |←──────────────── Fully Auto ───────────────────────→|
+Guided:   |←── BMad Dialog ──→|←────────── Auto ───────────────→|
+Direct:                        |←── Auto ──────────────────────→|
 ```
 
-| 경로 | 진입점 | 적합한 경우 |
-|------|--------|-------------|
-| **Sprint** | `/sprint "Brief"` 또는 `/sprint feature-name` | 자료(회의록, 참고자료)가 있을 때 — AI가 구성하고 내가 판단 |
-| **Guided** | BMad 12단계 → `/specs` → `/preview` | 탐색이 필요할 때 — AI와 함께 발견하고 정의 |
-| **Direct** | `/specs` → `/preview` | 기획이 끝났을 때 — 바로 실행 |
+| Route | Entry Point | Best When |
+|-------|-------------|-----------|
+| **Sprint** | `/sprint "Brief"` or `/sprint feature-name` | You have materials (meeting notes, references) — AI builds, you judge |
+| **Guided** | BMad 12-step → `/specs` → `/preview` | Exploration needed — discover and define with AI |
+| **Direct** | `/specs` → `/preview` | Planning is complete — execute immediately |
 
-> 소규모 작업은 BMad Quick Flow를 사용: `/quick-spec` → `/dev-story` → `/code-review`
+> For small tasks, use BMad Quick Flow: `/quick-spec` → `/dev-story` → `/code-review`
 
-경로는 고정이 아니다. 자료가 있지만 깊은 탐색이 필요하면 Guided에서 자료를 참고 입력으로 활용하고, BMad 12단계 완료 후에는 Direct와 동일하게 `/specs`가 산출물을 자동 인식한다.
+Routes are not fixed. If you have materials but need deep exploration, use Guided with materials as reference input. After completing BMad 12-step, `/specs` auto-detects the artifacts — same as Direct.
 
-> 상세: [Blueprint §4.3 경로 선택](docs/blueprint.md#43-경로-선택)
+> Details: [Blueprint §4.3 Route Selection](docs/blueprint.md#43-route-selection)
 
 ---
 
-## Brownfield — 기존 시스템 연동
+## Brownfield — Existing System Integration
 
-AI가 기존 서비스의 구조를 알아야 중복 API를 만들거나 기존 화면 흐름을 깨뜨리지 않는다. Brownfield 데이터는 **3가지 소스**에서 누적 수집된다:
+AI must understand the existing service structure to avoid creating duplicate APIs or breaking existing screen flows. Brownfield data is cumulatively collected from **3 sources**:
 
-1. **document-project 산출물** — BMad `/document-project` 워크플로우가 기존 코드베이스를 스캔하여 생성한 구조화 문서
-2. **MCP 서버** — AI가 필요할 때 접속해서 정보를 가져오는 외부 기억 저장소
-3. **로컬 코드베이스** — 같은 저장소에 있는 소스 코드를 직접 스캔
+1. **document-project artifacts** — Structured docs generated by BMad `/document-project` workflow scanning the existing codebase
+2. **MCP servers** — External memory stores the AI queries on demand
+3. **Local codebase** — Direct scan of source code in the same repository
 
-### Brownfield Context 생성
+### Brownfield Context Generation
 
-#### 자동 생성 (Sprint 경로)
+#### Auto-Generation (Sprint Route)
 
-`/sprint` 실행 시 brownfield-context.md가 자동으로 생성된다:
+`/sprint` automatically generates brownfield-context.md:
 
-1. **Phase 0** — 토폴로지 판정: document-project 유무, MCP 연결 상태, 빌드 도구를 감지하여 프로젝트 유형(`standalone` / `co-located` / `msa` / `monorepo`)을 결정
-2. **Pass 1 (Broad Scan)** — Brief 키워드 기반으로 도메인 개념(L1)과 행동 패턴(L2)을 수집
-3. **Pass 2 (Targeted Scan)** — Architecture/Epics 완료 후 통합 지점(L3)과 코드 수준(L4)을 추가 수집
+1. **Phase 0** — Topology detection: detect document-project presence, MCP connectivity, build tools to determine project type (`standalone` / `co-located` / `msa` / `monorepo`)
+2. **Pass 1 (Broad Scan)** — Collect domain concepts (L1) and behavior patterns (L2) based on Brief keywords
+3. **Pass 2 (Targeted Scan)** — After Architecture/Epics, collect integration points (L3) and code-level details (L4)
 
-수집 결과는 `specs/{feature}/planning-artifacts/brownfield-context.md`에 L1~L4 계층으로 기록된다.
+Results are recorded in `specs/{feature}/planning-artifacts/brownfield-context.md` as L1~L4 layers.
 
-#### 사전 준비: document-project (권장)
+#### Pre-Sprint Preparation: document-project (Recommended)
 
-Sprint 전에 BMad `/document-project` 워크플로우를 실행하면 스캔 품질이 높아진다:
+Running BMad `/document-project` before Sprint improves scan quality:
 
 ```bash
-# Claude Code에서 실행
+# In Claude Code
 /document-project
 ```
 
-기존 코드베이스를 분석하여 `_bmad-output/` 아래에 구조화 문서(`project-overview.md`, `api-contracts.md`, `data-models.md` 등)를 생성한다. Sprint의 Brownfield Scanner가 이 문서를 시드 데이터로 활용하여 MCP/로컬 스캔의 검색 범위를 좁힌다.
+This analyzes the existing codebase and generates structured docs under `_bmad-output/` (`project-overview.md`, `api-contracts.md`, `data-models.md`, etc.). Sprint's Brownfield Scanner uses these as seed data to narrow MCP/local scan scope.
 
-#### MCP 서버 구성
+#### MCP Server Configuration
 
-외부 서비스 데이터를 연동하려면 MCP 서버를 구성한다:
+To connect external service data, configure MCP servers:
 
-| MCP 서버 | 제공 정보 |
-|----------|-----------|
-| `backend-docs` | API 스펙, 도메인 정책, 비즈니스 규칙, 데이터 모델 |
-| `client-docs` | 컴포넌트 구조, 상태 관리 패턴, 코드 컨벤션, 화면 흐름 |
-| `svc-map` | 고객 여정, 화면 스크린샷, 플로우 그래프, 서비스 맵 |
-| `figma` | 최신 와이어프레임, 디자인 토큰, 컴포넌트 스펙 (실시간 OAuth) |
+| MCP Server | Provided Information |
+|------------|---------------------|
+| `backend-docs` | API specs, domain policies, business rules, data models |
+| `client-docs` | Component structure, state management patterns, code conventions, screen flows |
+| `svc-map` | Customer journeys, screen screenshots, flow graphs, service maps |
+| `figma` | Latest wireframes, design tokens, component specs (live OAuth) |
 
-#### 수동 준비 (MCP 없이)
+#### Manual Preparation (Without MCP)
 
-MCP 서버 없이도 brownfield-context.md를 직접 작성하여 Sprint에 제공할 수 있다:
+You can manually write brownfield-context.md and provide it to Sprint without MCP:
 
 ```bash
-# feature 디렉토리에 직접 배치
+# Place directly in the feature directory
 specs/{feature}/brownfield-context.md
-# 또는
+# or
 specs/{feature}/planning-artifacts/brownfield-context.md
 ```
 
-Sprint가 기존 파일을 감지하면 해당 레벨을 재스캔하지 않고 활용한다. 포맷은 `_bmad/docs/brownfield-context-format.md`를 참고한다. 튜토리얼 예제(`specs/test-tutor-excl/`)에 수동 작성된 brownfield-context.md 샘플이 포함되어 있다.
+Sprint detects existing files and uses them instead of re-scanning those levels. See `_bmad/docs/brownfield-context-format.md` for the format. A manually written brownfield-context.md sample is included in the tutorial example (`specs/test-tutor-excl/`).
 
-#### Greenfield 프로젝트
+#### Greenfield Projects
 
-기존 시스템이 없는 Greenfield 프로젝트에서는 Brownfield 데이터 없이도 Sprint가 정상 동작한다. Phase 0에서 자동 감지되며 별도 설정이 필요 없다.
+For Greenfield projects with no existing system, Sprint works normally without Brownfield data. Auto-detected in Phase 0 — no configuration needed.
 
-> 상세: [Blueprint §4.1 시스템 구성 요소](docs/blueprint.md#41-시스템-구성-요소)
+> Details: [Blueprint §4.1 System Components](docs/blueprint.md#41-system-components)
 
 ---
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 {project-root}/
-├── CLAUDE.md                        # 프로젝트별 규칙 (사용자 직접 작성)
-├── .mcp.json                        # MCP 서버 설정 (.gitignore 대상)
+├── CLAUDE.md                        # Project-specific rules (user-maintained)
+├── .mcp.json                        # MCP server config (.gitignored)
 ├── .claude/
-│   ├── agents/                      # Sprint 에이전트 (8개)
-│   ├── commands/                    # Sprint 커맨드 + BMAD 에이전트/워크플로우
-│   ├── rules/                       # Sprint 규칙 (bmad-*.md)
-│   ├── hooks/                       # Hook 스크립트 (알림, 보호, 복원)
-│   └── settings.json                # Hook 설정
-├── _bmad/                           # BMAD 방법론 (런타임 참조)
-│   └── docs/                        # 포맷 가이드
-├── preview-template/                # 프로토타입 기본 틀 (Vite + React + MSW)
-├── specs/                           # 프로젝트별 산출물 (feature 단위)
+│   ├── agents/                      # Sprint agents (8)
+│   ├── commands/                    # Sprint commands + BMad agents/workflows
+│   ├── rules/                       # Sprint rules (bmad-*.md)
+│   ├── hooks/                       # Hook scripts (notification, protection, recovery)
+│   └── settings.json                # Hook settings
+├── _bmad/                           # BMad Method (runtime reference)
+│   └── docs/                        # Format guides
+├── preview-template/                # Prototype scaffold (Vite + React + MSW)
+├── specs/                           # Per-feature Sprint artifacts
 │   └── {feature}/
-│       ├── inputs/                  # 사용자 Brief + 참고 자료
-│       ├── planning-artifacts/      # BMAD 산출물 (PRD, Architecture, Epics)
-│       ├── requirements.md          # 요구사항
-│       ├── design.md                # 설계
-│       ├── tasks.md                 # 태스크 (Entropy + 파일 소유권)
-│       ├── brownfield-context.md    # 기존 시스템 컨텍스트
+│       ├── inputs/                  # User Brief + reference materials
+│       ├── planning-artifacts/      # BMad artifacts (PRD, Architecture, Epics)
+│       ├── requirements.md          # Requirements
+│       ├── design.md                # Design
+│       ├── tasks.md                 # Tasks (Entropy + File Ownership)
+│       ├── brownfield-context.md    # Existing system context
 │       ├── api-spec.yaml            # OpenAPI 3.1
-│       ├── schema.dbml              # DB 스키마
-│       ├── bdd-scenarios/           # Gherkin 수용 테스트
-│       └── preview/                 # React + MSW 프로토타입
-└── docs/                            # 프레임워크 문서
+│       ├── schema.dbml              # DB schema
+│       ├── bdd-scenarios/           # Gherkin acceptance tests
+│       └── preview/                 # React + MSW prototype
+└── docs/                            # Framework documentation
 ```
 
-> Sprint Kit 파일(`.claude/agents/`, `.claude/commands/`, `.claude/rules/bmad-*`, `_bmad/`)은 직접 수정하지 않는다. `npx bmad-sprint-kit update`로 업데이트한다.
+> Sprint Kit files (`.claude/agents/`, `.claude/commands/`, `.claude/rules/bmad-*`, `_bmad/`) should not be modified directly. Update via `npx bmad-sprint-kit update`.
 
 ---
 
-## Multi-IDE 지원
+## Multi-IDE Support
 
-Sprint Kit의 원본 정의 파일은 `.claude/`에 있다. Claude Code 외 다른 AI IDE도 지원한다.
+Sprint Kit's canonical definition files live in `.claude/`. Other AI IDEs beyond Claude Code are also supported.
 
-**Claude Code** — 기본 IDE. 추가 설정 불필요.
+**Claude Code** — Default IDE. No additional setup required.
 
-**Codex CLI** — 설치 시 `--ide` 옵션으로 Codex 파일을 함께 생성한다:
+**Codex CLI** — Use the `--ide` option during installation to generate Codex files:
 
 ```bash
 npx bmad-sprint-kit init --ide claude-code,codex
 ```
 
-Codex에서는 `$sprint`, `$specs`, `$preview`, `$parallel`, `$validate`로 Sprint 커맨드를 실행한다.
+In Codex, run Sprint commands via `$sprint`, `$specs`, `$preview`, `$parallel`, `$validate`.
 
-**Gemini Code Assist** — `.gemini/commands/`에 TOML 래퍼가 자동 생성된다.
+**Gemini Code Assist** — TOML wrappers are auto-generated in `.gemini/commands/`.
 
-> 원본(`.claude/`)을 수정하면 `npx bmad-sprint-kit update` 시 변환 파일도 갱신된다.
-
----
-
-## 문서
-
-| 문서 | 내용 |
-|------|------|
-| [Blueprint](docs/blueprint.md) | 제품 전체 그림 — 8-Section (Problem → Thesis → User Model → Value Chain → Judgment → Constraints → Risk → Current State) |
-| [Judgment-Driven Development](docs/judgment-driven-development.md) | 설계 철학 + 설계 판단의 정의와 논의 과정 |
-| [BMad Method](https://github.com/nicholasgriffintn/bmad-method) | AI 역할극 프레임워크 (외부) |
+> When the canonical files (`.claude/`) are modified, `npx bmad-sprint-kit update` also refreshes the converted files.
 
 ---
 
-## 라이선스
+## Documentation
+
+| Document | Contents |
+|----------|----------|
+| [Blueprint](docs/blueprint.md) | Full product picture — 8-Section (Problem → Thesis → User Model → Value Chain → Judgment → Constraints → Risk → Current State) |
+| [Judgment-Driven Development](docs/judgment-driven-development.md) | Design philosophy + definition and discussion of design judgments |
+| [BMad Method](https://github.com/nicholasgriffintn/bmad-method) | AI role-play framework (external) |
+
+---
+
+## License
 
 MIT

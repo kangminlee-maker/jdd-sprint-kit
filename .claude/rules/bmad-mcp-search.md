@@ -1,94 +1,94 @@
-# MCP 검색 프로토콜
+# MCP Search Protocol
 
-## 프로젝트별 MCP 서버 구성
+## Project MCP Server Configuration
 
-이 프로젝트는 MCP 서버를 통해 기존 서비스의 백엔드, 클라이언트, 디자인 데이터를 참조할 수 있습니다.
+This project can reference existing service backend, client, and design data through MCP servers.
 
-### MCP 서버 설정
+### MCP Server Setup
 
-`.mcp.json` 파일을 프로젝트 루트에 생성하여 MCP 서버를 구성합니다. `.mcp.json.example`을 참고하세요.
+Create a `.mcp.json` file at the project root to configure MCP servers. See `.mcp.json.example` for reference.
 
-Sprint에서 활용하는 MCP 서버 역할:
+MCP server roles used in Sprint:
 
-| 역할              | 용도                                                        | 에이전트 참조명 |
-| ----------------- | ----------------------------------------------------------- | -------------- |
-| **backend-docs**  | 백엔드 도메인 정책, API 스펙, 비즈니스 로직                 | `backend-docs MCP` |
-| **client-docs**   | 클라이언트 UI/UX, 화면 흐름, 컴포넌트 구조                  | `client-docs MCP` |
-| **svc-map**       | Brownfield 서비스 맵: 고객 여정, 화면 스크린샷, 플로우 데이터 | `svc-map MCP` |
-| **figma**         | Figma 실시간 디자인 데이터: 와이어프레임, 컴포넌트, 디자인 토큰 | `figma MCP` |
+| Role              | Purpose                                                     | Agent Reference Name |
+| ----------------- | ----------------------------------------------------------- | -------------------- |
+| **backend-docs**  | Backend domain policies, API specs, business logic          | `backend-docs MCP`   |
+| **client-docs**   | Client UI/UX, screen flows, component structure             | `client-docs MCP`    |
+| **svc-map**       | Brownfield service map: customer journeys, screenshots, flow data | `svc-map MCP`  |
+| **figma**         | Figma live design data: wireframes, components, design tokens | `figma MCP`        |
 
-> - `figma` MCP 서버는 OAuth 인증 기반이며, `claude mcp add --transport http figma https://mcp.figma.com/mcp` 으로 추가 후 `/mcp` 에서 인증합니다.
-> - `svc-map` vs `figma` 데이터가 불일치할 경우 `figma`를 우선합니다 (더 최신).
+> - The `figma` MCP server uses OAuth authentication. Add via `claude mcp add --transport http figma https://mcp.figma.com/mcp`, then authenticate at `/mcp`.
+> - When `svc-map` and `figma` data conflict, prefer `figma` (more recent).
 
-### 검색 전략
+### Search Strategy
 
-도메인 관련 질문을 받으면, **항상 여러 관점에서 검색하고 통합된 답변을 제공**해야 합니다.
+When answering domain-related questions, **always search from multiple perspectives and provide an integrated answer**.
 
-#### 검색 순서
+#### Search Order
 
-1. **질문 분류**: 질문이 클라이언트/백엔드/디자인/복합에 해당하는지 판단
-2. **다중 검색**: 가능한 경우 관련 MCP 서버에서 병렬로 검색
-3. **통합 답변**: 백엔드, 클라이언트, 디자인 관점을 구분하여 답변
+1. **Classify question**: Determine if it concerns client / backend / design / multiple areas
+2. **Multi-search**: Search relevant MCP servers in parallel when possible
+3. **Integrated answer**: Distinguish backend, client, and design perspectives in the response
 
-#### 관점별 검색 기준
+#### Search Criteria by Perspective
 
-| 키워드/주제                                             | 검색 대상                             |
-| ------------------------------------------------------- | ------------------------------------- |
-| API, 엔드포인트, 데이터 모델, 비즈니스 로직, 권한, 인증  | backend-docs MCP                      |
-| UI 코드, 컴포넌트 구현, 상태 관리, 코드 구조             | client-docs MCP                       |
-| 고객 여정, 화면 플로우, 서비스 맵, 스크린샷              | svc-map MCP                           |
-| 와이어프레임, 디자인 시안, 레이아웃, 디자인 토큰, 스타일  | figma MCP                             |
-| 기능 전체, 도메인 정책, 서비스 흐름                      | **백엔드 + 클라이언트 + svc-map + Figma** |
+| Keywords/Topics                                            | Search Target                         |
+| ---------------------------------------------------------- | ------------------------------------- |
+| API, endpoints, data models, business logic, auth, permissions | backend-docs MCP                   |
+| UI code, component implementation, state management, code structure | client-docs MCP                |
+| Customer journeys, screen flows, service maps, screenshots | svc-map MCP                           |
+| Wireframes, design mockups, layouts, design tokens, styles | figma MCP                             |
+| Full feature, domain policies, service flows               | **backend + client + svc-map + Figma** |
 
-### 답변 형식
+### Response Format
 
-도메인 관련 질문에 답변할 때는 다음 형식을 사용합니다:
+Use the following format when answering domain-related questions:
 
 ```
-## [질문 주제]
+## [Topic]
 
-### 백엔드 관점
-- API 엔드포인트: ...
-- 비즈니스 로직: ...
-- 데이터 모델: ...
+### Backend Perspective
+- API endpoints: ...
+- Business logic: ...
+- Data models: ...
 
-### 클라이언트 관점
-- 화면 흐름: ...
-- 상태 관리: ...
-- UI 컴포넌트: ...
+### Client Perspective
+- Screen flows: ...
+- State management: ...
+- UI components: ...
 
-### 디자인 관점
-- 와이어프레임/시안: ...
-- 디자인 토큰: ...
-- 컴포넌트 스펙: ...
+### Design Perspective
+- Wireframes/mockups: ...
+- Design tokens: ...
+- Component specs: ...
 
-### 통합 요약
-[백엔드, 클라이언트, 디자인이 어떻게 연동되는지 설명]
+### Integrated Summary
+[Explain how backend, client, and design connect]
 ```
 
-## 로컬 코드베이스 검색 프로토콜
+## Local Codebase Search Protocol
 
-co-located 토폴로지(모놀리식, MSA, 모노레포)에서는 로컬 코드베이스를 직접 검색할 수 있습니다.
+In co-located topologies (monolith, MSA, monorepo), the local codebase can be searched directly.
 
-### 로컬 검색 도구 매핑
+### Local Search Tool Mapping
 
-| MCP 동작 | 로컬 대응 도구 | 용도 |
-|----------|--------------|------|
-| MCP index 읽기 | **Glob** | 디렉토리 구조, 파일 패턴 탐색 |
-| MCP search | **Grep** | 코드 내 키워드, 패턴 검색 |
-| MCP file read | **Read** | 특정 파일 전문 읽기 |
+| MCP Action     | Local Equivalent | Purpose                            |
+|----------------|------------------|------------------------------------|
+| MCP index read | **Glob**         | Directory structure, file patterns |
+| MCP search     | **Grep**         | Code keyword and pattern search    |
+| MCP file read  | **Read**         | Full file content reading          |
 
-### 검색 우선순위 (co-located)
+### Search Priority (co-located)
 
-co-located 토폴로지에서 동일 정보를 여러 소스에서 발견할 경우:
+When the same information is found in multiple sources within a co-located topology:
 
-1. **로컬 코드베이스** (가장 정확 — 실제 코드)
-2. **document-project 산출물** (구조화된 문서)
-3. **MCP 서버** (외부 참조)
+1. **Local codebase** (most accurate — actual code)
+2. **document-project artifacts** (structured documentation)
+3. **MCP servers** (external reference)
 
-### 검색 제외 경로
+### Excluded Paths
 
-로컬 검색 시 다음 경로는 항상 제외합니다:
+Always exclude the following paths from local searches:
 
 ```
 node_modules/    .git/         dist/        build/
