@@ -4,6 +4,21 @@ All notable changes to BMAD Sprint Kit will be documented in this file.
 
 ---
 
+## [Unreleased]
+
+### Changed
+- **Blueprint 범용 8-Section 구조 재작성** — Part 1~5 → §1~§8 + Appendix A/B/C
+  - §1 Problem, §2 Thesis(핵심 원칙 + 설계 판단), §3 User Model, §4 Value Chain(파이프라인 워크스루 + 경로 + 비용), §5 Judgment & Feedback, §6 Constraints & Trade-offs, §7 Risk Model, §8 Current State
+  - 에이전트 I/O 테이블을 §4.1에 통합 (Part 5.2 → §4.1)
+  - 파이프라인 각 단계에 "근거 설계 판단" 추가
+  - 설치/운영(Appendix A), 파일 구조(Appendix B), 용어집(Appendix C)으로 부록 분리
+
+### Added
+- **Blueprint Format Guide** — `_bmad/docs/blueprint-format-guide.md` 신규
+  - 범용 Product Blueprint 포맷 정의 (8-Section + 자기완결 원칙 + Self-review 체크리스트)
+
+---
+
 ## [0.3.0] - 2026-02-18
 
 ### Added
