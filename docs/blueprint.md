@@ -1,5 +1,5 @@
 ---
-synced_to: "1c82213"  # blueprint.md 외 소스 파일 변경 중 마지막 반영 커밋. blueprint.md 자체 커밋은 추적하지 않는다.
+synced_to: "8bc5249"  # blueprint.md 외 소스 파일 변경 중 마지막 반영 커밋. blueprint.md 자체 커밋은 추적하지 않는다.
 audience: "비개발자 제품 전문가"
 product: "BMAD Sprint Kit"
 version: "0.3.1"
