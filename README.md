@@ -117,7 +117,7 @@ Direct:                      |←── 자동 ───────────
 
 경로는 고정이 아니다. 자료가 있지만 깊은 탐색이 필요하면 Guided에서 자료를 참고 입력으로 활용하고, BMad 12단계 완료 후에는 Direct와 동일하게 `/specs`가 산출물을 자동 인식한다.
 
-> 상세: [Blueprint Part 4](docs/blueprint.md)
+> 상세: [Blueprint §4.3 경로 선택](docs/blueprint.md#43-경로-선택)
 
 ---
 
@@ -138,7 +138,7 @@ AI가 기존 서비스의 구조를 알아야 중복 API를 만들거나 기존 
 
 Greenfield(기존 시스템 없음) 프로젝트에서는 MCP 없이도 Sprint가 동작한다.
 
-> 상세: [Blueprint Part 2](docs/blueprint.md)
+> 상세: [Blueprint §4.1 시스템 구성 요소](docs/blueprint.md#41-시스템-구성-요소)
 
 ---
 
@@ -200,9 +200,8 @@ Codex에서는 `$sprint`, `$specs`, `$preview`, `$parallel`, `$validate`로 Spri
 
 | 문서 | 내용 |
 |------|------|
-| [Blueprint](docs/blueprint.md) | 전체 아키텍처 + Sprint 상세 따라가기 |
-| [Judgment-Driven Development](docs/judgment-driven-development.md) | 설계 철학 + 설계 판단 |
-| [Architecture](docs/bmad-sprint-v2-architecture.md) | 시스템 아키텍처 상세 |
+| [Blueprint](docs/blueprint.md) | 제품 전체 그림 — 8-Section (Problem → Thesis → User Model → Value Chain → Judgment → Constraints → Risk → Current State) |
+| [Judgment-Driven Development](docs/judgment-driven-development.md) | 설계 철학 + 설계 판단의 정의와 논의 과정 |
 | [BMad Method](https://github.com/nicholasgriffintn/bmad-method) | AI 역할극 프레임워크 (외부) |
 
 ---
