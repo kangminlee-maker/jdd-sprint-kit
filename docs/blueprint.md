@@ -1,5 +1,5 @@
 ---
-synced_to: "8bc5249"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
+synced_to: "b60cda7"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
 audience: "non-developer product expert"
 product: "BMAD Sprint Kit"
 version: "0.3.1"
