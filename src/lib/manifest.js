@@ -33,6 +33,7 @@ export const SPRINT_KIT_FILES = {
   docs: [
     'sprint-input-format.md', 'brownfield-context-format.md',
     'prd-format-guide.md', 'architecture-to-epics-checklist.md',
+    'blueprint-format-guide.md',
   ],
 };
 
