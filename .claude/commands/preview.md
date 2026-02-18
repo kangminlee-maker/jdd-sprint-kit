@@ -1,5 +1,5 @@
 ---
-description: "Specs에서 Full-stack Deliverables 생성 (OpenAPI, DBML, BDD, Prototype)"
+description: "Generate Full-stack Deliverables from Specs (OpenAPI, DBML, BDD, Prototype)"
 ---
 
 # /preview — Deliverables Generation
@@ -8,17 +8,17 @@ description: "Specs에서 Full-stack Deliverables 생성 (OpenAPI, DBML, BDD, Pr
 
 ## Purpose
 
-Specs 4-file에서 Full-stack Deliverables(OpenAPI, DBML, BDD, Prototype 등)를 생성한다.
+Generate Full-stack Deliverables (OpenAPI, DBML, BDD, Prototype, etc.) from Specs 4-file.
 
 ## When to Use
 
-Specs 4-file 생성이 완료된 후. `/specs` 다음 단계.
+After Specs 4-file generation is complete. The step after `/specs`.
 
 ## Inputs
 
-`$ARGUMENTS`: 사용하지 않음
+`$ARGUMENTS`: not used
 
-선행 파일 (`specs/{feature}/` 디렉토리):
+Required files (in `specs/{feature}/` directory):
 - `requirements.md`
 - `design.md`
 - `tasks.md`
@@ -26,16 +26,18 @@ Specs 4-file 생성이 완료된 후. `/specs` 다음 단계.
 
 ## Procedure
 
-### Step 1: Specs 확인
+Load config per Language Protocol in bmad-sprint-guide.md.
 
-1. `specs/` 하위에서 feature 디렉토리 탐색
-2. Specs 4-file 존재 확인 (requirements.md, design.md, tasks.md, brownfield-context.md)
-3. `specs/{feature}/planning-artifacts/` 존재 확인 (Entity Dictionary 재구축용)
-4. 없으면 사용자에게 `/specs` 선행 실행을 안내
+### Step 1: Specs Verification
 
-### Step 2: Deliverables 생성
+1. Search for feature directory under `specs/`
+2. Verify Specs 4-file existence (requirements.md, design.md, tasks.md, brownfield-context.md)
+3. Verify `specs/{feature}/planning-artifacts/` exists (for Entity Dictionary rebuild)
+4. If missing, guide user to run `/specs` first (in {communication_language})
 
-`@deliverable-generator`를 deliverables-only 모드로 호출한다:
+### Step 2: Deliverables Generation
+
+Invoke `@deliverable-generator` in deliverables-only mode:
 
 ```
 Task(subagent_type: "general-purpose", model: "sonnet")
@@ -48,24 +50,24 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     mode: deliverables-only"
 ```
 
-이 모드에서는 기존 Specs 4-file을 읽고 Stage 3-10을 실행:
-- OpenAPI 3.1 YAML (API 계약)
+This mode reads existing Specs 4-file and executes Stages 3-10:
+- OpenAPI 3.1 YAML (API contract)
 - API Sequence Diagrams (Mermaid)
-- DBML Schema (데이터베이스)
-- BDD/Gherkin Scenarios (수용 테스트)
-- XState State Machines (해당 시에만)
+- DBML Schema (database)
+- BDD/Gherkin Scenarios (acceptance tests)
+- XState State Machines (when applicable)
 - Decision Log (ADR)
-- Traceability Matrix (추적)
+- Traceability Matrix (tracing)
 - React Prototype + MSW Mock API
 
-### Step 3: 결과물 확인
+### Step 3: Output Review
 
-생성된 Sprint Output Package를 사용자에게 보여주고 확인을 받는다:
+Present generated Sprint Output Package to user for review (in {communication_language}):
 
-- **승인** → `/parallel` 실행 (병렬 구현)
-- **피드백 (Deliverables)** → Step 2 재실행 (Specs 보존)
-- **피드백 (설계)** → `/specs` 재실행 (Planning Artifacts 수정)
-- **중단** → 종료
+- **Approve** → run `/parallel` (parallel implementation)
+- **Feedback (Deliverables)** → re-run Step 2 (Specs preserved)
+- **Feedback (design)** → re-run `/specs` (modify Planning Artifacts)
+- **Abort** → exit
 
 ## Outputs
 - `specs/{feature-name}/api-spec.yaml`
@@ -77,7 +79,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 - `specs/{feature-name}/preview/` (React + MSW)
 
 ## Constraints
-1. **Disposable Preview**: 프리뷰 코드는 프로덕션과 완전 분리. 절대 프로덕션으로 이관하지 않는다
-2. **Specs 우선**: 프리뷰에서 발견한 문제는 코드가 아닌 스펙을 수정하여 해결
-3. **OpenAPI as Single Source of Truth**: API 타입, Mock 서버, 문서 모두 하나의 spec에서 파생
-4. **Entity Dictionary 일관성**: 모든 산출물의 명명은 Entity Dictionary를 따른다
+1. **Disposable Preview**: Preview code is fully isolated from production. Never migrate to production.
+2. **Specs first**: Issues found in preview are resolved by fixing specs, not code.
+3. **OpenAPI as Single Source of Truth**: API types, Mock server, and docs all derive from one spec.
+4. **Entity Dictionary consistency**: All artifact naming follows the Entity Dictionary.

@@ -1,387 +1,387 @@
-# Blueprint 작성 가이드라인
+# Blueprint Writing Guidelines
 
-제품(Product)의 **"왜"와 "어떻게 동작하는가"**를 대상 독자에게 자기완결적으로 전달하는 문서의 포맷 정의다.
+Format definition for a document that conveys a product's **"why" and "how it works"** to the target audience in a self-contained manner.
 
-> **참고 문서:**
-> - PRD 포맷 가이드: `_bmad/docs/prd-format-guide.md`
-> - Sprint Kit Blueprint (인스턴스): `docs/blueprint.md`
-> - JDD 철학: `docs/judgment-driven-development.md`
+> **Reference documents:**
+> - PRD format guide: `_bmad/docs/prd-format-guide.md`
+> - Sprint Kit Blueprint (instance): `docs/blueprint.md`
+> - JDD philosophy: `docs/judgment-driven-development.md`
 
 ---
 
-## 1. 자기완결 원칙
+## 1. Self-Containment Principle
 
-Blueprint의 대상 독자가 **코드를 읽지 않는다면**, 운영 상세도 Blueprint에 포함해야 한다.
+If the Blueprint's target audience **does not read code**, operational details must be included in the Blueprint.
 
-- "상세는 코드 참조", "에이전트 파일 참조"는 대상 독자가 코드를 읽을 수 있을 때만 허용
-- Blueprint는 대상 독자를 위한 **유일한 종합 문서**
-- 도구, 에이전트, 워크플로우의 동작 설명이 에이전트 정의 파일과 "중복"이더라도, 대상 독자가 접근 가능한 **유일한 형태**이므로 반드시 포함
+- "See code for details" or "See agent file" is allowed only when the target audience can read code
+- The Blueprint is the **only comprehensive document** for the target audience
+- Even if tool, agent, or workflow descriptions "overlap" with agent definition files, they must be included since this is the **only accessible form** for the target audience
 
-**검증 기준**: 대상 독자가 이 문서 하나만으로 AI와 함께 이 제품/서비스를 다시 만들어낼 수 있는가.
+**Verification criterion**: Can the target audience recreate this product/service with AI using only this document?
 
 ---
 
 ## 2. YAML Frontmatter
 
-모든 Blueprint는 YAML frontmatter로 시작한다.
+Every Blueprint starts with a YAML frontmatter.
 
 ```yaml
 ---
-synced_to: "{commit-hash}"     # Blueprint 외 소스 파일 변경 중 마지막 반영 커밋
-audience: "{대상 독자}"          # 예: "비개발자 제품 전문가", "팀 전체", "외부 투자자"
-product: "{제품명}"
-version: "{문서 버전}"
+synced_to: "{commit-hash}"     # Last commit where non-Blueprint source file changes were reflected
+audience: "{target audience}"   # e.g., "non-developer product expert", "entire team", "external investors"
+product: "{product name}"
+version: "{document version}"
 ---
 ```
 
-### 필수 필드
+### Required Fields
 
-| 필드 | 용도 |
-|------|------|
-| `audience` | 대상 독자 정의. 자기완결 수준과 용어 깊이를 결정 |
-| `product` | Blueprint가 다루는 제품/서비스명 |
+| Field | Purpose |
+|-------|---------|
+| `audience` | Target audience definition. Determines self-containment level and terminology depth |
+| `product` | Product/service name covered by the Blueprint |
 
-### 선택 필드
+### Optional Fields
 
-| 필드 | 용도 |
-|------|------|
-| `synced_to` | 소스 파일 동기화 추적 (Blueprint 외 파일의 마지막 반영 커밋) |
-| `version` | 문서 버전 |
+| Field | Purpose |
+|-------|---------|
+| `synced_to` | Source file sync tracking (last reflected commit of non-Blueprint files) |
+| `version` | Document version |
 
 ---
 
-## 3. 비전 선언
+## 3. Vision Statement
 
-Frontmatter 바로 아래에 인용 블록으로 **비전 선언**을 배치한다.
+Place a **vision statement** in a blockquote immediately below the frontmatter.
 
-- 제품이 지향하는 바를 3~5문장으로 서술
-- 대상 독자가 첫 문단에서 "이 제품이 뭔지"를 파악할 수 있어야 함
-- **유일한 원칙**: 비전 선언 마지막에 제품의 핵심 원칙을 한 문장으로 명시
+- Describe what the product aspires to be in 3-5 sentences
+- Target audience must grasp "what this product is" from the first paragraph
+- **Core principle**: State the product's core principle as one sentence at the end of the vision statement
 
 ```markdown
-> {제품}은 {누구}가 {무엇}을 할 수 있는 {도구/서비스/플랫폼}을 지향한다.
+> {product} aspires to be a {tool/service/platform} that enables {who} to {what}.
 > ...
 >
-> 유일한 원칙: **{한 문장 핵심 원칙}**
+> Core principle: **{one-sentence core principle}**
 ```
 
 ---
 
-## 4. 8-Section 구조
+## 4. 8-Section Structure
 
-### 개요
+### Overview
 
-| # | 섹션 | 한 줄 목적 |
-|---|------|-----------|
-| 1 | **Problem** | 이 제품이 존재하는 이유 |
-| 2 | **Thesis** | 핵심 원칙 + 설계 판단 + 전제 조건 |
-| 3 | **User Model** | 누가 사용하고, 무슨 역할을 하는가 |
-| 4 | **Value Chain** | 시스템 구성 + 파이프라인 + 경로 + 비용 |
-| 5 | **Judgment & Feedback** | 판단 방식 + 피드백 반영 메커니즘 |
-| 6 | **Constraints & Trade-offs** | 하지 않는 것 + 의식적 트레이드오프 |
-| 7 | **Risk Model** | 가정 + 깨지면 + 감지 신호 |
-| 8 | **Current State** | 현재 상태 + 미검증 가설 + 알려진 갭 |
+| # | Section | One-Line Purpose |
+|---|---------|-----------------|
+| 1 | **Problem** | Why this product exists |
+| 2 | **Thesis** | Core principle + design judgments + preconditions |
+| 3 | **User Model** | Who uses it and what role they play |
+| 4 | **Value Chain** | System components + pipeline + routes + cost |
+| 5 | **Judgment & Feedback** | How judgments are made + feedback mechanisms |
+| 6 | **Constraints & Trade-offs** | What it doesn't do + conscious trade-offs |
+| 7 | **Risk Model** | Assumptions + what breaks + detection signals |
+| 8 | **Current State** | Current status + unvalidated hypotheses + known gaps |
 
-### Appendix (선택)
+### Appendix (optional)
 
-| Appendix | 용도 |
-|----------|------|
-| A. 설치와 운영 | 셋업, 설정, 운영 가이드 |
-| B. 파일 구조 | 디렉토리 트리 + 파일별 역할 |
-| C. 용어집 | 제품 고유 용어 정의 |
-
----
-
-## 5. 섹션별 작성 규칙
-
-### §1 Problem
-
-**목적**: 이 제품이 풀려는 문제를 정의한다.
-
-**필수 요소**:
-- 문제의 현재 상태 (누가, 어떤 상황에서 어려움을 겪는가)
-- 기존 해결책이 왜 불충분한가
-- 이 문제가 중요한 이유
-
-**품질 기준**:
-- 비전문가가 읽어도 문제의 심각성을 이해할 수 있어야 한다
-- 솔루션 언급 없이 문제만 서술한다
-
-**안티패턴**:
-- ❌ 솔루션을 먼저 설명하고 문제를 역추론
-- ❌ 업계 전문 용어로만 서술하여 대상 독자가 이해 불가
+| Appendix | Purpose |
+|----------|---------|
+| A. Setup & Operations | Setup, configuration, operations guide |
+| B. File Structure | Directory tree + per-file roles |
+| C. Glossary | Product-specific term definitions |
 
 ---
 
-### §2 Thesis
+## 5. Per-Section Writing Rules
 
-**목적**: 문제에 대한 핵심 원칙과 설계 판단을 명시한다.
+### S1 Problem
 
-**필수 구조**:
+**Purpose**: Define the problem this product solves.
+
+**Required elements**:
+- Current state of the problem (who struggles in what situation)
+- Why existing solutions are insufficient
+- Why this problem matters
+
+**Quality criteria**:
+- Non-experts should understand the severity of the problem
+- Describe the problem only, without mentioning the solution
+
+**Anti-patterns**:
+- No: Describe the solution first and reverse-engineer the problem
+- No: Use only industry jargon, making it incomprehensible to the target audience
+
+---
+
+### S2 Thesis
+
+**Purpose**: State the core principle and design judgments for the problem.
+
+**Required structure**:
 
 ```
 2. Thesis
-  2.1 핵심 원칙 — 한 문장. 비전 선언의 "유일한 원칙"과 동일
-  2.2 설계 판단 — 핵심 원칙을 실현하기 위한 구체적 판단들
-  2.3 전제 조건 — 핵심 원칙이 성립하려면 참이어야 하는 것
-  2.4 원칙이 틀렸을 때 — 핵심 원칙이 실패하는 시나리오
+  2.1 Core Principle — one sentence. Same as "core principle" in the vision statement
+  2.2 Design Judgments — specific judgments to realize the core principle
+  2.3 Preconditions — what must be true for the core principle to hold
+  2.4 When the Principle Fails — scenarios where the core principle breaks down
 ```
 
-**§2.1 핵심 원칙**:
-- 한 문장으로 서술
-- 비전 선언에서 이미 선언한 원칙의 재진술
+**S2.1 Core Principle**:
+- One sentence
+- Restatement of the principle already declared in the vision statement
 
-**§2.2 설계 판단**:
-- 수와 형식은 자유 (3~10개 권장)
-- 각 판단은 다음 구조를 따른다:
-  - **이름** (영문, 짧은 선언문)
-  - **한 줄 요약** (인용 블록)
-  - **설명**: 왜 이 판단인가 + 예시
-  - **제품 구현**: 이 판단이 제품에서 어떻게 나타나는가
+**S2.2 Design Judgments**:
+- Number and format are flexible (3-10 recommended)
+- Each judgment follows this structure:
+  - **Name** (English, short declarative statement)
+  - **One-line summary** (blockquote)
+  - **Explanation**: Why this judgment + examples
+  - **Product implementation**: How this judgment manifests in the product
 
-**§2.3 전제 조건**:
-- 핵심 원칙이 성립하려면 참이어야 하는 것들
-- 예: "AI 생성 품질이 검토할 만한 수준이어야 한다"
+**S2.3 Preconditions**:
+- Things that must be true for the core principle to hold
+- e.g., "AI generation quality must be at a reviewable level"
 
-**§2.4 원칙이 틀렸을 때**:
-- 핵심 원칙이 실패하는 시나리오
-- 실패 시 어떤 일이 벌어지는가
+**S2.4 When the Principle Fails**:
+- Scenarios where the core principle fails
+- What happens when it fails
 
-**품질 기준**:
-- §2.2의 각 설계 판단이 §4(Value Chain), §5(Judgment), §6(Constraints)에서 근거로 참조되어야 한다
-- "원칙 → 판단 → 구현"의 인과 관계가 명확해야 한다
+**Quality criteria**:
+- Each design judgment in S2.2 must be referenced as rationale in S4 (Value Chain), S5 (Judgment), S6 (Constraints)
+- The causal chain "principle → judgment → implementation" must be clear
 
-**안티패턴**:
-- ❌ 설계 판단에 번호를 부여하여 "원칙 1, 원칙 2"처럼 서술 (판단은 원칙이 아님)
-- ❌ 판단의 근거 없이 선언만 나열
-- ❌ 전제 조건과 실패 시나리오 누락
-
----
-
-### §3 User Model
-
-**목적**: 누가 이 제품을 사용하고, 어떤 역할을 하는가.
-
-**필수 요소**:
-- 대상 사용자 정의 (긍정형: 무엇을 아는 사람)
-- 사용자가 하는 일 (구체적 역할/행동 목록)
-- 시스템이 하는 일 (사용자가 하지 않는 것)
-
-**품질 기준**:
-- 사용자를 소거법(~가 아닌 사람)이 아니라 전문성 중심으로 정의
-- 사용자 역할과 시스템 역할의 경계가 명확
-
-**안티패턴**:
-- ❌ "비개발자", "비전문가" 등 소거법적 정의
-- ❌ 사용자와 시스템의 역할 경계가 모호
+**Anti-patterns**:
+- No: Number design judgments as "Principle 1, Principle 2" (judgments are not principles)
+- No: List declarations without rationale
+- No: Omit preconditions and failure scenarios
 
 ---
 
-### §4 Value Chain
+### S3 User Model
 
-**목적**: 제품이 어떻게 가치를 전달하는가. 시스템 구성, 작동 과정, 경로, 비용을 설명한다.
+**Purpose**: Who uses this product and what role they play.
 
-**필수 구조**:
+**Required elements**:
+- Target user definition (affirmative: what expertise they have)
+- What users do (specific role/behavior list)
+- What the system does (what users don't do)
+
+**Quality criteria**:
+- Define users by expertise, not by negation ("not a ~")
+- Clear boundary between user role and system role
+
+**Anti-patterns**:
+- No: Define by negation ("non-developer", "non-expert")
+- No: Ambiguous boundary between user and system roles
+
+---
+
+### S4 Value Chain
+
+**Purpose**: How the product delivers value. Explain system components, process, routes, and cost.
+
+**Required structure**:
 
 ```
 4. Value Chain
-  4.1 시스템 구성 요소 — 도구, 에이전트, 외부 연동 등
-  4.2 파이프라인 — 전체 워크플로우 상세
-  4.3 경로 선택 — 입력 상태/사용자 유형에 따른 변형
-  4.4 비용 구조 — 비용 공식 또는 ROI 분석
+  4.1 System Components — tools, agents, external integrations, etc.
+  4.2 Pipeline — full workflow details
+  4.3 Route Selection — variations by input state/user type
+  4.4 Cost Structure — cost formula or ROI analysis
 ```
 
-**§4.1 시스템 구성 요소**:
-- 도구/서비스/에이전트/외부 연동 테이블
-- 각 구성 요소의 역할 한 줄 설명
+**S4.1 System Components**:
+- Tools/services/agents/external integrations table
+- One-line role description for each component
 
-**§4.2 파이프라인**:
-- **Follow-Along 패턴 권장**: 각 단계에서 "사용자가 보는 것(외부)"과 "시스템 동작(내부)"을 병행 서술
-- 각 단계에 다음 요소 포함:
-  - 사용자 시점: 사용자가 하는 일 / 받는 것
-  - 시스템 내부: 입력 → 처리 → 출력
-  - 산출물: 생성되는 결과물
-  - 실패 시: 에러 상황과 대응
-  - **근거 설계 판단**: 이 단계가 존재하는 이유 (§2.2 참조)
-- 대상 독자에 맞는 깊이로 서술
-  - 배달 앱: "주문 → 매칭 → 배달 → 평가" 수준의 요약
-  - 개발 도구: Phase별 상세 워크스루
+**S4.2 Pipeline**:
+- **Follow-Along pattern recommended**: Describe "what the user sees (external)" and "system behavior (internal)" in parallel at each step
+- Each step includes:
+  - User perspective: what the user does / receives
+  - System internals: input → processing → output
+  - Artifacts: generated outputs
+  - On failure: error situations and responses
+  - **Rationale design judgment**: why this step exists (references S2.2)
+- Depth appropriate to target audience
+  - Delivery app: summary level like "order → matching → delivery → rating"
+  - Dev tool: detailed per-phase walkthrough
 
-**§4.3 경로 선택**:
-- 입력 상태/사용자 유형에 따른 분기
-- 모든 경로의 합류점 명시
-- 경로 간 전환(크로스오버) 가능 여부
+**S4.3 Route Selection**:
+- Branching by input state/user type
+- Specify convergence points for all routes
+- Whether cross-route transitions (crossover) are possible
 
-**§4.4 비용 구조**:
-- 비용 공식 또는 ROI 비교
-- 현실 워크플로우와의 시간/비용 비교 (해당 시)
+**S4.4 Cost Structure**:
+- Cost formula or ROI comparison
+- Time/cost comparison with real-world workflow (if applicable)
 
-**품질 기준**:
-- §4.2의 각 단계에 근거 설계 판단이 명시되어야 한다
-- 대상 독자가 전체 프로세스를 처음부터 끝까지 따라갈 수 있어야 한다
+**Quality criteria**:
+- Each step in S4.2 must cite a rationale design judgment
+- Target audience must be able to follow the entire process end-to-end
 
-**안티패턴**:
-- ❌ 구성 요소만 나열하고 동작 흐름 누락
-- ❌ 파이프라인에서 실패 경로 누락
-- ❌ "상세는 코드 참조" (자기완결 원칙 위반)
-
----
-
-### §5 Judgment & Feedback
-
-**목적**: 사용자가 어떻게 판단하고, 피드백이 어떻게 반영되는가.
-
-**필수 요소**:
-- 판단 모델 (JP, 별점, 퀴즈, 리뷰 등 제품에 맞는 형태)
-- 각 판단 시점의 상세 (무엇을 보고, 무엇을 판단하고, 어떻게 응답하는가)
-- 피드백 반영 메커니즘 (피드백이 시스템에 어떻게 반영되는가)
-- 역방향 루프 (후속 단계에서 이전 단계 오류를 발견하는 경우)
-
-**품질 기준**:
-- 판단 시점이 §2.2 설계 판단의 구현임을 명시
-- 피드백 반영 경로가 구체적 (어떤 범위가 수정/재생성되는가)
-
-**안티패턴**:
-- ❌ "사용자 피드백을 반영합니다" 수준의 추상적 서술
-- ❌ 피드백 반영 비용/범위 누락
+**Anti-patterns**:
+- No: List components without explaining the flow
+- No: Omit failure paths in the pipeline
+- No: "See code for details" (violates self-containment principle)
 
 ---
 
-### §6 Constraints & Trade-offs
+### S5 Judgment & Feedback
 
-**목적**: 이 제품이 의식적으로 하지 않는 것과 트레이드오프를 명시한다.
+**Purpose**: How users judge and how feedback is incorporated.
 
-**필수 요소**:
-- 경계 (Boundaries): 이 제품이 하지 않는 것
-- 트레이드오프: 의식적으로 선택한 방향과 그 대가
-- 열어둔 것: 아직 결정하지 않은 것과 이유
+**Required elements**:
+- Judgment model (JPs, star ratings, quizzes, reviews, etc. — whatever fits the product)
+- Details at each judgment point (what they see, what they judge, how they respond)
+- Feedback incorporation mechanism (how feedback flows back into the system)
+- Reverse loop (when later stages discover errors in earlier stages)
 
-**품질 기준**:
-- 각 트레이드오프가 §2.2 설계 판단과 연결
-- "하지 않는 것"이 명확하여 범위 혼동이 없어야 한다
+**Quality criteria**:
+- Judgment points are implementations of S2.2 design judgments (cite explicitly)
+- Feedback incorporation paths are specific (what scope is modified/regenerated)
 
-**안티패턴**:
-- ❌ 제약 없이 "모든 것을 할 수 있다"
-- ❌ 트레이드오프의 대가(cost)를 숨김
-
----
-
-### §7 Risk Model
-
-**목적**: 제품의 핵심 가정, 가정이 깨지면 벌어지는 일, 감지 신호를 정의한다.
-
-**필수 구조**:
-
-| 가정 | 깨지면 | 감지 신호 |
-|------|--------|----------|
-| {무엇이 참이어야 하는가} | {깨졌을 때 영향} | {어떻게 알 수 있는가} |
-
-**품질 기준**:
-- §2.3 전제 조건과 연결
-- 감지 신호가 구체적이고 측정 가능
-
-**안티패턴**:
-- ❌ 리스크를 나열만 하고 감지 방법 누락
-- ❌ "리스크 없음"
+**Anti-patterns**:
+- No: "We incorporate user feedback" level of abstract description
+- No: Omit feedback cost/scope
 
 ---
 
-### §8 Current State
+### S6 Constraints & Trade-offs
 
-**목적**: 제품의 현재 상태를 솔직하게 기술한다.
+**Purpose**: What this product consciously does not do and its trade-offs.
 
-**필수 요소**:
-- 현재 버전/상태
-- 미검증 가설 (아직 실사용으로 검증되지 않은 것)
-- 알려진 갭 (설계와 구현 사이의 차이)
+**Required elements**:
+- Boundaries: what this product does not do
+- Trade-offs: consciously chosen directions and their costs
+- Left open: what has not been decided yet and why
 
-**품질 기준**:
-- CHANGELOG 또는 릴리스 노트와 정합
-- 미검증 가설이 §7의 가정과 연결
+**Quality criteria**:
+- Each trade-off connects to an S2.2 design judgment
+- "What it doesn't do" must be clear enough to prevent scope confusion
 
-**안티패턴**:
-- ❌ 미완성 상태를 숨기고 "완성된 제품"으로 서술
-- ❌ 구현되지 않은 기능을 마치 구현된 것처럼 서술
-
----
-
-## 6. Appendix 가이드
-
-Appendix는 본문의 흐름을 방해하지 않으면서 레퍼런스가 필요한 정보를 담는다.
-
-**원칙**:
-- Appendix도 자기완결 원칙을 따른다. 에이전트 파일이나 코드를 참조하지 않는다
-- 대상 독자가 Appendix 내에서 모든 용어와 구조를 이해할 수 있어야 한다
-
-**일반적인 Appendix**:
-
-| Appendix | 용도 | 포함 기준 |
-|----------|------|----------|
-| 설치와 운영 | 셋업, 설정, 운영 가이드 | 대상 독자가 직접 설치/운영하는 경우 |
-| 파일 구조 | 디렉토리 트리 + 파일별 역할 | 파일 구조 이해가 필요한 경우 |
-| 용어집 | 제품 고유 용어 정의 | 제품 고유 용어가 10개 이상인 경우 |
+**Anti-patterns**:
+- No: No constraints, "can do everything"
+- No: Hide the cost of trade-offs
 
 ---
 
-## 7. 작성 규칙
+### S7 Risk Model
 
-### 언어
+**Purpose**: Define core assumptions, what happens if they break, and detection signals.
 
-- 대상 독자의 언어에 맞춘다 (한국어 제품은 한국어, 국제 제품은 영어)
-- 기술 용어는 대상 독자 수준에 맞게 사용. 불가피한 경우 용어집(Appendix C)에서 정의
+**Required structure**:
 
-### 정보 밀도
+| Assumption | If Broken | Detection Signal |
+|-----------|-----------|-----------------|
+| {what must be true} | {impact when broken} | {how to detect it} |
 
-- 모든 문장이 정보 무게를 가져야 한다
-- 채움말, 반복, 장식적 서술 제거
-- 테이블이 산문보다 효율적이면 테이블 사용
+**Quality criteria**:
+- Connect to S2.3 preconditions
+- Detection signals must be specific and measurable
 
-### 참조 규칙
-
-- Blueprint 내부 섹션 간 참조: `§{번호}` 형식 (예: "§2.2 설계 판단 참조")
-- 외부 문서 참조: 자기완결 원칙을 먼저 확인. 대상 독자가 접근 가능한 경우만 참조
-- 설계 판단 참조: §4, §5, §6에서 근거를 밝힐 때 판단의 영문명 사용
-
-### 길이 가이드
-
-| 제품 복잡도 | 예상 분량 | §4 비중 |
-|------------|----------|---------|
-| 단순 (단일 기능) | 200~400줄 | 30% |
-| 중간 (다기능 서비스) | 400~800줄 | 40% |
-| 복합 (플랫폼/도구킷) | 800~1200줄 | 45% |
+**Anti-patterns**:
+- No: List risks without detection methods
+- No: "No risks"
 
 ---
 
-## 8. 체크리스트 (Self-Review)
+### S8 Current State
 
-Blueprint 작성 완료 후 다음을 확인한다:
+**Purpose**: Honestly describe the product's current state.
 
-### 구조
+**Required elements**:
+- Current version/state
+- Unvalidated hypotheses (not yet validated through real usage)
+- Known gaps (differences between design and implementation)
 
-- [ ] YAML frontmatter에 `audience` 필드 존재
-- [ ] 비전 선언이 frontmatter 바로 아래에 존재
-- [ ] 8개 섹션이 모두 존재 (§1~§8)
-- [ ] Appendix가 필요한 경우 포함
+**Quality criteria**:
+- Consistent with CHANGELOG or release notes
+- Unvalidated hypotheses connect to S7 assumptions
 
-### 자기완결
+**Anti-patterns**:
+- No: Hide incomplete state and describe as "complete product"
+- No: Describe unimplemented features as if implemented
 
-- [ ] "코드 참조", "에이전트 파일 참조" 문구가 0건
-- [ ] 대상 독자가 이 문서만으로 제품을 이해할 수 있는가
-- [ ] 모든 용어가 문서 내에서 정의되거나 용어집에 있는가
+---
 
-### 인과 관계
+## 6. Appendix Guide
 
-- [ ] §2.1(원칙) → §2.2(판단) → §4/§5/§6에서 근거로 참조
-- [ ] §2.3(전제 조건) → §7(Risk Model)에서 연결
-- [ ] §4.2의 각 단계에 근거 설계 판단이 명시
+Appendices hold reference information without disrupting the main text flow.
 
-### 정보 보존 (기존 문서 재작성 시)
+**Principles**:
+- Appendices also follow the self-containment principle. Do not reference agent files or code
+- Target audience must understand all terms and structures within the Appendix
 
-- [ ] 기존 문서의 모든 정보가 새 구조에 매핑됨
-- [ ] 손실 항목이 없음을 매핑 테이블로 검증
+**Common Appendices**:
 
-### 정합성
+| Appendix | Purpose | Inclusion Criteria |
+|----------|---------|-------------------|
+| Setup & Operations | Setup, configuration, operations guide | When target audience directly installs/operates |
+| File Structure | Directory tree + per-file roles | When file structure understanding is needed |
+| Glossary | Product-specific term definitions | When 10+ product-specific terms exist |
 
-- [ ] 비전 선언의 핵심 원칙 = §2.1 핵심 원칙 (동일 문장)
-- [ ] §8 Current State가 CHANGELOG와 정합
-- [ ] 외부 참조 문서(JDD 등)와 중복이 아닌 역할 분담
+---
+
+## 7. Writing Rules
+
+### Language
+
+- Match the target audience's language (Korean products in Korean, international products in English)
+- Use technical terms at the target audience's level. Define unavoidable terms in the glossary (Appendix C)
+
+### Information Density
+
+- Every sentence must carry information weight
+- Remove filler words, repetition, decorative prose
+- Use tables when more efficient than prose
+
+### Reference Rules
+
+- Intra-Blueprint section references: `S{number}` format (e.g., "see S2.2 Design Judgments")
+- External document references: check self-containment principle first. Reference only if target audience can access
+- Design judgment references: use English judgment names when citing rationale in S4, S5, S6
+
+### Length Guide
+
+| Product Complexity | Expected Length | S4 Proportion |
+|-------------------|----------------|---------------|
+| Simple (single feature) | 200-400 lines | 30% |
+| Medium (multi-feature service) | 400-800 lines | 40% |
+| Complex (platform/toolkit) | 800-1200 lines | 45% |
+
+---
+
+## 8. Checklist (Self-Review)
+
+Verify the following after Blueprint completion:
+
+### Structure
+
+- [ ] YAML frontmatter has `audience` field
+- [ ] Vision statement exists immediately below frontmatter
+- [ ] All 8 sections exist (S1-S8)
+- [ ] Appendix included if needed
+
+### Self-Containment
+
+- [ ] Zero occurrences of "see code" or "see agent file"
+- [ ] Target audience can understand the product from this document alone
+- [ ] All terms are defined within the document or in the glossary
+
+### Causal Chain
+
+- [ ] S2.1 (principle) → S2.2 (judgments) → referenced as rationale in S4/S5/S6
+- [ ] S2.3 (preconditions) → connected in S7 (Risk Model)
+- [ ] Each step in S4.2 cites a rationale design judgment
+
+### Information Preservation (when rewriting existing documents)
+
+- [ ] All information from the existing document is mapped to the new structure
+- [ ] Verified zero loss items via mapping table
+
+### Consistency
+
+- [ ] Vision statement core principle = S2.1 core principle (same sentence)
+- [ ] S8 Current State is consistent with CHANGELOG
+- [ ] External reference documents (JDD, etc.) have role division, not overlap

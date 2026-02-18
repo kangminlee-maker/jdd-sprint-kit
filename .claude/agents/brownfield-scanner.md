@@ -33,10 +33,10 @@ Produces **L1 (Domain Concept) + L2 (Behavior)** layers.
 
 **Trigger**: Only runs when `document_project_path` is non-null.
 
-**Defense** (부분 성공 허용):
-- 경로 자체가 존재하지 않음 → Stage 0 전체 스킵, Stage 1로 fallback
-- 일부 파일만 존재 → **존재하는 파일만 소비**, 누락 파일은 Self-Validation Report에 기록. 예: `project-overview.md`는 있지만 `api-contracts.md`는 없으면 L1 시드 데이터만 생성하고 L2는 Stage 1~4에서 수집
-- 파일 존재하지만 파싱 실패 → 해당 파일만 스킵, 나머지는 정상 소비. 실패 원인을 Self-Validation Report에 기록
+**Defense** (partial success allowed):
+- Path itself does not exist → Skip Stage 0 entirely, fall back to Stage 1
+- Only some files exist → **Consume only available files**, record missing files in Self-Validation Report. e.g., if `project-overview.md` exists but `api-contracts.md` does not, generate L1 seed data only and collect L2 via Stages 1-4
+- File exists but parse fails → Skip that file only, consume remaining files. Record failure cause in Self-Validation Report
 
 Read artifacts from `document_project_path` and extract seed data for L1~L4:
 
@@ -170,9 +170,9 @@ After collection, perform self-check:
 ```
 
 **Gap Classification**:
-- `신규 기능` — No existing system equivalent expected
-- `데이터 부재` — Should exist but MCP didn't return it
-- `MCP 장애` — Server timeout or error
+- `new-feature` — No existing system equivalent expected
+- `data-absent` — Should exist but MCP didn't return it
+- `mcp-failure` — Server timeout or error
 
 ## MCP Fallback Strategy
 
@@ -255,5 +255,5 @@ For Pass 2, **APPEND** L3 and L4 layers to existing file (do not overwrite L1/L2
 4. **No silent gaps** — every source failure or empty result is explicitly recorded
 5. **Existing keywords check** — before searching, read existing brownfield-context.md layers to avoid duplicate searches
 6. **Max 3 hops** in Structural Traversal (MCP) and Import Tracing (Local) to prevent unbounded exploration
-7. **svc-map vs figma conflict** — when data conflicts, figma takes precedence (more up-to-date). Record the conflict in the `gaps` section: "svc-map: {value_A}, figma: {value_B} → figma 채택"
+7. **svc-map vs figma conflict** — when data conflicts, figma takes precedence (more up-to-date). Record the conflict in the `gaps` section: "svc-map: {value_A}, figma: {value_B} → figma adopted"
 8. **Local vs MCP conflict** — local codebase takes precedence for co-located code. Record both sources when data conflicts.

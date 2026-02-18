@@ -25,17 +25,17 @@ Structured and evidence-based. Every judgment cites specific artifact sections. 
 
 ### Goals Fallback
 
-goals 배열이 비어있는 경우 (Guided/Direct 경로):
+When the goals array is empty (Guided/Direct routes):
 
-1. `artifact_path`에서 PRD 경로를 추론한다:
-   - artifact_path가 `specs/{feature}/planning-artifacts/` 하위 → 같은 디렉토리의 `prd.md`
-   - artifact_path가 `specs/{feature}/requirements.md` 등 → `specs/{feature}/planning-artifacts/prd.md`
-2. PRD의 **Success Criteria > Measurable Outcomes** 섹션에서 목표 3~5개를 추출한다
-3. 추출한 goals를 Stage 1 커버리지 매핑에 사용한다
-4. sprint-input.md에 역기록하지 않는다 (Scope Gate 내부에서만 사용)
+1. Infer PRD path from `artifact_path`:
+   - If artifact_path is under `specs/{feature}/planning-artifacts/` → use `prd.md` in the same directory
+   - If artifact_path is `specs/{feature}/requirements.md` etc. → use `specs/{feature}/planning-artifacts/prd.md`
+2. Extract 3-5 goals from the PRD's **Success Criteria > Measurable Outcomes** section
+3. Use the extracted goals for Stage 1 coverage mapping
+4. Do not write back to sprint-input.md (used internally by Scope Gate only)
 
-**적용 범위**: goals fallback은 **prd 이후 단계**(prd, architecture, epics, spec)에서만 적용한다.
-product-brief 단계에서 goals가 비어있으면 Stage 1을 SKIP하고 Stage 2-3만 실행한다.
+**Scope**: Goals fallback applies only to **post-brief stages** (prd, architecture, epics, spec).
+If goals are empty at the product-brief stage, SKIP Stage 1 and run Stage 2-3 only.
 
 ### Stage 1: Structured Probe (Coverage Mapping)
 
@@ -44,7 +44,7 @@ For each goal in `goals[]`, locate specific items in the artifact that address i
 ```markdown
 | Goal | Covered By | Section/Line | Customer Impact | Status |
 |------|-----------|--------------|-----------------|--------|
-| {goal_1} | {specific item from artifact} | {section reference} | {고객에게 미치는 영향 1줄} | COVERED / UNCOVERED |
+| {goal_1} | {specific item from artifact} | {section reference} | {1-line customer impact} | COVERED / UNCOVERED |
 | {goal_2} | ... | ... | ... | ... |
 ```
 
@@ -88,7 +88,7 @@ Apply stage-specific checklist:
 
 #### epics
 - [ ] Every FR from PRD is covered by at least one Story
-- [ ] Stories tagged `(기존 확장)` or `(신규)` per brownfield
+- [ ] Stories tagged `(existing-extension)` or `(new)` per brownfield
 - [ ] Acceptance Criteria on every Story are testable
 - [ ] Epic priorities align with PRD P0/P1
 - [ ] Dependencies between Stories are explicit
@@ -97,18 +97,18 @@ Apply stage-specific checklist:
 
 #### spec
 
-**requirements.md 검증**:
-- [ ] 모든 PRD FR이 requirement item으로 변환됨
-- [ ] 요구사항 ID가 PRD FR 번호와 추적 가능
-- [ ] NFR이 numeric target과 함께 포함됨
+**requirements.md checks**:
+- [ ] All PRD FRs are converted to requirement items
+- [ ] Requirement IDs are traceable to PRD FR numbers
+- [ ] NFRs are included with numeric targets
 
-**design.md 검증**:
-- [ ] Architecture의 주요 컴포넌트가 모듈 구조에 반영됨
-- [ ] 데이터 모델이 Architecture와 일치
-- [ ] API 엔드포인트 인벤토리가 Architecture API 설계와 일치
-- [ ] Brownfield 통합점이 명시됨
+**design.md checks**:
+- [ ] Architecture's major components are reflected in module structure
+- [ ] Data model matches Architecture
+- [ ] API endpoint inventory matches Architecture API design
+- [ ] Brownfield integration points are specified
 
-**tasks.md 검증**:
+**tasks.md checks**:
 - [ ] Every Story from Epics is covered by at least one Task
 - [ ] Every Task has an Entropy Tolerance tag (High/Medium/Low)
 - [ ] Every Task has File Ownership assigned (no unowned files)
@@ -119,24 +119,24 @@ Apply stage-specific checklist:
 
 #### deliverables
 
-**Input**: `artifact_paths` 배열에 key-flows.md + api-spec.yaml 포함
+**Input**: `artifact_paths` array includes key-flows.md + api-spec.yaml
 
 **API Data Sufficiency Check**:
-1. key-flows.md에서 API 호출이 포함된 모든 Step을 추출한다
-2. 각 Flow별로 API 호출 순서를 정리한다
-3. api-spec.yaml에서 각 API의 요청/응답 스키마를 참조한다
-4. Flow 내 후행 API의 요청 필드 각각에 대해:
-   - 선행 API 응답 (같은 Flow 내 이전 모든 Step 누적)에 해당 필드가 있는가?
-   - 없다면, 사용자 입력(화면에서 직접 입력하는 필드)으로 획득 가능한가?
-5. 획득 경로가 불명확한 필드 → WARN 리포트에 포함
+1. Extract all Steps containing API calls from key-flows.md
+2. Organize API call sequences per Flow
+3. Reference each API's request/response schema from api-spec.yaml
+4. For each request field of a subsequent API within a Flow:
+   - Does the preceding API response (cumulative across all prior Steps in the same Flow) contain this field?
+   - If not, can it be obtained from user input (fields entered directly on screen)?
+5. Fields with unclear acquisition paths → include in WARN report
 
-**추가 체크리스트**:
-- [ ] 모든 key-flows의 API 호출이 api-spec.yaml에 정의된 엔드포인트와 매칭됨
-- [ ] 연속 API 호출 간 데이터 충족성 확인 (Data Sufficiency WARN 0건)
-- [ ] api-spec.yaml의 요청 스키마 필수 필드가 key-flows 상에서 획득 가능
-- [ ] 에러 응답(4xx) 시나리오가 key-flows의 alternative path에 반영됨
+**Additional checklist**:
+- [ ] All API calls in key-flows match endpoints defined in api-spec.yaml
+- [ ] Data sufficiency confirmed across consecutive API calls (0 Data Sufficiency WARNs)
+- [ ] Required fields in api-spec.yaml request schemas are obtainable from key-flows
+- [ ] Error response (4xx) scenarios are reflected in key-flows alternative paths
 
-**Verdict**: Data Sufficiency WARN이 1건 이상이면 Stage 2 FAIL.
+**Verdict**: If 1+ Data Sufficiency WARNs → Stage 2 FAIL.
 
 **Verdict**: If 2+ items FAIL → Stage 2 FAIL.
 
@@ -148,7 +148,7 @@ With Stage 1-2 results as context, identify issues that structured checks missed
 - **Implicit assumptions**: Unstated dependencies or prerequisites
 - **Edge case gaps**: Scenarios not covered by User Journeys or AC
 - **Domain rule violations**: Brownfield constraints not respected
-- **Customer-facing gaps**: 고객 관점에서 빠진 시나리오나 사용자 경험 단절
+- **Customer-facing gaps**: Missing scenarios or UX continuity breaks from the customer's perspective
 - **Scope creep indicators**: Content unrelated to Sprint goals (>30% of artifact)
 
 **Verdict**: Only CRITICAL issues cause Stage 3 FAIL. Warnings are noted but don't block.
@@ -187,16 +187,16 @@ With Stage 1-2 results as context, identify issues that structured checks missed
 
 ### Overall Verdict: PASS / FAIL
 
-**1-Line Summary**: {stage} {PASS/FAIL} — {핵심 판단 1줄}
+**1-Line Summary**: {stage} {PASS/FAIL} — {1-line key verdict}
 
 **Failure Source** (if FAIL): `local` | `upstream:{stage}`
-- `local`: 현재 단계에서 수정 가능한 문제 (기본값)
-- `upstream:{stage}`: 이전 단계의 산출물에 문제가 있어 현재 단계에서 해결 불가
-  - 예: `upstream:prd` — PRD의 모순적 요구사항이 Architecture에서 해결 불가
-  - 예: `upstream:product-brief` — Problem statement 누락으로 PRD 작성 불가
+- `local`: Issue fixable at the current stage (default)
+- `upstream:{stage}`: Issue originates from a prior stage's artifact, not resolvable here
+  - e.g., `upstream:prd` — contradictory PRD requirements cannot be resolved in Architecture
+  - e.g., `upstream:product-brief` — missing problem statement prevents PRD authoring
 
 **Suggested Fix** (if FAIL):
-{실패 원인을 해결하기 위한 구체적 조치. upstream인 경우 원인 단계에서 수정할 내용을 명시}
+{Specific actions to resolve the failure. For upstream failures, specify what to fix at the originating stage}
 
 **Failure Reasons** (if FAIL):
 1. {specific reason with reference}
@@ -205,9 +205,9 @@ With Stage 1-2 results as context, identify issues that structured checks missed
 **Recommendations** (if PASS with warnings):
 1. {recommendation}
 
-**Customer Impact Summary** (항상 포함):
-{Scope Gate 결과를 고객 관점 1~2문장으로 요약}
-예: "고객이 튜터를 차단하는 시나리오가 완전히 커버됨. 단, 차단 해제 시나리오가 누락되어 확인 필요."
+**Customer Impact Summary** (always included):
+{Summarize Scope Gate results from the customer's perspective in 1-2 sentences}
+e.g., "Tutor exclusion scenarios are fully covered. However, the unblock/restore scenario is missing and needs confirmation."
 ```
 
 ## Rules
