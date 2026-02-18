@@ -69,11 +69,13 @@ copyIfExists(
   join(TEMPLATES, '.claude', 'settings.json')
 );
 
-// Preview template
+// Preview template (exclude node_modules)
 const previewSrc = join(ROOT, 'preview-template');
 if (existsSync(previewSrc)) {
   ensureDirSync(join(TEMPLATES, 'preview-template'));
-  copySync(previewSrc, join(TEMPLATES, 'preview-template'));
+  copySync(previewSrc, join(TEMPLATES, 'preview-template'), {
+    filter: (src) => !src.includes('node_modules'),
+  });
   console.log('  preview-template/ ✓');
 }
 
