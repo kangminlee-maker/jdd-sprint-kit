@@ -2,7 +2,7 @@
 synced_to: "6195930"  # blueprint.md 외 소스 파일 변경 중 마지막 반영 커밋. blueprint.md 자체 커밋은 추적하지 않는다.
 audience: "비개발자 제품 전문가"
 product: "BMAD Sprint Kit"
-version: "0.3.0"
+version: "0.3.1"
 ---
 
 # BMAD Sprint Kit Blueprint
@@ -820,9 +820,10 @@ JP1 ──→ JP2 ──→ Done
 
 ## 8.1 현재 버전
 
-**v0.3.0** (2026-02-18)
+**v0.3.1** (2026-02-18)
 
 주요 변경:
+- Blueprint 범용 8-Section 구조 재작성 + Blueprint Format Guide 신규
 - MSW Mock Layer로 Prism 완전 대체 (stateful 프로토타입)
 - Comment 처리 플로우 도입 (영향 분석 → cost 기반 수정/재생성 선택)
 - API Data Sufficiency 검증 (Scope Gate deliverables 단계)
@@ -831,14 +832,23 @@ JP1 ──→ JP2 ──→ Done
 
 > 전체 변경 이력: `CHANGELOG.md`
 
-## 8.2 미검증 가설
+## 8.2 파이프라인 검증 상태
+
+| 구간 | 상태 | 비고 |
+|------|------|------|
+| Phase 0 → JP1 (기획) | 구현 완료, 부분 검증 | 개발자 시뮬레이션으로 동작 확인 |
+| JP1 → JP2 (Deliverables + 프로토타입) | 구현 완료, 부분 검증 | 개발자 시뮬레이션으로 동작 확인 |
+| JP2 이후 (Parallel + Validate + Circuit Breaker) | **구현 완료, 미검증** | 실제 실행 테스트 미수행 |
+
+## 8.3 미검증 가설
 
 - **실제 프로덕트 팀으로 Sprint를 실행한 적이 없다** — 모든 테스트는 개발자에 의한 시뮬레이션
 - **실제 Brownfield 프로젝트에서 MCP 기반 스캔을 실행한 적이 없다** — Brownfield Scanner의 L3/L4 품질 미검증
 - **프로토타입의 판단 피델리티가 충분한지 미검증** — MSW stateful mock이 실제 판단에 충분한지
 - **비용 공식의 계수가 미보정** — 사전 입력 비용, 생성 비용, 판단 비용의 상대적 크기 미측정
+- **JP2 이후 파이프라인(Parallel, Validate, Circuit Breaker)의 실제 동작 미검증** — 에이전트 정의는 완성되었으나 end-to-end 실행 테스트 없음
 
-## 8.3 알려진 갭
+## 8.4 알려진 갭
 
 - **Sprint Kit → BMad Phase 4 자동 전환 미지원**: tasks.md 고유 정보(DAG, Entropy, File Ownership) 수동 전달 필요
 - **멀티 사용자 미지원**: 현재 한 명의 제품 전문가가 전체 Sprint를 진행하는 것을 전제
