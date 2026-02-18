@@ -129,6 +129,33 @@ AI가 기존 서비스의 구조를 알아야 중복 API를 만들거나 기존 
 2. **MCP 서버** — AI가 필요할 때 접속해서 정보를 가져오는 외부 기억 저장소
 3. **로컬 코드베이스** — 같은 저장소에 있는 소스 코드를 직접 스캔
 
+### Brownfield Context 생성
+
+#### 자동 생성 (Sprint 경로)
+
+`/sprint` 실행 시 brownfield-context.md가 자동으로 생성된다:
+
+1. **Phase 0** — 토폴로지 판정: document-project 유무, MCP 연결 상태, 빌드 도구를 감지하여 프로젝트 유형(`standalone` / `co-located` / `msa` / `monorepo`)을 결정
+2. **Pass 1 (Broad Scan)** — Brief 키워드 기반으로 도메인 개념(L1)과 행동 패턴(L2)을 수집
+3. **Pass 2 (Targeted Scan)** — Architecture/Epics 완료 후 통합 지점(L3)과 코드 수준(L4)을 추가 수집
+
+수집 결과는 `specs/{feature}/planning-artifacts/brownfield-context.md`에 L1~L4 계층으로 기록된다.
+
+#### 사전 준비: document-project (권장)
+
+Sprint 전에 BMad `/document-project` 워크플로우를 실행하면 스캔 품질이 높아진다:
+
+```bash
+# Claude Code에서 실행
+/document-project
+```
+
+기존 코드베이스를 분석하여 `_bmad-output/` 아래에 구조화 문서(`project-overview.md`, `api-contracts.md`, `data-models.md` 등)를 생성한다. Sprint의 Brownfield Scanner가 이 문서를 시드 데이터로 활용하여 MCP/로컬 스캔의 검색 범위를 좁힌다.
+
+#### MCP 서버 구성
+
+외부 서비스 데이터를 연동하려면 MCP 서버를 구성한다:
+
 | MCP 서버 | 제공 정보 |
 |----------|-----------|
 | `backend-docs` | API 스펙, 도메인 정책, 비즈니스 규칙, 데이터 모델 |
@@ -136,7 +163,22 @@ AI가 기존 서비스의 구조를 알아야 중복 API를 만들거나 기존 
 | `svc-map` | 고객 여정, 화면 스크린샷, 플로우 그래프, 서비스 맵 |
 | `figma` | 최신 와이어프레임, 디자인 토큰, 컴포넌트 스펙 (실시간 OAuth) |
 
-Greenfield(기존 시스템 없음) 프로젝트에서는 MCP 없이도 Sprint가 동작한다.
+#### 수동 준비 (MCP 없이)
+
+MCP 서버 없이도 brownfield-context.md를 직접 작성하여 Sprint에 제공할 수 있다:
+
+```bash
+# feature 디렉토리에 직접 배치
+specs/{feature}/brownfield-context.md
+# 또는
+specs/{feature}/planning-artifacts/brownfield-context.md
+```
+
+Sprint가 기존 파일을 감지하면 해당 레벨을 재스캔하지 않고 활용한다. 포맷은 `_bmad/docs/brownfield-context-format.md`를 참고한다. 튜토리얼 예제(`specs/test-tutor-excl/`)에 수동 작성된 brownfield-context.md 샘플이 포함되어 있다.
+
+#### Greenfield 프로젝트
+
+기존 시스템이 없는 Greenfield 프로젝트에서는 Brownfield 데이터 없이도 Sprint가 정상 동작한다. Phase 0에서 자동 감지되며 별도 설정이 필요 없다.
 
 > 상세: [Blueprint §4.1 시스템 구성 요소](docs/blueprint.md#41-시스템-구성-요소)
 
