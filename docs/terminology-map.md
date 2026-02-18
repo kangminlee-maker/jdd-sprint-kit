@@ -40,6 +40,14 @@ Korean-English canonical term reference for BMad Sprint Kit. All files use the *
 | 도구 스택 | tool stack | system components |
 | 핸드오프 | handoff | phase transition rules |
 | 전파 | propagation | downstream update after edit |
+| 프로덕트 전문가 | product expert | target user — customer expert who judges deliverables |
+| 갭 분류 | gap classification | brownfield scanner: `new-feature` / `data-absent` / `mcp-failure` |
+| 자기완결 | self-containment | Blueprint principle — no external file references |
+| 정보 밀도 | information density | writing rule — every sentence carries weight |
+| 추적성 체인 | traceability chain | PRD: Vision → Success Criteria → Journeys → FR |
+| 영향 분석 | impact analysis | JP Comment: system analyzes feedback scope |
+| 비용 투명성 | cost transparency | JP Comment: user sees cost before choosing |
+| 고객 여정 서사 | customer journey narrative | JP1 presentation format |
 
 ## Sprint Flow Terms
 
