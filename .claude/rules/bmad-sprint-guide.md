@@ -1,7 +1,11 @@
 # Sprint Kit — BMad Method 실행 확장팩
 
+> 유일한 원칙: **사람의 판단만이 축적되는 영속 자산이다. AI 산출물은 전부 재생성 가능한 소모품이다.**
+>
 > AI가 만들고, 사람이 판단한다. 사람의 입력이 만들기의 품질을 높이고, 사람의 판단이 방향을 결정한다.
 > — Judgment-Driven Development (`docs/judgment-driven-development.md`)
+>
+> 제품 전체 그림: `docs/blueprint.md` (§1 Problem ~ §8 Current State + Appendix)
 
 ## 도구 스택
 
@@ -9,7 +13,8 @@
 |------|------|
 | **BMad Method** | 기반 플랫폼: 에이전트, 워크플로우 엔진, 퍼실리테이션 (`_bmad/`) |
 | **Sprint Kit** | BMad 실행 확장팩: 자동 파이프라인, Specs, Deliverables, Prototype |
-| **Claude Code Native Teams** | 에이전트 조율, 태스크 의존성 추적 |
+| **Claude Code** | AI IDE — 에이전트 실행 환경 |
+| **Claude Code Native Teams** | 에이전트 조율, 태스크 의존성 추적 (`Task`, `SendMessage`) |
 | **gh CLI** | GitHub Issue/PR 관리 |
 
 ## 경로 선택
@@ -130,9 +135,12 @@ BMad 12단계 (사람-AI 대화):
 │   └── commands/                       # BMad + Sprint 커맨드
 ├── _bmad/                              # BMad Method (기반 플랫폼)
 │   ├── bmm/                            # BMad 에이전트, 워크플로우
-│   └── docs/                           # 방법론 레퍼런스
+│   └── docs/                           # 포맷 가이드 (PRD, Blueprint, Sprint Input 등)
 ├── _bmad-output/                       # BMad 산출물 출력 (Guided 경로)
 │   └── planning-artifacts/             # Product Brief, PRD, Architecture, Epics
+├── docs/                               # 프레임워크 문서
+│   ├── blueprint.md                    # 제품 Blueprint (§1~§8 + Appendix)
+│   └── judgment-driven-development.md  # 설계 철학 (JDD)
 ├── specs/                              # Sprint 산출물 (feature 단위)
 │   └── {feature}/
 │       ├── inputs/                     # 사용자 원본 + sprint-input.md
