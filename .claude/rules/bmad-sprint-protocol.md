@@ -77,7 +77,7 @@ specs/{feature}/
 ├── design.md                   # Architecture → 설계
 ├── tasks.md                    # Epics → 병렬 태스크 + Entropy + File Ownership
 │
-├── api-spec.yaml               # OpenAPI 3.1 (API 계약 — Prism + Specmatic 공용)
+├── api-spec.yaml               # OpenAPI 3.1 (API 계약 — MSW Mock + Specmatic 공용)
 ├── api-sequences.md            # Mermaid sequence diagrams
 ├── schema.dbml                 # Database schema (DBML)
 ├── bdd-scenarios/              # Gherkin acceptance tests
@@ -86,7 +86,7 @@ specs/{feature}/
 ├── traceability-matrix.md      # FR → Design → Task → BDD → API 매핑
 ├── key-flows.md                # 핵심 사용자 플로우 Step-by-Step (JP2 검증용)
 ├── readiness.md                # JP1/JP2 Readiness 데이터 (Layer 0 자동 승인 판정용)
-└── preview/                    # React + Prism 프로토타입 (npm run dev)
+└── preview/                    # React + MSW 프로토타입 (npm run dev)
 ```
 
 ## 핸드오프 규칙

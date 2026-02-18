@@ -141,6 +141,6 @@ BMad 12단계 (사람-AI 대화):
 │       ├── requirements.md
 │       ├── design.md
 │       ├── tasks.md
-│       └── preview/                    # React + Prism 프로토타입
+│       └── preview/                    # React + MSW 프로토타입
 └── src/                                # 소스 코드
 ```

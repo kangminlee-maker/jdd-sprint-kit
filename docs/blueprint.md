@@ -1,3 +1,7 @@
+---
+synced_to: "6195930"  # fix: preview-template 빌드 시 node_modules 제외
+---
+
 # BMAD Sprint Kit Blueprint
 
 > **Sprint Kit은 BMad Method 위에서 동작하는 Judgment-Driven Development 실행 확장팩이다.**
@@ -19,12 +23,12 @@ flowchart LR
     D --> E["5. Specs 생성"]
     E --> JP1{{"JP1\n고객에게 필요한\n제품인가?"}}
     JP1 -->|Confirm| F["6. Deliverables\n생성"]
-    JP1 -->|Comment| C
-    JP1 -->|Redirect| CB
+    JP1 -->|Comment| JP1_FB["영향 분석\n→ 수정반영 or 재생성"]
+    JP1_FB --> JP1
     F --> JP2{{"JP2\n고객이 원하는\n경험인가?"}}
     JP2 -->|Confirm| G["7. 병렬 구현\n(Parallel)"]
-    JP2 -->|Comment| F
-    JP2 -.->|Redirect to JP1| JP1
+    JP2 -->|Comment| JP2_FB["영향 분석\n→ 수정반영 or 재생성"]
+    JP2_FB --> JP2
     G --> H["8. 검증\n(Validate)"]
     H -->|통과| I["완료"]
     H -->|실패 반복| CB["방향 전환\n(Circuit Breaker)"]
@@ -117,10 +121,11 @@ AI 시대의 재생성 방식:
 전제: 사람의 판단(피드백)이 축적되어 다음 생성에 반영됨
 ```
 
-**Sprint Kit 구현 — Circuit Breaker + Spec 보존 + 코드 폐기**:
-- Circuit Breaker: 비상 모드가 아닌 **정상적인 재생성 트리거**
-- JP1 → Comment → 재생성 → JP1: PRD 방향이 틀리면 전체 재생성
-- JP2 → Redirect to JP1: 프로토타입을 보고 나서야 요구사항 오류를 발견하면 PRD부터 재생성
+**Sprint Kit 구현 — Comment 처리 플로우 + Circuit Breaker + 코드 폐기**:
+- **Comment 처리 플로우**: JP에서 Comment 시, 피드백 규모에 따라 **수정반영+전파**(소규모) 또는 **재생성**(대규모)을 cost와 함께 제시. 사용자가 선택한다.
+  - 수정반영+전파: 영향 받는 파일을 양방향 수정 → Scope Gate 검증
+  - 재생성: 해당 Phase부터 파이프라인 재실행 (Scope Gate 포함)
+- Circuit Breaker: 반복 실패 시 방향 전환 — 재생성 범위가 Sprint 전체로 확장될 때 발동
 - Specs(요구사항, 설계)는 보존하되, 코드는 언제든 폐기 가능
 
 ### 원칙 4: Customer-Lens Judgment Points — 고객 관점의 판단 시점
@@ -132,7 +137,7 @@ AI 시대의 재생성 방식:
 **Sprint Kit 구현 — JP1 "고객에게 필요한 제품인가?" + JP2 "고객이 원하는 경험인가?"**:
 - JP1: 요구사항, 사용자 시나리오, 기능 범위를 고객 여정 서사로 제시. BMad 12단계가 발견하려는 것들을 구조적 체크리스트로 보조
 - JP2: 동작하는 프로토타입 + 핵심 시나리오 가이드. 직접 클릭해보고 판단
-- 응답: Confirm(진행) / Comment(해당 산출물 재생성) / Redirect(방향 전환)
+- 응답: **Confirm**(진행) / **Comment**(영향 분석 → 수정반영+전파 또는 재생성을 cost와 함께 제시 → 사용자 선택)
 
 ### 원칙 5: Knowledge Shape Determines Route — 지식의 형태가 경로를 결정한다
 
@@ -174,21 +179,21 @@ Sprint Kit은 "2가지 고객 질문에 답한다":
 **JP1 (Judgment Point 1): "고객에게 필요한 제품인가?"**
 - 판단 대상: 요구사항, 사용자 시나리오, 기능 범위, 우선순위
 - 제시 형식: 고객 여정 서사 + 원래 의도 ↔ FR 매핑 + 구조적 체크리스트
-- 응답: Confirm / Comment(→ 재생성) / Redirect(→ 방향 전환)
+- 응답: **Confirm** / **Comment** → 피드백 규모에 따라 수정반영+전파 또는 재생성 (cost 기반 선택)
 
 **JP2 (Judgment Point 2): "고객이 원하는 경험인가?"**
 - 판단 대상: 프로토타입, 화면 흐름, 인터랙션
 - 제시 형식: 동작하는 프로토타입 + 핵심 시나리오 가이드
-- 응답: Confirm / Comment(→ 재생성) / Redirect to JP1(→ 요구사항 재검토)
+- 응답: **Confirm** / **Comment** → 피드백 규모에 따라 수정반영+전파 또는 재생성 (cost 기반 선택)
 
-**역방향 루프**: JP2에서 "요구사항 자체가 잘못됐다"고 판단되면 JP1으로 돌아간다.
+**역방향 루프**: JP2에서 "요구사항 자체가 잘못됐다"고 판단되면, Comment의 **재생성 옵션** 범위가 JP1 이전 Phase로 자연 확장된다.
 이것은 실패가 아니라, **구체적 결과물이 촉진한 정상적인 발견 프로세스**다.
 
 ```
 JP1 ──→ JP2 ──→ Done
  ↑        │
  └────────┘  "프로토타입을 보니 요구사항이 잘못됐네"
-             → JP1으로 돌아가서 PRD 재생성
+             → Comment → 재생성 범위가 PRD까지 확장
 ```
 
 ---
@@ -207,7 +212,8 @@ JP1 ──→ JP2 ──→ Done
 | **Git Worktree** | 파일 충돌 없는 병렬 구현 환경 |
 | **GitHub CLI (`gh`)** | Issue/PR 관리, 태스크 추적 |
 | **Specmatic** | OpenAPI 계약 기반 자동 테스트 (Worker 자체 검증) |
-| **Prism** | OpenAPI Mock 서버 (프로토타입 + 개발 중 API 시뮬레이션) |
+| **MSW (Mock Service Worker)** | 프로토타입 stateful API (브라우저 Service Worker에서 네트워크 인터셉트) |
+| **@redocly/cli** | OpenAPI 스펙 lint (스펙 구문/구조 + example ↔ schema 일치 검증) |
 | **npx bmad-sprint-kit** | Sprint Kit 설치/업데이트 CLI |
 
 ## 2.2 에이전트 아키텍처
@@ -292,7 +298,7 @@ Sprint Kit은 `npx bmad-sprint-kit` CLI로 설치/업데이트한다.
 - `.claude/hooks/` — Hook 스크립트 4개
 - `.claude/settings.json` — Hook 설정
 - `_bmad/docs/` — 포맷 가이드 4개
-- `preview-template/` — React + Vite + Prism 프로토타입 템플릿
+- `preview-template/` — React + Vite + MSW 프로토타입 템플릿
 
 ## 2.5 Hook 시스템
 
@@ -513,6 +519,10 @@ Greenfield 시 → 이 단계 스킵.
 
 **@scope-gate 최종 검증**
 
+**Step 5-G: @scope-gate deliverables** — Specs 생성 후 API Data Sufficiency 검증:
+- key-flows.md의 API 호출 순서 대비, 후행 API의 요청 필드가 선행 API 응답에서 획득 가능한지 확인
+- 획득 경로가 불명확한 필드는 WARN으로 리포트
+
 ### 산출물
 
 ```
@@ -570,6 +580,10 @@ specs/{feature}/planning-artifacts/brownfield-context.md  (L1 + L2 + L3 + L4 app
 - `design.md` — Architecture → 구조화된 설계 (컴포넌트, 인터페이스)
 - `tasks.md` — Epics → 병렬 실행 가능한 태스크 목록
 - `brownfield-context.md` (frozen) — planning-artifacts/에서 복사한 **Frozen snapshot** (이후 Workers가 참조)
+
+**SSOT 참조 우선순위**: 동일 개념이 여러 파일에 기술된 경우 다음 우선순위를 따른다:
+- `api-spec.yaml` > `design.md`의 API 섹션
+- `schema.dbml` > `design.md`의 데이터 모델 섹션
 
 **Entropy Tolerance + 파일 소유권 배정**:
 - 각 태스크에 Entropy 레벨 (Low/Medium/High) 태깅
@@ -632,8 +646,24 @@ specs/{feature}/
 | 응답 | 동작 |
 |------|------|
 | **Confirm** | JP2 (Deliverables 생성)로 진행 |
-| **Comment** | 피드백을 반영하여 해당 산출물 재생성 → 다시 JP1 |
-| **Redirect** | 방향 전환 — Circuit Breaker 호출 |
+| **Comment** | Comment 처리 플로우 실행 (아래 참조) |
+
+#### Comment 처리 플로우
+
+JP에서 Comment를 선택하면, 피드백 규모에 따라 처리 방식을 동적으로 결정한다. 이 플로우는 Advanced Elicitation, Party Mode, 직접 피드백 모두에 동일하게 적용된다:
+
+1. **피드백 입력**: 사용자가 수정할 내용을 자유 텍스트로 입력한다
+2. **영향 분석**: 시스템이 피드백의 영향 범위를 분석하여 다음을 산출한다
+   - 수정반영 시: 수정 대상 파일 목록 (upstream + downstream) + 예상 소요 시간
+   - 재생성 시: 재실행 시작 Phase + 예상 소요 시간
+3. **처리 옵션 제시**: cost와 함께 두 가지 옵션을 제시한다
+   - **[M] 수정반영+전파**: 기존 산출물 내 직접 수정 + 의존 파일 양방향 전파 (N개 파일, ~M분) + Scope Gate 검증
+   - **[R] 재생성**: 해당 Phase부터 재실행 (~M분)
+4. **사용자 선택**: cost를 보고 사용자가 선택한다
+5. **실행 + 검증**:
+   - 수정반영 선택 시: 전체 파일 수정 → Scope Gate 검증 → PASS 시 JP 복귀
+   - 재생성 선택 시: 해당 Phase부터 파이프라인 재실행 → Scope Gate 포함 → JP 복귀
+6. **피드백 기록**: `planning-artifacts/feedback-log.md`에 피드백 내용 + 처리 방식 + 결과를 기록한다
 
 ---
 
@@ -651,7 +681,7 @@ specs/{feature}/
 
 | 산출물 | 파일 | 역할 |
 |--------|------|------|
-| OpenAPI 3.1 YAML | `api-spec.yaml` | API 계약 — Prism Mock + Specmatic 계약 테스트 공용 |
+| OpenAPI 3.1 YAML | `api-spec.yaml` | API 계약 — MSW Mock + Specmatic 계약 테스트 공용 |
 | API Sequences | `api-sequences.md` | Mermaid sequence diagrams |
 | DBML Schema | `schema.dbml` | 데이터베이스 설계 (dbdiagram.io ERD) |
 | BDD/Gherkin | `bdd-scenarios/` | Given-When-Then 수용 테스트 |
@@ -659,7 +689,8 @@ specs/{feature}/
 | Decision Log | `decision-log.md` | ADR + AI reasoning trace |
 | Traceability Matrix | `traceability-matrix.md` | FR → Design → Task → BDD → API 매핑 |
 | Key Flows | `key-flows.md` | 핵심 사용자 플로우 Step-by-Step (JP2 검증용) |
-| Prototype | `preview/` | React + Prism Mock 서버 프로토타입 |
+| MSW Mocks | `mocks/` | MSW handler (browser.ts, handlers.ts, store.ts, seed.ts) |
+| Prototype | `preview/` | React + MSW stateful 프로토타입 |
 
 ### 산출물
 
@@ -673,7 +704,10 @@ specs/{feature}/
 ├── decision-log.md
 ├── traceability-matrix.md
 ├── key-flows.md
-└── preview/
+├── preview/
+│   └── src/mocks/           # MSW handler (browser.ts, handlers.ts, store.ts, seed.ts)
+└── planning-artifacts/
+    └── feedback-log.md      # Comment 처리 기록 (피드백 + 선택 + 결과)
 ```
 
 ---
@@ -684,21 +718,23 @@ specs/{feature}/
 
 1. 프로토타입 실행: `cd specs/{feature}/preview && npm run dev`
 2. 핵심 시나리오 가이드(key-flows.md 기반)를 따라 직접 클릭
-3. API 명세 탐색 (Swagger UI)
+3. DevPanel로 상태 리셋/디버깅 (MSW in-memory store 기반)
 
 ### 시스템 내부
 
-- Prism mock 서버가 `api-spec.yaml` 기반으로 API 응답 시뮬레이션
-- React SPA가 Prism에 연결되어 실제와 유사한 UX 제공
+- MSW Service Worker가 `api-spec.yaml` 기반으로 네트워크 레벨에서 API 요청을 인터셉트하여 stateful 응답 제공
+- React SPA는 실제 서비스와 동일한 코드로 API를 호출 (MSW의 존재를 알지 못함)
 - key-flows.md에서 핵심 시나리오 자동 추출하여 가이드 제시
+- **jp1_to_jp2_changes**: JP1 이후 Phase 2에서 변경/보완된 사항을 readiness.md에 기록하여 JP2 Section 0에 자동 표시
 
 ### 응답 처리
 
 | 응답 | 동작 |
 |------|------|
 | **Confirm** | Parallel(병렬 구현)로 진행 |
-| **Comment** | 피드백을 반영하여 Deliverables 재생성 → 다시 JP2 |
-| **Redirect to JP1** | "요구사항 자체가 잘못" → PRD부터 재생성 |
+| **Comment** | Comment 처리 플로우 실행 (3.6 참조) |
+
+JP2에서 요구사항 오류를 발견한 경우, Comment의 **재생성 옵션** 범위가 JP1 이전 Phase(PRD 등)로 자연 확장된다.
 
 ### 역방향 루프
 
@@ -796,7 +832,9 @@ Worker Failure Protocol:
 **트리거 조건**:
 - 동일 카테고리 3회 연속 VALIDATE 실패
 - 5회 누적 VALIDATE 실패
-- JP1/JP2에서 Redirect 응답
+- Comment의 재생성 범위가 Sprint 전체로 확장될 때 (brief.md 수정이 필요한 수준)
+
+> 참고: Conductor Role 4의 이름 "Redirect"는 범위 이탈 시 축소/전환이라는 내부 메커니즘을 지칭하며, JP 응답 옵션과는 별개이다.
 
 **대응 경로**:
 
@@ -925,7 +963,8 @@ specs/{feature}/
 │   ├── prd.md                       # PRD
 │   ├── architecture.md              # Architecture + ADR
 │   ├── epics-and-stories.md         # Epics & Stories
-│   └── brownfield-context.md        # L1~L4 수집 원본 (작업 중 append)
+│   ├── brownfield-context.md        # L1~L4 수집 원본 (작업 중 append)
+│   └── feedback-log.md              # Comment 처리 기록 (피드백 + 선택 + 결과)
 │
 ├── sprint-log.md                    # Sprint 실행 로그 (timeline + decisions + issues)
 ├── brownfield-context.md            # Frozen snapshot (L1~L4, Workers 참조용)
@@ -934,7 +973,7 @@ specs/{feature}/
 ├── design.md                        # Architecture → 설계
 ├── tasks.md                         # Epics → 병렬 태스크 + Entropy + File Ownership
 │
-├── api-spec.yaml                    # OpenAPI 3.1 (API 계약 — Prism + Specmatic 공용)
+├── api-spec.yaml                    # OpenAPI 3.1 (API 계약 — MSW Mock + Specmatic 공용)
 ├── api-sequences.md                 # Mermaid sequence diagrams
 ├── schema.dbml                      # Database schema (DBML)
 ├── bdd-scenarios/                   # Gherkin acceptance tests
@@ -942,8 +981,9 @@ specs/{feature}/
 ├── decision-log.md                  # ADRs + AI reasoning trace
 ├── traceability-matrix.md           # FR → Design → Task → BDD → API 매핑
 ├── key-flows.md                     # 핵심 사용자 플로우 Step-by-Step (JP2 검증용)
-├── readiness.md                     # JP1/JP2 Readiness 데이터
-└── preview/                         # React + Prism 프로토타입 (npm run dev)
+├── readiness.md                     # JP1/JP2 Readiness 데이터 (jp1_to_jp2_changes 포함)
+└── preview/                         # React + MSW 프로토타입 (npm run dev)
+    └── src/mocks/                   # MSW handler (browser.ts, handlers.ts, store.ts, seed.ts)
 ```
 
 ## 5.2 에이전트 상세
@@ -962,15 +1002,15 @@ specs/{feature}/
 | 에이전트 | 입력 | 출력 | 호출 시점 |
 |---------|------|------|----------|
 | @auto-sprint | sprint-input.md | planning-artifacts/ 전체 | Sprint 전체 오케스트레이션 |
-| @scope-gate | 직전 산출물 + goals | Pass/Fail + gap 보고 | BMad 각 단계 후 |
+| @scope-gate | 직전 산출물 + goals | Pass/Fail + gap 보고 | BMad 각 단계 후 + deliverables 후 |
 | @brownfield-scanner | MCP + 로컬 코드 | brownfield-context.md | Pass 1 (broad) + Pass 2 (targeted) |
-| @deliverable-generator | planning-artifacts/ | Specs + Deliverables + Prototype | Specs/Deliverables 단계 |
+| @deliverable-generator | planning-artifacts/ | Specs + Deliverables + MSW Mocks + readiness.md + Prototype | Specs/Deliverables 단계 |
 
 ### Execute 에이전트
 
 | 에이전트 | 입력 | 출력 | 호출 시점 |
 |---------|------|------|----------|
-| @worker | 태스크 + Specs + brownfield | 구현 코드 | Parallel (병렬) |
+| @worker | 태스크 + Specs + brownfield | 구현 코드 (SSOT Reference Priority 준수) | Parallel (병렬) |
 | @judge-quality | 구현 코드 + Specs | Pass/Fail + 이슈 리스트 | Validate Phase 1 |
 | @judge-security | 구현 코드 | Pass/Fail + 취약점 리스트 | Validate Phase 2 |
 | @judge-business | 구현 코드 + PRD | Pass/Fail + 미충족 FR 리스트 | Validate Phase 3 |
@@ -988,14 +1028,20 @@ specs/{feature}/
 | **DISC-N** | Discovered Requirement ID. Brief에 없지만 참고 자료에서 발견된 요구사항 |
 | **Frozen snapshot** | 특정 시점의 brownfield-context.md 복사본. Workers가 참조하는 고정 버전 |
 | **Conductor** | @auto-sprint의 오케스트레이션 역할. Goal Tracking, Scope Gate, Budget, Redirect 4역할 |
-| **Circuit Breaker** | 반복 실패 시 방향 전환 메커니즘. 경미(Spec 수정) / 중대(재생성) |
+| **Circuit Breaker** | 반복 실패 또는 재생성 범위 확장 시 방향 전환 메커니즘. 경미(Spec 수정) / 중대(재생성) |
 | **planning-artifacts** | BMad 에이전트가 생성하는 기획 산출물 (Product Brief, PRD, Architecture, Epics) |
 | **Sprint 경로** | 자료(회의록, 참고자료)가 있을 때. `/sprint` 커맨드로 진입 |
 | **Guided 경로** | 탐색이 필요할 때. BMad 12단계 대화로 진입 |
 | **Direct 경로** | 기획이 끝났을 때. `/specs` 커맨드로 직접 진입 |
 | **Quick Flow** | 소규모 작업용 경량 파이프라인. `/quick-spec` → `/dev-story` → `/code-review` |
 | **Specmatic** | OpenAPI 계약 기반 자동 테스트 도구. Worker가 자체 검증에 사용 |
-| **Prism** | OpenAPI Mock 서버. 프로토타입의 API 시뮬레이션에 사용 |
+| **MSW (Mock Service Worker)** | 브라우저 Service Worker 기반 stateful mock API. 프로토타입에서 CRUD 플로우 간 상태 유지 |
+| **SSOT Reference Priority** | 동일 개념이 여러 파일에 기술된 경우의 참조 우선순위. api-spec.yaml > design.md API 섹션, schema.dbml > design.md 데이터 모델 |
+| **API Data Sufficiency** | Flow 내 후행 API의 요청 필드가 선행 API 응답에서 획득 가능한지 검증하는 Scope Gate deliverables 체크 |
+| **수정반영+전파** | Comment 처리 방식. 영향 받는 파일을 양방향(upstream + downstream) 수정 후 Scope Gate 검증. 소규모 피드백에 적합 |
+| **Comment 처리 플로우** | JP에서 Comment 시 실행되는 통합 메커니즘. 영향 분석 → cost 기반 [수정반영+전파] / [재생성] 선택 → 실행 → JP 복귀 |
+| **feedback-log.md** | Comment 처리 기록. planning-artifacts/ 하위에 위치하며, 피드백 내용 + 선택한 처리 방식 + 결과를 기록 |
 | **document-project** | BMad 워크플로우. 기존 코드베이스를 스캔하여 구조화 문서 생성 |
 | **MCP** | Model Context Protocol. AI가 외부 데이터 소스에 접근하는 프로토콜 |
+| **readiness.md** | JP1/JP2 Readiness 데이터. YAML frontmatter에 jp1_to_jp2_changes 필드를 포함하여 JP1 이후 변경 사항 추적 |
 | **/summarize-prd** | PRD 요약/분석 + 피드백 반영 커맨드. 기존 PRD를 빠르게 파악할 때 사용 |
