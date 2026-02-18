@@ -654,7 +654,7 @@ Phase 2 데이터 흐름 검증에서 보완한 항목입니다:
 
 | 상호작용 | 검증 방법 | 신뢰도 | 결과 |
 |----------|----------|--------|------|
-| API 계약 | Specmatic / Prism Smoke Test | HIGH | PASS/FAIL |
+| API 계약 | Specmatic + OpenAPI lint + tsc | HIGH | PASS/FAIL |
 | DB 스키마 | DBML 정적 분석 | HIGH | PASS/FAIL |
 | 인증 패턴 | API spec 패턴 매칭 | MEDIUM | PASS/FAIL |
 | {기존 기능 영향} | 설계 검토 (L2 예측) | LOW | 설계 반영됨 |
@@ -681,8 +681,7 @@ Phase 2 데이터 흐름 검증에서 보완한 항목입니다:
 ### Run Prototype
 cd specs/{feature_name}/preview
 npm install && npm run dev
-- React App: http://localhost:5173
-- Mock API: http://localhost:4010
+- React App: http://localhost:5173 (MSW가 네트워크 레벨에서 API 인터셉트)
 ```
 
 > 피드백이 있으면 [F] Comment를 선택하세요. 수정반영/재생성 옵션을 cost와 함께 제시합니다.

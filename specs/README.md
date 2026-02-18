@@ -31,7 +31,7 @@ specs/
     ├── design.md                 # Specs: 설계
     ├── tasks.md                  # Specs: 태스크
     ├── entity-dictionary.md      # Specs: 엔티티 사전
-    └── preview/                  # React + Prism 프로토타입
+    └── preview/                  # React + MSW 프로토타입
 ```
 
 ## 경로별 사용법

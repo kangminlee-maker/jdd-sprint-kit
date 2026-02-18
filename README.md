@@ -42,10 +42,10 @@ flowchart LR
 Sprint 1회 실행으로 다음 산출물이 자동 생성된다:
 
 - **설계 문서 3종** — 요구사항(requirements.md), 설계(design.md), 태스크(tasks.md)
-- **OpenAPI 3.1 YAML** — API 명세 + Prism Mock 서버 + Specmatic 계약 테스트
+- **OpenAPI 3.1 YAML** — API 명세 + MSW Mock + Specmatic 계약 테스트
 - **DBML 스키마** — 데이터베이스 설계 (dbdiagram.io에서 ERD 확인 가능)
 - **BDD/Gherkin 시나리오** — Given-When-Then 형식 수용 테스트
-- **React + Prism 프로토타입** — `npm run dev`로 즉시 클릭해볼 수 있는 시제품
+- **React + MSW 프로토타입** — `npm run dev`로 즉시 클릭해볼 수 있는 시제품
 
 ---
 
@@ -156,7 +156,7 @@ Greenfield(기존 시스템 없음) 프로젝트에서는 MCP 없이도 Sprint�
 │   └── settings.json                # Hook 설정
 ├── _bmad/                           # BMAD 방법론 (런타임 참조)
 │   └── docs/                        # 포맷 가이드
-├── preview-template/                # 프로토타입 기본 틀 (Vite + React + Prism)
+├── preview-template/                # 프로토타입 기본 틀 (Vite + React + MSW)
 ├── specs/                           # 프로젝트별 산출물 (feature 단위)
 │   └── {feature}/
 │       ├── inputs/                  # 사용자 Brief + 참고 자료
@@ -168,7 +168,7 @@ Greenfield(기존 시스템 없음) 프로젝트에서는 MCP 없이도 Sprint�
 │       ├── api-spec.yaml            # OpenAPI 3.1
 │       ├── schema.dbml              # DB 스키마
 │       ├── bdd-scenarios/           # Gherkin 수용 테스트
-│       └── preview/                 # React + Prism 프로토타입
+│       └── preview/                 # React + MSW 프로토타입
 └── docs/                            # 프레임워크 문서
 ```
 

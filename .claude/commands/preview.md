@@ -56,7 +56,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 - XState State Machines (해당 시에만)
 - Decision Log (ADR)
 - Traceability Matrix (추적)
-- React Prototype + Prism Mock API
+- React Prototype + MSW Mock API
 
 ### Step 3: 결과물 확인
 
@@ -74,7 +74,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 - `specs/{feature-name}/bdd-scenarios/`
 - `specs/{feature-name}/decision-log.md`
 - `specs/{feature-name}/traceability-matrix.md`
-- `specs/{feature-name}/preview/` (React + Prism)
+- `specs/{feature-name}/preview/` (React + MSW)
 
 ## Constraints
 1. **Disposable Preview**: 프리뷰 코드는 프로덕션과 완전 분리. 절대 프로덕션으로 이관하지 않는다

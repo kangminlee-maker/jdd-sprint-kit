@@ -218,11 +218,11 @@ Stage 4b 변경의 정합성은 다층 안전망으로 검증된다:
 |------|---------|----------|
 | 1차 | Stage 4b 변경 로그 | 변경 발생 여부 (가시성) |
 | 2차 | Step 5-G Scope Gate | API Data Sufficiency (로직 검증) |
-| 3차 | JP2 Prism Smoke Test | 실제 API 호출 성공 여부 (실행 검증) |
+| 3차 | JP2 MSW Prototype 검증 | 실제 API 호출 성공 여부 (실행 검증) |
 | 4차 | JP2 Section 0 → 사용자 | 의도 부합 여부 (판단) |
 
 > 변경 로그(1차)는 가시성 도구이지 정합성 보장 도구가 아니다.
-> 진정한 정합성 검증은 Smoke Test(3차)다. 변경 로그가 누락되어도 Smoke Test가 잡아줄 수 있다.
+> 진정한 정합성 검증은 MSW Prototype 검증(3차)다. 변경 로그가 누락되어도 Prototype 검증이 잡아줄 수 있다.
 
 ### 2.3 Self-Validation 추가
 
