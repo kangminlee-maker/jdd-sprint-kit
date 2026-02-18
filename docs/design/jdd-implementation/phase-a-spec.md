@@ -2,7 +2,7 @@
 
 > **상태**: 완료 (2026-02-16)
 > **대상 파일**: `.claude/rules/bmad-sprint-guide.md`, `.claude/rules/bmad-sprint-protocol.md`
-> **상위 문서**: `docs/jdd-implementation-scope.md`, `docs/judgment-driven-development.md`
+> **상위 문서**: `docs/design/jdd-implementation/scope.md`, `docs/judgment-driven-development.md`
 
 ---
 

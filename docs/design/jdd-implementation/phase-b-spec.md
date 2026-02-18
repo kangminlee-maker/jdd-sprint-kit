@@ -2,8 +2,8 @@
 
 > **상태**: 완료 (2026-02-16)
 > **대상 파일**: `.claude/agents/auto-sprint.md`, `.claude/agents/scope-gate.md`, `.claude/agents/deliverable-generator.md`
-> **상위 문서**: `docs/jdd-implementation-scope.md`, `docs/judgment-driven-development.md`
-> **선행**: Phase A 완료 (`docs/phase-a-spec.md`)
+> **상위 문서**: `docs/design/jdd-implementation/scope.md`, `docs/judgment-driven-development.md`
+> **선행**: Phase A 완료 (`docs/design/jdd-implementation/phase-a-spec.md`)
 
 ---
 

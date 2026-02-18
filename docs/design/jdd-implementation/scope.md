@@ -242,7 +242,7 @@ Phase D (Sprint Kit 리포)
 - **시작일**: 2026-02-16
 - **완료일**: 2026-02-16
 - **변경 파일**: bmad-sprint-guide.md, bmad-sprint-protocol.md
-- **구현 명세**: `docs/phase-a-spec.md`
+- **구현 명세**: `docs/design/jdd-implementation/phase-a-spec.md`
 - **핵심 결정**:
   - 경로 네이밍: Sprint / Guided / Direct (Bottom-up/Top-down은 철학 문서에서만)
   - MECE 기준: 입력 상태 (비정형 자료 / 탐색 필요 / 구조화된 산출물) + 크로스오버
@@ -254,7 +254,7 @@ Phase D (Sprint Kit 리포)
 - **시작일**: 2026-02-16
 - **완료일**: 2026-02-16
 - **변경 파일**: auto-sprint.md, scope-gate.md, deliverable-generator.md
-- **구현 명세**: `docs/phase-b-spec.md`
+- **구현 명세**: `docs/design/jdd-implementation/phase-b-spec.md`
 - **핵심 결정**:
   - Layer 0 자동 승인 제거 → 정보 배너로 전환 (JP1 의무화)
   - JP1 Visual Summary: 서사 기본 + 상세는 Advanced, 경로 독립 설계
@@ -267,7 +267,7 @@ Phase D (Sprint Kit 리포)
 - **시작일**: 2026-02-16
 - **완료일**: 2026-02-16
 - **변경 파일**: specs.md, sprint.md, auto-sprint.md, parallel.md, desktop-notify.sh
-- **구현 명세**: `docs/phase-c-spec.md`
+- **구현 명세**: `docs/design/jdd-implementation/phase-c-spec.md`
 - **핵심 결정**:
   - specs.md Step 0 전체 교체 (auto-detect + 탐색 + sprint-input.md 생성)
   - sprint.md CP→JP (5곳), force_cp1→force_jp1 (3곳), tracking_source 추가, BMad 감지 (Case 2)
