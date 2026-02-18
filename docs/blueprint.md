@@ -302,6 +302,24 @@ Sprint Kit은 세 계층의 에이전트를 사용한다.
 
 Greenfield 프로젝트에서는 Brownfield 소스가 없어도 Sprint가 동작한다.
 
+### Brownfield Context 생성
+
+brownfield-context.md는 기존 시스템의 맥락을 L1~L4 계층으로 정리한 파일이다. Sprint가 이 파일을 참조하여 기존 API와 중복되지 않는 설계를 하고, 기존 화면 흐름을 깨뜨리지 않는 기능을 만든다.
+
+**자동 생성 (Sprint 경로)**: `/sprint` 실행 시 @brownfield-scanner가 자동으로 생성한다.
+
+1. Phase 0에서 토폴로지를 판정한다 — document-project 유무, MCP 연결 상태, 빌드 도구를 감지하여 프로젝트 유형(`standalone` / `co-located` / `msa` / `monorepo`)을 결정한다.
+2. Pass 1(Broad Scan)에서 Brief 키워드 기반으로 도메인 개념(L1)과 행동 패턴(L2)을 수집한다.
+3. Pass 2(Targeted Scan)에서 Architecture/Epics 완료 후 통합 지점(L3)과 코드 수준(L4)을 추가 수집한다.
+
+수집 결과는 `specs/{feature}/planning-artifacts/brownfield-context.md`에 기록된다. 각 Pass의 상세 동작은 아래 §4.2 파이프라인에서 설명한다.
+
+**사전 준비 — document-project (권장)**: Sprint 전에 BMad `/document-project` 워크플로우를 실행하면 Brownfield 스캔 품질이 높아진다. 이 워크플로우는 기존 코드베이스를 분석하여 구조화 문서(프로젝트 개요, API 계약, 데이터 모델 등)를 생성한다. Sprint의 Brownfield Scanner가 이 문서를 시드 데이터로 활용하여, MCP/로컬 스캔의 검색 범위를 좁히고 누락을 줄인다.
+
+**수동 준비 (MCP 없이)**: MCP 서버를 구성할 수 없는 환경에서는 brownfield-context.md를 직접 작성하여 `specs/{feature}/brownfield-context.md` 또는 `specs/{feature}/planning-artifacts/brownfield-context.md`에 배치할 수 있다. Sprint가 기존 파일을 감지하면 해당 레벨을 재스캔하지 않고 활용한다. 작성 포맷은 `_bmad/docs/brownfield-context-format.md`에 정의되어 있다.
+
+**Greenfield**: 기존 시스템이 없는 신규 프로젝트에서는 별도 준비가 필요 없다. Phase 0에서 자동 감지되며, Brownfield 스캔을 건너뛴다.
+
 ---
 
 ## 4.2 파이프라인
