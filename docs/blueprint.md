@@ -1,5 +1,5 @@
 ---
-synced_to: "6195930"  # fix: preview-template 빌드 시 node_modules 제외
+synced_to: "6195930"  # blueprint.md 외 소스 파일 변경 중 마지막 반영 커밋. blueprint.md 자체 커밋은 추적하지 않는다.
 ---
 
 # BMAD Sprint Kit Blueprint
