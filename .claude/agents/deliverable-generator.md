@@ -20,17 +20,17 @@ Progress-oriented. Reports each pipeline stage completion with counts (e.g., "Op
 - `output_base`: Base path for specs output (default: `specs/`)
 - `preview_template`: Path to preview-template/ directory
 - `mode`: `"full"` (default), `"specs-only"`, or `"deliverables-only"`
-  - **full**: 10-Stage 전체 실행
-  - **specs-only**: Stage 1-2만 실행 (/specs 호출 시 — Entity Dictionary + Specs 4-file만 생성)
-  - **deliverables-only**: Stage 3-10만 실행 (/preview 또는 Auto Sprint JP1 승인 후 — Specs 4-file이 이미 존재해야 함)
+  - **full**: Run the complete 10-Stage pipeline
+  - **specs-only**: Run Stage 1-2 only (invoked by /specs — generates Entity Dictionary + Specs 4-file only)
+  - **deliverables-only**: Run Stage 3-10 only (invoked by /preview or Auto Sprint after JP1 approval — requires pre-existing Specs 4-file)
 
 ## Execution Protocol — 10-Stage Pipeline
 
-> **mode="specs-only"** 인 경우 Stage 1-2 + JP1 Readiness 생성을 실행한 뒤 종료한다.
-> JP1 Readiness는 Stage 2 완료 직후에 readiness.md의 JP1 데이터 항목을 생성한다.
+> **mode="specs-only"**: Execute Stage 1-2 + JP1 Readiness generation, then stop.
+> JP1 Readiness is generated immediately after Stage 2, populating readiness.md JP1 data fields:
 > (scenario_summaries, tracking_completeness, ai_inferred_count, side_effect_high_count, customer_impact_changes)
-> scope_gate_summary는 /specs 호출 시 spec 단계 Scope Gate 결과만 포함한다.
-> **mode="deliverables-only"** 인 경우 기존 Specs 4-file + Entity Dictionary를 읽고 Stage 3부터 실행한다.
+> scope_gate_summary includes only the spec-stage Scope Gate result when invoked via /specs.
+> **mode="deliverables-only"**: Read existing Specs 4-file + Entity Dictionary, then start from Stage 3.
 
 ### Stage 1: Entity Dictionary
 
@@ -39,66 +39,66 @@ Build a unified naming dictionary from PRD + Architecture:
 ```markdown
 | Domain Term (Korean) | English Name | DB Table | API Resource | React Component | BDD Actor |
 |---------------------|-------------|----------|-------------|----------------|-----------|
-| 학생 | Student | students | /students | StudentProfile | Student |
-| 튜터 | Tutor | tutors | /tutors | TutorCard | Tutor |
+| Student | Student | students | /students | StudentProfile | Student |
+| Tutor | Tutor | tutors | /tutors | TutorCard | Tutor |
 ```
 
 This dictionary ensures naming consistency across ALL subsequent outputs. Every generated artifact MUST use these canonical names.
 
 **Output**: Write Entity Dictionary to `{output_base}/{feature_name}/entity-dictionary.md`
 
-> deliverables-only 모드에서는 이 파일을 먼저 읽고 Stage 3부터 실행한다.
-> 파일이 없으면 PRD + Architecture에서 재구축하되, 기존 Specs 4-file의 명명과 일치시킨다.
+> In deliverables-only mode, read this file first then start from Stage 3.
+> If the file is missing, rebuild from PRD + Architecture, ensuring names align with existing Specs 4-file.
 
-### tracking_source 분기 (Stage 2 시작 시)
+### tracking_source Branching (at Stage 2 start)
 
-Sprint Input 경로 결정:
-1. `{planning_artifacts}/../inputs/sprint-input.md` 존재 확인
-2. 존재하면 `tracking_source` 필드를 읽는다
-3. 미존재하면 `tracking_source: success-criteria`로 간주한다
+Sprint Input path resolution:
+1. Check if `{planning_artifacts}/../inputs/sprint-input.md` exists
+2. If exists, read the `tracking_source` field
+3. If not found, assume `tracking_source: success-criteria`
 
-| tracking_source | requirements.md Source 열 | BRIEF-N 매핑 | Entropy 할당 기준 |
+| tracking_source | requirements.md Source column | BRIEF-N mapping | Entropy assignment basis |
 |----------------|--------------------------|-------------|------------------|
-| `brief` | `(source: BRIEF-N / DISC-N / AI-inferred)` 태깅 | 수행 | sprint-input.md complexity + Brief 분석 |
-| `success-criteria` | FR# 직접 사용 (Source 열 생략 가능) | 스킵 | Architecture 기술 결정 + brownfield-context |
+| `brief` | `(source: BRIEF-N / DISC-N / AI-inferred)` tagging | Performed | sprint-input.md complexity + Brief analysis |
+| `success-criteria` | Use FR# directly (Source column optional) | Skipped | Architecture tech decisions + brownfield-context |
 
-**success-criteria 경로 Entropy 할당 기준**:
-- brownfield-context.md에서 언급된 기존 코드 접점이 있는 태스크 → High
-- 다중 조건 AC를 가진 태스크 또는 Architecture에서 복잡한 통합점으로 표시된 태스크 → Medium
-- 나머지 → Low
+**success-criteria route Entropy assignment basis**:
+- Tasks touching existing code touchpoints in brownfield-context.md → High
+- Tasks with multi-condition ACs or marked as complex integration points in Architecture → Medium
+- All others → Low
 
 ### Stage 2: Specs 4-File Generation
 
 Create `{output_base}/{feature_name}/`:
 
-1. **brownfield-context.md** — Copy frozen snapshot from `{planning_artifacts}/brownfield-context.md` to `{output_base}/{feature_name}/brownfield-context.md`. 복사 실패 시 경고를 Output Summary에 포함.
+1. **brownfield-context.md** — Copy frozen snapshot from `{planning_artifacts}/brownfield-context.md` to `{output_base}/{feature_name}/brownfield-context.md`. On copy failure, include warning in Output Summary.
 2. **requirements.md** — Transform PRD into requirements format:
    - FR → Requirement items with IDs, priority, entropy tolerance
-   - **Brief 출처 태깅**: 각 FR에 `(source: BRIEF-N)` 또는 `(source: DISC-N)` 또는 `(source: AI-inferred)` 태그 부여. sprint-input.md의 `brief_sentences` 배열과 Discovered Requirements를 참조하여 FR의 출처를 명시
+   - **Brief source tagging**: Tag each FR with `(source: BRIEF-N)`, `(source: DISC-N)`, or `(source: AI-inferred)`. Reference sprint-input.md's `brief_sentences` array and Discovered Requirements to attribute each FR's origin
    - NFR → Quality constraints with numeric targets
    - AC → Acceptance criteria linked to requirements
 3. **design.md** — Transform Architecture into design format:
    - Component diagram → Module structure
    - Data model → Schema references
-   - API design → Endpoint inventory (요약 수준. API 상세 스키마의 SSOT는 api-spec.yaml)
+   - API design → Endpoint inventory (summary level; the SSOT for detailed API schemas is api-spec.yaml)
    - Integration points → Brownfield touchpoints
 4. **tasks.md** — Transform Epics into parallel tasks:
    - Story → Task with entropy tag, file ownership, dependencies
    - Assign worker IDs
    - Ensure DAG ordering (no circular deps)
 
-   **tasks.md 스키마** (각 태스크는 이 포맷을 따른다):
+   **tasks.md schema** (each task follows this format):
    ```markdown
    ## Task: T-{N}: {Task Title}
    - **Entropy**: High / Medium / Low
    - **Worker**: Worker-{N}
-   - **Dependencies**: T-{X}, T-{Y} (또는 "None")
+   - **Dependencies**: T-{X}, T-{Y} (or "None")
    - **Owned Files**:
      - src/path/to/file1.ts
      - src/path/to/file2.ts
    - **Story**: E{N}-S{M} ({story title})
    - **AC**: AC-{N}, AC-{M}
-   - **Server Start** (API 태스크): `npm run start:test` (port: {N})
+   - **Server Start** (API tasks): `npm run start:test` (port: {N})
    - **Subtasks**:
      1. [ ] {subtask description}
      2. [ ] {subtask description}
@@ -120,7 +120,7 @@ Generate `{output_base}/{feature_name}/api-spec.yaml`:
 - Use OpenAPI 3.0.3 or 3.1 (redocly lint supports both)
 - Minimize nullable usage (use required/optional instead)
 - Every endpoint must have at least one 2xx and one 4xx response
-- OpenAPI `paths`에는 리소스 경로만 사용한다 (`/exclusions`, `/ratings`). base path(`/api/v1` 등)는 `servers.url`에 기록한다. MSW handler의 BASE 상수가 client.ts의 `BASE_URL + VERSION`과 동일하게 설정되어야 한다.
+- OpenAPI `paths` use resource paths only (`/exclusions`, `/ratings`). Base path (`/api/v1` etc.) goes in `servers.url`. The MSW handler's BASE constant must match `BASE_URL + VERSION` from client.ts.
 
 ### Stage 4: API Sequence Diagrams
 
@@ -133,61 +133,61 @@ Generate `{output_base}/{feature_name}/api-sequences.md`:
 
 ### Stage 4b: Key Flow Text Generation
 
-PRD의 User Journey 섹션에서 핵심 사용자 플로우를 Step-by-Step 텍스트로 변환한다.
-JP2에서 "생각한대로 동작하는가?" 검증에 사용된다.
+Convert key user flows from the PRD's User Journey section into Step-by-Step text.
+Used at JP2 to verify "does it work as intended?"
 
 ```markdown
 ## Key Flows
 
 ### Flow 1: {flow_name}
-{시작 상태} → {사용자 행동 1} → {시스템 반응 1}
-→ {사용자 행동 2} → {시스템 반응 2} → {결과 상태}
+{initial state} → {user action 1} → {system response 1}
+→ {user action 2} → {system response 2} → {result state}
 
 ### Flow 2: {flow_name}
 ...
 ```
 
-- PRD User Journey의 각 주요 경로를 1개 플로우로 변환
-- Happy path 우선, 주요 alternative path 포함
-- **Output**: `{output_base}/{feature_name}/key-flows.md`에 저장
-- JP2 Visual Summary에서 이 파일을 참조
+- Convert each major path in PRD User Journey into one flow
+- Prioritize Happy path, include major alternative paths
+- **Output**: Save to `{output_base}/{feature_name}/key-flows.md`
+- Referenced by JP2 Visual Summary
 
-**보강 범위 제한**:
+**Reinforcement scope limits**:
 
-| 변경 유형 | 처리 |
-|----------|------|
-| 기존 엔드포인트에 응답 필드 추가 | 자동 보강 + 변경 로그 기록 |
-| 기존 필드의 타입 변경 | 자동 보강 + 변경 로그 기록 |
-| 쿼리 파라미터 추가 | 자동 보강 + 변경 로그 기록 |
-| 응답 구조 변경 (flat → nested 등) | **중단** — Output Summary에 WARN: "구조 변경이 필요합니다. JP2에서 확인하세요." |
-| 새 엔드포인트 추가 필요 | **중단** — Output Summary에 WARN: "새 엔드포인트가 필요합니다. Phase 1 설계 재검토를 권장합니다." |
+| Change Type | Handling |
+|------------|---------|
+| Add response field to existing endpoint | Auto-reinforce + log change |
+| Change field type on existing field | Auto-reinforce + log change |
+| Add query parameter | Auto-reinforce + log change |
+| Change response structure (flat → nested, etc.) | **Stop** — Output Summary WARN: "Structural change required. Review at JP2." |
+| New endpoint needed | **Stop** — Output Summary WARN: "New endpoint required. Phase 1 design re-review recommended." |
 
-자동 보강은 "필드 수준"까지만. "구조 수준" 이상의 변경은 사용자 판단 영역이다.
+Auto-reinforcement applies up to "field level" only. "Structural level" and above changes are user judgment territory.
 
-**API Data Flow Verification** (key-flows 작성 시 필수 확인):
+**API Data Flow Verification** (mandatory when writing key-flows):
 
-key-flows의 각 플로우에서 후행 API 호출의 요청 필드가 선행 API 호출의 응답에 포함되어 있는지 확인하라.
-부족한 필드가 있으면 해당 API의 응답 스키마(api-spec.yaml)를 보강하라.
+Verify that request fields of subsequent API calls within each key-flow are present in the responses of preceding API calls.
+If any fields are insufficient, reinforce the corresponding API's response schema in api-spec.yaml.
 
-구체적으로:
-- 각 플로우 내에서 API 호출이 2개 이상 연속되는 경우를 식별한다
-- 후행 API의 요청에 필요한 모든 필드가 선행 API의 응답 또는 이전 Step 누적 응답에서 획득 가능한지 확인한다
-- 사용자 입력(화면에서 직접 입력)으로 제공되는 필드는 제외한다
-- 부족한 필드 발견 시:
-  1. 보강 범위 제한 테이블에 따라 자동 보강 가능 여부를 판정한다
-  2. 자동 보강 가능하면:
-     a. 해당 API 응답 스키마에 필드를 추가하고, 관련 파일(design.md, api-spec.yaml, types.ts 등)에 일관되게 반영한다
-     b. 변경 내역을 readiness.md YAML frontmatter의 `jp1_to_jp2_changes`에 기록한다:
+Specifically:
+- Identify cases where 2+ API calls are consecutive within a flow
+- Verify all fields required by the subsequent API's request are obtainable from the preceding API's response or cumulative prior Step responses
+- Exclude fields provided via user input (entered directly on screen)
+- On insufficient field discovery:
+  1. Determine auto-reinforcement eligibility per the reinforcement scope limits table
+  2. If auto-reinforcement is possible:
+     a. Add the field to the relevant API response schema, reflecting consistently across related files (design.md, api-spec.yaml, types.ts, etc.)
+     b. Log the change in readiness.md YAML frontmatter under `jp1_to_jp2_changes`:
         ```yaml
         jp1_to_jp2_changes:
-          - change: "{endpoint} 응답에 {field_name}: {type} 추가"
+          - change: "Added {field_name}: {type} to {endpoint} response"
             flow: "{flow_name}"
-            reason: "후행 API의 요청 필드가 선행 응답에 부재"
+            reason: "Subsequent API request field absent from preceding response"
             files_modified: [api-spec.yaml, design.md, preview/src/api/types.ts]
         ```
-     c. readiness.md가 없으면 생성하고, 있으면 기존 내용을 보존하며 append한다
-  3. 자동 보강 불가(구조/엔드포인트 수준)면:
-     - 변경하지 않고 Output Summary에 WARN으로 기록
+     c. If readiness.md does not exist, create it; if it exists, preserve existing content and append
+  3. If auto-reinforcement is not possible (structural/endpoint level):
+     - Do not modify; record as WARN in Output Summary
 
 ### Stage 5: DBML Schema
 
@@ -246,24 +246,24 @@ Highlight any FR without full coverage chain.
 ### Stage 10: React Prototype
 
 1. Copy `preview-template/` → `{output_base}/{feature_name}/preview/`
-2. Copy `api-spec.yaml` → `preview/api/openapi.yaml` (직접 복사, 변환 없음)
+2. Copy `api-spec.yaml` → `preview/api/openapi.yaml` (direct copy, no transformation)
 3. Generate pages based on PRD User Journeys:
    - One page per major screen identified in PRD/Architecture
    - React Router routes in App.tsx
 4. Generate components from Entity Dictionary + Architecture component diagram
-5. Wire API calls through `api/client.ts` (MSW가 네트워크 레벨에서 인터셉트)
+5. Wire API calls through `api/client.ts` (MSW intercepts at network level)
 6. Generate MSW mock layer (`src/mocks/`):
-   a. **seed.ts**: api-spec.yaml의 각 GET 엔드포인트 example에서 초기 데이터 추출
-   b. **store.ts**: seed.ts를 import하여 in-memory store 구성. 각 리소스별 배열 + counter.
-   c. **handlers.ts**: api-spec.yaml의 각 path + method 조합에 대해 MSW handler 생성 (preview-template의 placeholder를 덮어씀):
-      - GET (list): store에서 필터링하여 반환
-      - GET (detail): store에서 ID로 조회, 404 처리
-      - POST (create): store에 추가, 409/422 에러 처리
-      - PUT/PATCH: store에서 업데이트
-      - DELETE: store에서 제거, 404 처리
-      - `POST /__reset` + `GET /__store` + `resetStore()` 함수를 항상 포함
-      - BASE path는 client.ts의 `BASE_URL + VERSION`과 동일하게 설정
-      - 응답 데이터를 타입 명시적으로 구성: `const response: SchemaType = { ... }` — tsc가 스키마 불일치를 잡을 수 있도록
+   a. **seed.ts**: Extract initial data from each GET endpoint's examples in api-spec.yaml
+   b. **store.ts**: Import seed.ts to build in-memory store. Per-resource arrays + counters.
+   c. **handlers.ts**: Generate MSW handlers for each path + method combination in api-spec.yaml (overwriting preview-template placeholders):
+      - GET (list): Filter from store and return
+      - GET (detail): Look up by ID from store, handle 404
+      - POST (create): Add to store, handle 409/422 errors
+      - PUT/PATCH: Update in store
+      - DELETE: Remove from store, handle 404
+      - Always include `POST /__reset` + `GET /__store` + `resetStore()` function
+      - BASE path must match `BASE_URL + VERSION` from client.ts
+      - Construct response data with explicit types: `const response: SchemaType = { ... }` — so tsc catches schema mismatches
 7. Implement:
    - **Happy path**: Full flow as described in PRD User Journey
    - **Error scenarios**: All PRD AC error cases with appropriate UI feedback
@@ -286,101 +286,101 @@ Highlight any FR without full coverage chain.
 - fetch wrapper from `api/client.ts`
 - No state management library (React state + context sufficient for prototype)
 
-**MSW Stateful 프로토타입 패턴**:
+**MSW Stateful Prototype Pattern**:
 
-프로토타입은 MSW(Mock Service Worker)를 사용하여 API 상태를 유지한다.
-Spec 검증은 OpenAPI lint(`@redocly/cli`) + `tsc --noEmit`이 담당한다.
+The prototype uses MSW (Mock Service Worker) to maintain API state.
+Spec validation is handled by OpenAPI lint (`@redocly/cli`) + `tsc --noEmit`.
 
-1. **초기 데이터**: `mocks/seed.ts`에 OpenAPI examples에서 추출한 seed 데이터 정의
-2. **상태 관리**: `mocks/store.ts`에 in-memory store. CRUD 연산이 store를 변경
-3. **요청 인터셉트**: `mocks/handlers.ts`에 MSW handler. api-spec.yaml의 모든 endpoint를 커버
-4. **플로우 간 연속성**: POST로 생성한 데이터가 GET에서 조회됨 (store 공유)
-5. **리셋**: DevPanel의 "Reset State" 버튼 또는 `POST /__reset` 호출로 store를 seed 상태로 초기화
-6. **디버깅**: DevPanel의 "Show Store" 버튼 또는 `GET /__store`로 현재 store 상태 확인
+1. **Initial data**: Define seed data in `mocks/seed.ts` extracted from OpenAPI examples
+2. **State management**: In-memory store in `mocks/store.ts`. CRUD operations mutate the store
+3. **Request interception**: MSW handlers in `mocks/handlers.ts` cover all endpoints from api-spec.yaml
+4. **Cross-flow continuity**: Data created via POST is queryable via GET (shared store)
+5. **Reset**: DevPanel "Reset State" button or `POST /__reset` call resets store to seed state
+6. **Debugging**: DevPanel "Show Store" button or `GET /__store` to inspect current store state
 
-**API 책임 원칙**:
-- React 컴포넌트는 실제 서비스와 동일한 코드로 API를 호출한다 (client.ts 무수정)
-- MSW가 네트워크 레벨에서 인터셉트하므로, 컴포넌트는 mock의 존재를 알지 못한다
-- 페이지 간 상태는 store를 통해 자동 공유된다 (전역 React state 불필요)
-- onComplete 콜백을 통한 낙관적 업데이트는 **권장하지만 필수 아님** — MSW가 상태를 관리하므로 GET 재호출만으로도 정확한 결과를 받을 수 있다
+**API Responsibility Principle**:
+- React components call APIs with the same code as the real service (client.ts unmodified)
+- MSW intercepts at network level, so components are unaware of mocks
+- Cross-page state is automatically shared through the store (no global React state needed)
+- Optimistic updates via onComplete callbacks are **recommended but not required** — since MSW manages state, a GET re-fetch always returns accurate results
 
-**Handler 생성 규칙** (deliverable-generator가 따라야 할 규칙):
-- api-spec.yaml의 모든 path x method 조합에 대해 handler를 생성한다
-- 응답 구조는 api-spec.yaml components/schemas를 정확히 따른다
-- **응답 데이터를 타입 명시적으로 구성한다**: `const response: SchemaType = { ... }` — tsc가 스키마 불일치를 잡을 수 있도록
-- 에러 응답(4xx)은 api-spec.yaml의 에러 example을 사용한다
-- GET list: 쿼리 파라미터 필터링을 지원한다 (OpenAPI parameters 참조)
-- POST create: store에 추가 + ID 자동 채번 + 관련 count 업데이트
-- DELETE: store에서 제거 + 관련 count 감소
-- 교차 엔드포인트 상태: 하나의 엔드포인트 동작이 다른 엔드포인트 조회 결과에 영향을 미치는 경우 (예: 평가+차단 POST → 차단 목록 GET), handler 내에서 store를 직접 조작하여 연동한다
-- `POST /__reset` + `GET /__store` + `resetStore()` 함수를 항상 포함한다
+**Handler Generation Rules** (rules the deliverable-generator must follow):
+- Generate a handler for every path x method combination in api-spec.yaml
+- Response structure must exactly follow api-spec.yaml components/schemas
+- **Construct response data with explicit types**: `const response: SchemaType = { ... }` — so tsc catches schema mismatches
+- Error responses (4xx) use api-spec.yaml error examples
+- GET list: Support query parameter filtering (per OpenAPI parameters)
+- POST create: Add to store + auto-increment ID + update related counts
+- DELETE: Remove from store + decrement related counts
+- Cross-endpoint state: When one endpoint's action affects another endpoint's query results (e.g., rating+block POST → block list GET), directly manipulate the store within handlers to maintain linkage
+- Always include `POST /__reset` + `GET /__store` + `resetStore()` function
 
-**Spec Validation** (Stage 10 코드 생성 완료 후 실행):
+**Spec Validation** (run after Stage 10 code generation):
 
-프로토타입의 스펙 정합성을 자동 검증한다.
+Automatically verify prototype's spec conformance.
 
 1. `cd {output_base}/{feature_name}/preview && npm install`
-2. OpenAPI spec 문법/구조 + example 검증 (.redocly.yaml 규칙 적용):
+2. OpenAPI spec syntax/structure + example validation (.redocly.yaml rules applied):
    ```bash
    npx @redocly/cli lint api/openapi.yaml
    ```
-3. Handler ↔ types.ts 스키마 정합성 검증:
+3. Handler ↔ types.ts schema conformance:
    ```bash
    npx tsc --noEmit
    ```
-4. **실패 시 자동 수정**: 실패 항목별 최대 1회 수정 시도. 재실패 시 Output Summary에 실패 내역 보고 (JP2에서 사람이 확인).
+4. **On failure, auto-fix once**: Attempt one fix per failing item. On re-failure, report failure details in Output Summary (human reviews at JP2).
 
-Spec Validation 결과를 Output Summary에 포함: `Spec Validation: redocly lint PASS/FAIL, tsc: PASS/FAIL`
+Spec Validation results included in Output Summary: `Spec Validation: redocly lint PASS/FAIL, tsc: PASS/FAIL`
 
 ## Context Management
-- Stage 3-6 (OpenAPI, Sequences, DBML, BDD)를 먼저 생성하고 파일에 저장
-- Stage 7-9 (XState, Decision Log, Traceability)는 생성된 파일을 참조하여 생성
-- Stage 10 (Prototype)은 OpenAPI + Entity Dictionary + PRD User Journeys만 참조
-- 각 Stage 시작 시 Entity Dictionary를 재참조하여 명명 일관성 유지
-- Budget pressure 시 우선순위: specs → API → prototype (Rule 8 유지)
+- Generate Stage 3-6 (OpenAPI, Sequences, DBML, BDD) first and save to files
+- Stage 7-9 (XState, Decision Log, Traceability) reference the generated files
+- Stage 10 (Prototype) references only OpenAPI + Entity Dictionary + PRD User Journeys
+- Re-reference Entity Dictionary at each Stage start to maintain naming consistency
+- Under budget pressure, prioritize: specs → API → prototype (Rule 8)
 
-## readiness.md 쓰기 규칙
+## readiness.md Writing Rules
 
-- **specs-only 모드**: readiness.md를 **생성** (JP1 Data 섹션 작성)
-- **deliverables-only 모드 Stage 4b**: readiness.md가 없으면 **생성**, 있으면 **읽기** → `jp1_to_jp2_changes` **append**
-- **deliverables-only 모드 Self-Validation**: 기존 readiness.md를 **읽기** → JP2 Data 섹션 **append**
-- JP1 Data는 절대 덮어쓰지 않는다
-- readiness.md 포맷: YAML frontmatter(머신 파싱 데이터) + Markdown 본문(사람용 설명, 선택적). sprint-input.md와 동일 패턴.
+- **specs-only mode**: **Create** readiness.md (write JP1 Data section)
+- **deliverables-only mode Stage 4b**: If readiness.md doesn't exist, **create** it; if it exists, **read** → **append** `jp1_to_jp2_changes`
+- **deliverables-only mode Self-Validation**: **Read** existing readiness.md → **append** JP2 Data section
+- Never overwrite JP1 Data
+- readiness.md format: YAML frontmatter (machine-parseable data) + Markdown body (human-readable description, optional). Same pattern as sprint-input.md.
 
-## Self-Validation (모든 Stage 완료 후)
+## Self-Validation (after all Stages complete)
 
-다음을 확인하고 Output Summary에 포함:
-1. OpenAPI: 모든 PRD FR에 대응하는 엔드포인트 존재 여부
-2. DBML: Entity Dictionary의 모든 엔티티에 대응하는 테이블 존재 여부
-3. BDD: 모든 PRD AC에 대응하는 시나리오 존재 여부
-4. Traceability: GAP이 0인지 확인
-5. Prototype: 모든 PRD User Journey에 대응하는 페이지 존재 여부
+Verify the following and include in Output Summary:
+1. OpenAPI: Every PRD FR has a corresponding endpoint
+2. DBML: Every Entity Dictionary entity has a corresponding table
+3. BDD: Every PRD AC has a corresponding scenario
+4. Traceability: Confirm 0 GAPs
+5. Prototype: Every PRD User Journey has a corresponding page
 6. (reserved)
-7a. **MSW handler 엔드포인트 커버리지**: MSW handler가 api-spec.yaml의 모든 path x method 조합을 커버하는지 확인. handlers.ts에 누락된 endpoint가 있으면 Output Summary에 WARN.
-7b. **BASE 경로 정합성**: handlers.ts의 `BASE` 상수가 client.ts의 `BASE_URL + VERSION`과 동일한지 확인. 불일치 시 **자동 수정** (handlers.ts의 BASE를 client.ts 기준으로 갱신) + Output Summary에 FIX 기록.
-7c. **handler 응답 타입 안전성**: handlers.ts 내 모든 `HttpResponse.json()` 호출에서 응답 데이터가 api/types.ts의 타입으로 명시적 어노테이션되어 있는지 확인. `tsc --noEmit`이 스키마 불일치를 잡을 수 있도록 보장.
-8. **API Data Sufficiency**: key-flows.md의 각 플로우에서 연속 API 호출 간 데이터 충족성 최종 확인. 후행 API 요청 필드가 선행 API 응답에 포함되지 않은 경우 Output Summary에 WARN 표시.
-9. **Readiness 데이터 생성**: JP1/JP2 Visual Summary에서 사용할 Readiness 데이터를 `{output_base}/{feature_name}/readiness.md`에 저장:
+7a. **MSW handler endpoint coverage**: Verify MSW handlers cover every path x method combination in api-spec.yaml. Missing endpoints in handlers.ts → WARN in Output Summary.
+7b. **BASE path consistency**: Verify handlers.ts `BASE` constant matches client.ts `BASE_URL + VERSION`. On mismatch, **auto-fix** (update handlers.ts BASE to match client.ts) + log FIX in Output Summary.
+7c. **Handler response type safety**: Verify all `HttpResponse.json()` calls in handlers.ts have response data explicitly annotated with types from api/types.ts. Ensures tsc catches schema mismatches.
+8. **API Data Sufficiency**: Final verification that consecutive API calls in key-flows.md have data sufficiency. If a subsequent API request field is not in the preceding API response → WARN in Output Summary.
+9. **Readiness data generation**: Save JP1/JP2 Visual Summary readiness data to `{output_base}/{feature_name}/readiness.md`:
 
-   **JP1 데이터** (specs-only 모드에서도 생성):
-   - scenario_summaries: PRD User Journey에서 핵심 시나리오 3~5개를 1~2문장으로 축약.
-     각 시나리오에 관련 FR 번호를 태깅한다.
-     형식: `"고객이 {상황}에서 {행동}하면, 시스템이 {결과}를 제공한다." → FR1, FR3`
-   - tracking_completeness: 추적 소스 (brief_sentences 또는 Success Criteria) 중 FR에 매핑되지 않은 항목 수
-   - ai_inferred_count: `source: AI-inferred`인 FR 개수
-   - scope_gate_summary: 전 단계 PASS/FAIL 상태 (auto-sprint 경유 시에만. /specs 직접 실행 시 spec 단계만 포함)
-   - side_effect_high_count: brownfield-context.md Impact Analysis의 HIGH 위험도 항목 수
-   - customer_impact_changes: brownfield side-effect를 고객 관점 문장으로 번역한 목록.
-     형식: `"기존 '튜터 관리' 화면에서 '차단' 버튼이 추가됩니다"`
+   **JP1 Data** (also generated in specs-only mode):
+   - scenario_summaries: Condense 3-5 key scenarios from PRD User Journey into 1-2 sentences each.
+     Tag each scenario with related FR numbers.
+     Format: `"When a customer {situation} and {action}, the system provides {result}." → FR1, FR3`
+   - tracking_completeness: Number of tracking source items (brief_sentences or Success Criteria) not mapped to any FR
+   - ai_inferred_count: Number of FRs with `source: AI-inferred`
+   - scope_gate_summary: PASS/FAIL status of all prior stages (only available when routed through auto-sprint; /specs direct invocation includes spec stage only)
+   - side_effect_high_count: Number of HIGH severity items in brownfield-context.md Impact Analysis
+   - customer_impact_changes: Brownfield side-effects translated into customer-perspective statements.
+     Format: `"A 'Block' button will be added to the existing 'Tutor Management' screen"`
 
-   **JP2 데이터** (deliverables-only 모드에서 생성 — 기존과 동일):
-   - Spec Validation 결과: redocly lint PASS/FAIL, tsc PASS/FAIL
-   - BDD→FR 커버리지: N/M covered
-   - Traceability Gap: N개
+   **JP2 Data** (generated in deliverables-only mode — same as before):
+   - Spec Validation results: redocly lint PASS/FAIL, tsc PASS/FAIL
+   - BDD→FR coverage: N/M covered
+   - Traceability Gap: N items
 
-10. **JP1→JP2 변경 기록**: Stage 4b에서 자동 보정한 항목 수. readiness.md의 `jp1_to_jp2_changes` 배열 길이와 실제 보정 횟수가 일치하는지 확인. 자동 보강 불가 WARN 건수도 Output Summary에 포함.
+10. **JP1→JP2 change log**: Count of auto-corrected items from Stage 4b. Verify readiness.md `jp1_to_jp2_changes` array length matches actual correction count. Include auto-reinforcement-impossible WARN count in Output Summary.
 
-GAP이 있으면 Output Summary에 명시 (JP2에서 사람이 확인).
+If GAPs exist, state them in Output Summary (human reviews at JP2).
 
 ## Output Summary
 
@@ -426,4 +426,4 @@ npm run dev
 6. **OpenAPI as single source of truth** — API types, mock server, and documentation all derive from one spec
 7. **Skip XState** if no complex state management identified (don't force it)
 8. **Priority on budget pressure**: specs → API → prototype (in that order)
-9. **Consumer awareness** — 각 Stage의 산출물은 소비자를 인식한다. 소비자의 제약조건을 위반하는 산출물을 생성하지 않는다 (예: MSW handler의 BASE 상수가 client.ts의 BASE_URL + VERSION과 일치해야 함)
+9. **Consumer awareness** — each Stage's output is aware of its consumers. Do not produce output that violates consumer constraints (e.g., MSW handler BASE constant must match client.ts BASE_URL + VERSION)

@@ -24,7 +24,7 @@ Direct and specific. Every finding includes file path, line number, severity, an
 
 ### 2. Pattern Compliance
 - Consistency with project's established patterns
-- **기존 코드베이스 패턴 준수 (configured client-docs MCP에서 기존 컴포넌트 구조, 상태 관리 패턴 참조)**
+- **Existing codebase pattern compliance (reference existing component structure, state management patterns from configured client-docs MCP)**
 - Architecture document (design.md) adherence
 - Framework best practices
 
@@ -41,12 +41,12 @@ Direct and specific. Every finding includes file path, line number, severity, an
 ### 5. API Contract Compliance
 When `specs/{feature}/api-spec.yaml` exists:
 
-**Specmatic 실행 프로토콜**:
-1. API 서버 시작: tasks.md에 정의된 서버 시작 커맨드 실행 (기본: `npm run start:test`)
-2. 서버 health check: `curl http://localhost:{port}/health` (최대 30초 대기)
-3. Specmatic 실행: `specmatic test --spec specs/{feature}/api-spec.yaml --host localhost --port {port}`
-4. 서버 종료: 프로세스 kill
-5. 서버 시작 실패 → Specmatic 검증 SKIP + 경고를 리포트에 포함
+**Specmatic execution protocol**:
+1. Start API server: Run the server start command defined in tasks.md (default: `npm run start:test`)
+2. Server health check: `curl http://localhost:{port}/health` (wait up to 30 seconds)
+3. Run Specmatic: `specmatic test --spec specs/{feature}/api-spec.yaml --host localhost --port {port}`
+4. Stop server: Kill process
+5. Server start failure → SKIP Specmatic verification + include warning in report
 
 - Contract violations are **CRITICAL** severity
 - Check: request/response schemas match, status codes correct, required fields present
@@ -68,12 +68,12 @@ When `specs/{feature}/api-spec.yaml` exists:
 ```
 
 ## Input References
-- `changed_files`: 검증 대상 파일 목록 (`git diff --name-only {base_branch}...HEAD`로 추출)
-- `specs/{feature}/design.md` - 기술 설계
-- `specs/{feature}/tasks.md` - 태스크별 소유 파일 목록
-- `specs/{feature}/brownfield-context.md` - 기존 시스템 패턴
-- `specs/{feature}/api-spec.yaml` - API 계약 명세 (Specmatic 검증용)
-- **configured client-docs MCP** — 기존 코드 컨벤션, 컴포넌트 구조
+- `changed_files`: List of files to verify (`git diff --name-only {base_branch}...HEAD`)
+- `specs/{feature}/design.md` - Technical design
+- `specs/{feature}/tasks.md` - Per-task owned file list
+- `specs/{feature}/brownfield-context.md` - Existing system patterns
+- `specs/{feature}/api-spec.yaml` - API contract spec (for Specmatic verification)
+- **configured client-docs MCP** — Existing code conventions, component structure
 
 ## Rules
 1. Report honestly — if code is genuinely clean, state so with evidence. Never fabricate findings.
