@@ -140,7 +140,7 @@ Advantage: consistent results each time
 Prerequisite: human judgment (feedback) accumulates and feeds into the next generation
 ```
 
-**Sprint Kit implementation — Comment handling flow + Circuit Breaker**: When Comment is given at a JP, the system presents **apply-fix+propagate** (small-scale) or **regenerate** (large-scale) with cost estimates. The user chooses based on cost. Apply-fix is also validated by Scope Gate for consistency. Circuit Breaker is a normal mechanism that expands regeneration scope to the entire Sprint on repeated failures.
+**Sprint Kit implementation — Comment handling flow + Circuit Breaker**: When Comment is given at a JP, the system presents **apply-fix+propagate** (small-scale) or **regenerate** (large-scale) with cost estimates. The user chooses based on cost. Apply-fix is also validated by Scope Gate for consistency. Circuit Breaker is a normal mechanism that expands regeneration scope to the entire Sprint on repeated failures. (Full flow detail: S5.4. Trade-off cost: S6.2.)
 
 ### Customer-Lens Judgment Points
 
@@ -150,6 +150,7 @@ Prerequisite: human judgment (feedback) accumulates and feeds into the next gene
 - JP1 "Is this the right product for customers?" — presents requirements, scenarios, feature scope as customer journey narrative
 - JP2 "Is this the experience customers want?" — hands-on experience with working prototype + key scenario guide
 - Response: **Confirm** (proceed) / **Comment** (impact analysis → apply-fix or regenerate with cost estimates → user chooses)
+- Presentation format and flow details: S5.2 (JP1), S5.3 (JP2). Trade-off of limiting to 2 JPs: S6.2.
 
 ### Knowledge Shape Determines Route
 
@@ -244,6 +245,18 @@ Real user examples:
 | **MSW (Mock Service Worker)** | Prototype stateful API (network interception via browser Service Worker) |
 | **@redocly/cli** | OpenAPI spec lint (syntax/structure + example ↔ schema conformance) |
 | **npx bmad-sprint-kit** | Sprint Kit install/update CLI |
+
+#### Tool Selection Rationale
+
+Most tools above are platform givens (BMad, Claude Code) or have no practical alternatives (GitHub CLI, MCP). The following were deliberate choices:
+
+**MSW (Mock Service Worker)** — Selected for prototype fidelity. Requirement: JP2 judgment requires a prototype that behaves like a real service (stateful CRUD across flows). MSW intercepts at the network level via browser Service Worker, so the React app calls APIs with the same code as production — unaware it's mocked. Previously used Prism (OpenAPI proxy mock), but Prism could not maintain cross-request state (e.g., "POST creates a record → GET returns it"), making realistic user journeys impossible.
+
+**Specmatic** — Selected for contract-based verification. Requirement: Workers implementing in parallel must verify API conformance without a running backend. Specmatic generates contract tests directly from `api-spec.yaml`, enabling each Worker to self-verify in isolation. Alternative considered: Pact (consumer-driven contracts), but Sprint Kit's flow generates the API spec first (provider-first), making Specmatic's provider-first model a natural fit.
+
+**@redocly/cli** — Selected for OpenAPI lint depth. Requirement: catch structural errors and example ↔ schema mismatches before MSW handler generation. Redocly detects example/schema conformance issues that Spectral (the main alternative) does not cover by default.
+
+**Git Worktree** — Selected over feature branches for parallel Workers. Worktrees share the same `.git` directory, avoiding merge overhead and enabling true concurrent file system access.
 
 ### Agent 3-Tier Architecture
 
@@ -756,6 +769,8 @@ Changes/supplements after JP1 are recorded in readiness.md's `jp1_to_jp2_changes
 
 ## 5.4 Comment Handling Flow
 
+> Design rationale: S2.2 Regeneration Over Modification. Trade-off cost of this approach: S6.2.
+
 When Comment is selected at a JP, the handling approach is dynamically determined based on feedback scope. This flow applies equally to Party Mode discoveries, Advanced Elicitation results, and direct feedback.
 
 1. **Feedback input**: User enters correction direction as free text
@@ -806,12 +821,14 @@ This is the realization of Artifacts as Medium — the requirements error would 
 
 ## 6.2 Trade-offs
 
-| Choice | Cost | Rationale |
-|--------|------|-----------|
-| Regeneration default, modification as supplement | Regeneration suggested even for small changes (potential inefficiency) | Regeneration Over Modification — apply-fix is supplemented by Scope Gate verification |
-| JPs limited to 2 | Mid-stage issues only discovered at JP | Customer-Lens Judgment Points — JP1 can be removed when AI speed improves |
-| Fully automatic pipeline | No mid-process intervention (Sprint route) | Input Reduces Cycles — supplemented by upfront input quality |
-| BMad artifact format dependency | Compatibility issues on BMad version changes | Extension model — BMad is the base platform |
+Each trade-off below links to its design judgment (S2.2) and implementation (S4/S5).
+
+| Choice | Cost | Rationale | Implementation |
+|--------|------|-----------|----------------|
+| Regeneration default, modification as supplement | Regeneration suggested even for small changes (potential inefficiency) | Regeneration Over Modification (S2.2) | Comment handling flow (S5.4) |
+| JPs limited to 2 | Mid-stage issues only discovered at JP | Customer-Lens Judgment Points (S2.2) | JP1 (S5.2), JP2 (S5.3) |
+| Fully automatic pipeline | No mid-process intervention (Sprint route) | Input Reduces Cycles (S2.2) | Pipeline (S4.2) |
+| BMad artifact format dependency | Compatibility issues on BMad version changes | Extension model — BMad is the base platform | Tool Stack (S4.1) |
 
 ## 6.3 Left Open
 
@@ -991,3 +1008,23 @@ specs/{feature}/
 | **/summarize-prd** | PRD summary/analysis + feedback application command. Used for quickly understanding existing PRDs |
 | **Scope Gate** | 3-stage verification performed by @scope-gate agent: Structured Probe + Checklist + Holistic Review. Runs after each BMad step and after Deliverables |
 | **Amelia** (Dev) | BMad agent. Handles Story implementation. Used in Guided route |
+
+---
+
+# Appendix D: Blueprint Sync Criteria
+
+The YAML frontmatter `synced_to` field tracks the last commit where non-Blueprint source file changes were reflected in this document. Blueprint's own commits are not tracked.
+
+Use the following criteria to determine whether a code change requires a Blueprint update:
+
+| Change Type | Blueprint Update Target | Example |
+|-------------|------------------------|---------|
+| Customer experience change | S4 Pipeline, S5 JP model | JP response options changed, process flow changed |
+| Tool/technology replacement | S4.1 Tool Stack | Prism → MSW replacement |
+| Design judgment change | S2 Design Judgments | JP count change, regeneration policy change |
+| New route or entry point | S2.2 Knowledge Shape, S4.3 Route Selection | New crossover path added |
+| Refactoring / bugfix | **No update needed** | Internal implementation change, performance improvement |
+| Unvalidated hypothesis validated | S8.3 Unvalidated Hypotheses | Sprint executed with actual team |
+| Known gap resolved | S8.4 Known Gaps | Multi-user support implemented |
+
+**Rule of thumb**: If a non-developer product expert would notice the change (different screens, different flow, different judgment points), update the Blueprint. If only developers would notice (code structure, performance, internal refactoring), skip it.
