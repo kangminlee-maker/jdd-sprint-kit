@@ -2,7 +2,7 @@
 
 **Sprint Kit Design Philosophy — Execution Extension for the BMad Method**
 
-> bmad-sprint-kit aims to be a tool that enables product experts — not developers —
+> jdd-sprint-kit aims to be a tool that enables product experts — not developers —
 > to realize their judgments as software deliverables using AI.
 > Users don't know code, but they know what their customers want.
 > They do only three things:

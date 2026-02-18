@@ -11,7 +11,7 @@ export async function runUpdate(options = {}) {
   const projectDir = process.cwd();
 
   if (!yes) {
-    p.intro(`BMAD Sprint Kit Update v${SPRINT_KIT_VERSION}`);
+    p.intro(`JDD Sprint Kit Update v${SPRINT_KIT_VERSION}`);
   }
 
   // Environment check
@@ -19,10 +19,10 @@ export async function runUpdate(options = {}) {
 
   if (!env.hasSprintKit) {
     if (yes) {
-      console.error('Error: Sprint Kit is not installed. Run: npx bmad-sprint-kit init');
+      console.error('Error: Sprint Kit is not installed. Run: npx jdd-sprint-kit init');
       process.exit(1);
     }
-    p.cancel('Sprint Kit이 설치되어 있지 않습니다. 먼저 init을 실행해주세요: npx bmad-sprint-kit init');
+    p.cancel('Sprint Kit이 설치되어 있지 않습니다. 먼저 init을 실행해주세요: npx jdd-sprint-kit init');
     process.exit(1);
   }
 

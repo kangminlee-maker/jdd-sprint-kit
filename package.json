@@ -1,10 +1,10 @@
 {
-  "name": "bmad-sprint-kit",
+  "name": "jdd-sprint-kit",
   "version": "0.3.1",
   "description": "Judgment-Driven Development toolkit for BMad Method",
   "type": "module",
   "bin": {
-    "bmad-sprint-kit": "bin/cli.js"
+    "jdd-sprint-kit": "bin/cli.js"
   },
   "scripts": {
     "prepublishOnly": "node scripts/build-templates.js"
@@ -26,7 +26,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kangminlee-maker/bmad-sprint-kit.git"
+    "url": "git+https://github.com/kangminlee-maker/jdd-sprint-kit.git"
   },
   "keywords": [
     "bmad",

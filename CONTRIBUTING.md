@@ -1,6 +1,6 @@
-# Contributing to BMAD Sprint Kit
+# Contributing to JDD Sprint Kit
 
-Thank you for your interest in contributing to BMAD Sprint Kit!
+Thank you for your interest in contributing to JDD Sprint Kit!
 
 ## Understanding the Project
 
@@ -26,8 +26,8 @@ Design philosophy: [Judgment-Driven Development](docs/judgment-driven-developmen
 ### Setup
 
 ```bash
-git clone https://github.com/kangminlee-maker/bmad-sprint-kit.git
-cd bmad-sprint-kit
+git clone https://github.com/kangminlee-maker/jdd-sprint-kit.git
+cd jdd-sprint-kit
 npm install
 npx bmad-method install
 ```
@@ -79,4 +79,4 @@ When your change affects customer-visible behavior, update `docs/blueprint.md`. 
 
 ## Questions?
 
-Open an [issue](https://github.com/kangminlee-maker/bmad-sprint-kit/issues) or start a [discussion](https://github.com/kangminlee-maker/bmad-sprint-kit/discussions).
+Open an [issue](https://github.com/kangminlee-maker/jdd-sprint-kit/issues) or start a [discussion](https://github.com/kangminlee-maker/jdd-sprint-kit/discussions).

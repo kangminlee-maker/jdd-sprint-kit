@@ -1,4 +1,4 @@
-# BMAD Sprint Kit
+# JDD Sprint Kit
 
 **"A single-line brief becomes a working prototype."**
 
@@ -61,7 +61,7 @@ A single Sprint run auto-generates the following artifacts:
 ### Installation
 
 ```bash
-npx bmad-sprint-kit init
+npx jdd-sprint-kit init
 ```
 
 An interactive wizard detects your environment and installs Sprint Kit files.
@@ -214,7 +214,7 @@ For Greenfield projects with no existing system, Sprint works normally without B
 └── docs/                            # Framework documentation
 ```
 
-> Sprint Kit files (`.claude/agents/`, `.claude/commands/`, `.claude/rules/bmad-*`, `_bmad/`) should not be modified directly. Update via `npx bmad-sprint-kit update`.
+> Sprint Kit files (`.claude/agents/`, `.claude/commands/`, `.claude/rules/bmad-*`, `_bmad/`) should not be modified directly. Update via `npx jdd-sprint-kit update`.
 
 ---
 
@@ -227,14 +227,14 @@ Sprint Kit's canonical definition files live in `.claude/`. Other AI IDEs beyond
 **Codex CLI** — Use the `--ide` option during installation to generate Codex files:
 
 ```bash
-npx bmad-sprint-kit init --ide claude-code,codex
+npx jdd-sprint-kit init --ide claude-code,codex
 ```
 
 In Codex, run Sprint commands via `$sprint`, `$specs`, `$preview`, `$parallel`, `$validate`.
 
 **Gemini Code Assist** — TOML wrappers are auto-generated in `.gemini/commands/`.
 
-> When the canonical files (`.claude/`) are modified, `npx bmad-sprint-kit update` also refreshes the converted files.
+> When the canonical files (`.claude/`) are modified, `npx jdd-sprint-kit update` also refreshes the converted files.
 
 ---
 

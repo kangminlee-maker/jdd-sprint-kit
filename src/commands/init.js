@@ -175,7 +175,7 @@ export async function runInit(options = {}) {
       const result = mergeSettings(settingsPath, backupPath);
       p.log.success(`settings.json ${result.action === 'merged' ? '머지' : '생성'} 완료`);
     } else {
-      p.log.info('settings.json 훅 설정을 건너뛰었습니다. 나중에 설정하려면: npx bmad-sprint-kit init');
+      p.log.info('settings.json 훅 설정을 건너뛰었습니다. 나중에 설정하려면: npx jdd-sprint-kit init');
     }
   } else {
     mergeSettings(settingsPath, backupPath);

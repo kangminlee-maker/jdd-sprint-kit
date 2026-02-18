@@ -1,6 +1,6 @@
 # Terminology Map
 
-Korean-English canonical term reference for BMad Sprint Kit. All files use the **English (Canonical)** column as the single source of truth.
+Korean-English canonical term reference for JDD Sprint Kit. All files use the **English (Canonical)** column as the single source of truth.
 
 ## Core Terms
 

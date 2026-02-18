@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to BMAD Sprint Kit will be documented in this file.
+All notable changes to JDD Sprint Kit will be documented in this file.
 
 ---
 
@@ -65,7 +65,7 @@ All notable changes to BMAD Sprint Kit will be documented in this file.
 
 ### Migration from 0.2.0
 
-1. **preview-template 업데이트**: `@stoplight/prism-cli`, `concurrently` 제거됨. `msw`, `@redocly/cli` 추가됨. `npx bmad-sprint-kit update`로 반영
+1. **preview-template 업데이트**: `@stoplight/prism-cli`, `concurrently` 제거됨. `msw`, `@redocly/cli` 추가됨. `npx jdd-sprint-kit update`로 반영
 2. **기존 Sprint 산출물의 preview/**: Prism 기반으로 생성된 프로토타입은 수동 재생성 필요 (`/preview` 재실행)
 3. **JP 피드백**: Redirect 옵션 제거. Comment 선택 시 수정반영/재생성 옵션이 cost와 함께 제시됨
 4. **CLAUDE.md**: 사용자 프로젝트 규칙에 Prism 참조가 있으면 MSW로 수동 변경 필요
@@ -101,7 +101,7 @@ All notable changes to BMAD Sprint Kit will be documented in this file.
 
 ### Migration from 0.1.0
 
-`npx bmad-sprint-kit update`로 파일을 업데이트한다. 수동 마이그레이션이 필요한 항목:
+`npx jdd-sprint-kit update`로 파일을 업데이트한다. 수동 마이그레이션이 필요한 항목:
 
 1. **sprint-input.md**: 기존 `force_cp1_review` 필드는 `force_jp1_review`로 자동 인식됨 (하위 호환)
 2. **tracking_source**: 기존 sprint-input.md에 없는 필드. 새로 생성되는 Sprint에서 자동 추가됨
@@ -120,5 +120,5 @@ All notable changes to BMAD Sprint Kit will be documented in this file.
 - React + Prism 프로토타입 자동 생성
 - Multi-IDE 지원 (Claude Code, Codex CLI, Gemini Code Assist)
 - Hook 시스템 (desktop-notify, protect-readonly, pre-compact, session-recovery)
-- `npx bmad-sprint-kit init/update/compat-check` CLI
+- `npx jdd-sprint-kit init/update/compat-check` CLI
 - 튜토리얼 프로젝트 (test-tutor-excl)

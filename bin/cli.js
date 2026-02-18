@@ -11,7 +11,7 @@ const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-
 const program = new Command();
 
 program
-  .name('bmad-sprint-kit')
+  .name('jdd-sprint-kit')
   .description('Judgment-Driven Development toolkit for BMad Method')
   .version(pkg.version);
 

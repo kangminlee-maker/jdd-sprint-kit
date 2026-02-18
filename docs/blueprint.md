@@ -1,13 +1,13 @@
 ---
 synced_to: "b60cda7"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
 audience: "non-developer product expert"
-product: "BMAD Sprint Kit"
+product: "JDD Sprint Kit"
 version: "0.3.1"
 ---
 
-# BMAD Sprint Kit Blueprint
+# JDD Sprint Kit Blueprint
 
-> bmad-sprint-kit aspires to be a tool that enables product experts — not developers —
+> jdd-sprint-kit aspires to be a tool that enables product experts — not developers —
 > to turn their judgments into software outcomes directly, powered by AI.
 > Users don't know code, but they know what customers want.
 > They do only three things:
@@ -244,7 +244,7 @@ Real user examples:
 | **Specmatic** | OpenAPI contract-based automated testing (Worker self-verification) |
 | **MSW (Mock Service Worker)** | Prototype stateful API (network interception via browser Service Worker) |
 | **@redocly/cli** | OpenAPI spec lint (syntax/structure + example ↔ schema conformance) |
-| **npx bmad-sprint-kit** | Sprint Kit install/update CLI |
+| **npx jdd-sprint-kit** | Sprint Kit install/update CLI |
 
 #### Tool Selection Rationale
 
@@ -895,13 +895,13 @@ Key changes:
 
 ## Installation
 
-Sprint Kit is installed/updated via the `npx bmad-sprint-kit` CLI.
+Sprint Kit is installed/updated via the `npx jdd-sprint-kit` CLI.
 
 | Command | Action |
 |---------|--------|
-| `npx bmad-sprint-kit init` | Interactive wizard: BMad detection → file installation → Hook setup |
-| `npx bmad-sprint-kit update` | Update existing files (version comparison + diff display) |
-| `npx bmad-sprint-kit compat-check` | BMad version compatibility check |
+| `npx jdd-sprint-kit init` | Interactive wizard: BMad detection → file installation → Hook setup |
+| `npx jdd-sprint-kit update` | Update existing files (version comparison + diff display) |
+| `npx jdd-sprint-kit compat-check` | BMad version compatibility check |
 
 If BMad Method is not detected during installation, an error with guidance message is displayed.
 

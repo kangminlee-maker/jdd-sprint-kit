@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BMAD Sprint Kit — Parallel Orchestrator (Agents SDK)
+JDD Sprint Kit — Parallel Orchestrator (Agents SDK)
 
 Usage:
     python scripts/parallel-orchestrator.py --feature <feature-name> [--base-branch main]
@@ -392,7 +392,7 @@ def close_gh_issue(task: Task) -> None:
 # Task 5 — Run parallel agents
 # ---------------------------------------------------------------------------
 WORKER_SYSTEM_PROMPT = """\
-You are a BMAD Sprint Kit Worker agent. You implement exactly ONE task in an \
+You are a JDD Sprint Kit Worker agent. You implement exactly ONE task in an \
 isolated git worktree.
 
 ## Rules
@@ -633,7 +633,7 @@ async def async_main(feature_name: str, base_branch: str, dry_run: bool) -> int:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="BMAD Sprint Kit — Parallel Orchestrator (Agents SDK)",
+        description="JDD Sprint Kit — Parallel Orchestrator (Agents SDK)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )

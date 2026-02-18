@@ -4,7 +4,7 @@ import { detect, checkBmadCompat } from './detect.js';
 import { describeHookChanges } from './merge.js';
 
 export function showIntro() {
-  p.intro(`BMAD Sprint Kit Installer v${SPRINT_KIT_VERSION}`);
+  p.intro(`JDD Sprint Kit Installer v${SPRINT_KIT_VERSION}`);
   p.note(
     [
       'AI가 만들고, 사람이 판단한다.',
@@ -12,7 +12,7 @@ export function showIntro() {
       '프로덕트 전문가가 JP1/JP2에서 방향을 결정합니다.',
       '/sprint "만들고 싶은 기능" 한 줄이면 시작됩니다.',
     ].join('\n'),
-    'BMAD Sprint Kit'
+    'JDD Sprint Kit'
   );
 }
 
@@ -106,7 +106,7 @@ export function showBmadRequired(bmadVersion, bmadCompat) {
         '',
         '업그레이드 후 다시 실행:',
         '  npx bmad-method install',
-        '  npx bmad-sprint-kit init',
+        '  npx jdd-sprint-kit init',
       ].join('\n'),
       'BMad Method 업그레이드 필요'
     );
@@ -119,7 +119,7 @@ export function showBmadRequired(bmadVersion, bmadCompat) {
         '  npx bmad-method install',
         '',
         '설치 후 다시 실행:',
-        '  npx bmad-sprint-kit init',
+        '  npx jdd-sprint-kit init',
       ].join('\n'),
       'BMad Method 필요'
     );
@@ -164,8 +164,8 @@ export function showAlreadyInstalled(version) {
     [
       `Sprint Kit v${version}이 이미 설치되어 있습니다.`,
       '',
-      '업데이트:  npx bmad-sprint-kit update',
-      '보완:     npx bmad-sprint-kit init  (빠진 설정만 진행)',
+      '업데이트:  npx jdd-sprint-kit update',
+      '보완:     npx jdd-sprint-kit init  (빠진 설정만 진행)',
     ].join('\n'),
     '이미 설치됨'
   );
