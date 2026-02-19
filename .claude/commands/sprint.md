@@ -78,7 +78,12 @@ Parse `$ARGUMENTS` — 2 entry points, 1 pipeline:
 3. **Verify specs/{feature_name}/ exists**:
    If missing → auto-create + guide:
    a. Create `specs/{feature_name}/inputs/`
-   b. Generate `specs/{feature_name}/inputs/brief.md` template:
+   b. Generate `specs/{feature_name}/inputs/brief.md` template (in {document_output_language}):
+      Section headings and placeholder text must be written in {document_output_language}.
+      HTML comments (guidance for the user) are written in {communication_language}.
+      The `## Reference Sources` section heading and sub-section headings are always in English (machine-parseable).
+
+      Example (when document_output_language=Korean, communication_language=Korean):
       ```markdown
       # {feature_name}
 
@@ -88,7 +93,7 @@ Parse `$ARGUMENTS` — 2 entry points, 1 pipeline:
       ## 만들어야 할 기능
       (구체적인 기능을 설명하세요)
 
-      ## 참고 소스
+      ## Reference Sources
 
       ### GitHub
       <!-- 기존 서비스 코드가 있으면 URL과 탐색 힌트를 작성하세요 -->
@@ -99,11 +104,11 @@ Parse `$ARGUMENTS` — 2 entry points, 1 pipeline:
       <!-- Figma 디자인 URL이 있으면 작성하세요 -->
       <!-- - https://figma.com/design/{fileKey}/... -->
 
-      ### 정책 문서
+      ### Policy Docs
       <!-- Scanner가 우선 탐색할 정책/도메인 문서명 -->
       <!-- - document-name.md -->
 
-      ### 탐색 메모
+      ### Scan Notes
       <!-- Brownfield 탐색 시 참고할 자유 형식 메모 -->
       ```
    c. Message (in {communication_language}):
@@ -281,16 +286,16 @@ See `_bmad/docs/sprint-input-format.md` for reference analysis format.
    - 5 or fewer: include all (default: included in Sprint scope)
    - Over 5: include top 3, rest as "next Sprint candidates"
 4. **Contradiction detection**: Record contradictions between Brief and references in Detected Contradictions (no auto-resolution)
-5. **Parse '참고 소스' section from brief.md** (if exists):
-   - Detect heading: `## 참고 소스` / `## Reference Sources` / `## References`
-   - Parse sub-sections:
-     - `### GitHub`: extract URLs + per-URL notes (indented text below URL)
+5. **Parse Reference Sources section from brief.md** (if exists):
+   - Detect heading (canonical → fallback): `## Reference Sources` / `## 참고 소스` / `## References`
+   - Parse sub-sections (canonical → fallback):
+     - `### GitHub` / `### GitHub`: extract URLs + per-URL notes (indented text below URL)
        - URL pattern: `https://github.com/{owner}/{repo}` (`.git` suffix auto-strip)
        - Notes: non-URL indented lines below each URL
-     - `### Figma`: extract URLs + notes
+     - `### Figma` / `### Figma`: extract URLs + notes
        - URL pattern: `https://figma.com/design/{fileKey}/...` or `.../file/{fileKey}/...`
-     - `### 정책 문서` / `### Policy Docs`: collect document names (line items)
-     - `### 탐색 메모` / `### Scan Notes`: collect as free-text
+     - `### Policy Docs` / `### 정책 문서`: collect document names (line items)
+     - `### Scan Notes` / `### 탐색 메모`: collect as free-text
    - 참고 소스 섹션의 GitHub repos는 사용자 명시 의도 → AskUserQuestion 없이 다운로드 대상 확정
    - 섹션이 없거나 비어있으면 → skip (기존 auto-detect만 사용)
    - HTML 주석으로 감싸인 라인 (`<!-- ... -->`)은 skip (템플릿 상태 그대로)
