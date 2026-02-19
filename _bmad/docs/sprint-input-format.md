@@ -72,13 +72,22 @@ validation:
   contradictions_detected: 1
 tracking_source: brief | success-criteria
 external_resources:
+  github_repos:
+    - owner_repo: "org/backend-api"
+      source_file: "brief.md#참고-소스"  # or auto-detect source filename
+      notes: "NestJS API. 매칭 엔진: src/matching/"  # from 참고 소스 section
+    status: configured | not-configured | reference-only
   external_repos:
     - name: "{repo-name}"
       path: "{accessible local path}"
-      access_method: "add-dir"
+      access_method: "add-dir"  # or "tarball-snapshot"
+      source_url: ""  # present when access_method is tarball-snapshot
+  policy_docs:
+    - "matching-policy.md"
+  scan_notes: "매칭 엔진과 예약 플로우 중심으로 탐색"
   figma:
     - file_key: "{fileKey}"
-      source_file: "brief.md"
+      source_file: "brief.md#참고-소스"
     status: configured | not-configured
 flags:
   force_jp1_review: false  # true for Grade C Briefs
@@ -109,10 +118,18 @@ flags:
 | `tracking_source` | Y | Brief tracking source. `brief`: BRIEF-N based (Sprint route), `success-criteria`: PRD Success Criteria based (Guided/Direct route) |
 | `flags.force_jp1_review` | Y | Whether to force JP1 review |
 | `external_resources` | N | External resource references auto-detected from inputs and environment |
-| `external_resources.external_repos` | N | External repo paths detected via `--add-dir` or other access methods |
+| `external_resources.github_repos` | N | GitHub repo references auto-detected from inputs |
+| `external_resources.github_repos[].owner_repo` | (Y if github_repos exists) | GitHub owner/repo (e.g., `org/backend-api`) |
+| `external_resources.github_repos[].source_file` | (Y if github_repos exists) | File where the GitHub URL was detected |
+| `external_resources.github_repos.status` | (Y if github_repos exists) | `configured` (downloaded) / `not-configured` (download failed) / `reference-only` (URL only) |
+| `external_resources.external_repos` | N | External repo paths detected via `--add-dir` or tarball snapshot |
 | `external_resources.external_repos[].name` | (Y if external_repos exists) | Repo identifier (derived from directory name) |
 | `external_resources.external_repos[].path` | (Y if external_repos exists) | Accessible local path to the repo |
-| `external_resources.external_repos[].access_method` | (Y if external_repos exists) | How the path was provided (`add-dir`) |
+| `external_resources.external_repos[].access_method` | (Y if external_repos exists) | How the path was provided (`add-dir` / `tarball-snapshot`) |
+| `external_resources.external_repos[].source_url` | N | Original URL (for tarball re-download; present when access_method is `tarball-snapshot`) |
+| `external_resources.github_repos[].notes` | N | 탐색 힌트 (brief.md 참고 소스 섹션에서 전달). Scanner가 참조 |
+| `external_resources.policy_docs` | N | Scanner 우선 탐색 대상 문서명 목록 (brief.md 참고 소스 섹션에서 전달) |
+| `external_resources.scan_notes` | N | 전체 탐색 자유 형식 메모 (brief.md 참고 소스 섹션에서 전달) |
 | `external_resources.figma` | N | Figma design file references |
 | `external_resources.figma[].file_key` | (Y if figma exists) | Figma fileKey extracted from URL |
 | `external_resources.figma[].source_file` | (Y if figma exists) | File where URL was detected |

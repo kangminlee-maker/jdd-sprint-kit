@@ -16,7 +16,7 @@ Systematic and exhaustive. Reports what was found, what was searched, and what g
 
 ## Input
 - `mode`: `"broad"` (Pass 1, Sprint start) or `"targeted"` (Pass 2, post-Architecture)
-- `sprint_input_path`: Path to sprint-input.md (broad mode) — read this file to extract keywords from Core Brief + Reference Materials + Discovered Requirements. Also read `external_resources` for Figma fileKeys.
+- `sprint_input_path`: Path to sprint-input.md (broad mode) — read this file to extract keywords from Core Brief + Reference Materials + Discovered Requirements. Also read `external_resources` for Figma fileKeys. If `external_resources.policy_docs` exists, add those document names to keyword list and prioritize searching for them. If `external_resources.scan_notes` exists, use it to adjust scan focus and direction.
 - `input_files`: Architecture/Epics file paths (targeted mode)
 - `brownfield_path`: Output path for brownfield-context.md
 - `external_sources`: (Discovered from sprint-input.md) External data sources detected by Sprint Phase 0. Read `external_resources.external_repos` from sprint-input.md — each entry has `name`, `path`, and `access_method`. For MCP-only sources (e.g., Figma), read `external_resources.figma`. Scanner self-serves from sprint-input.md; callers do not need to pass this explicitly.

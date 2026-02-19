@@ -76,15 +76,50 @@ Parse `$ARGUMENTS` — 2 entry points, 1 pipeline:
    - README content: Sprint usage + folder structure guide
 
 3. **Verify specs/{feature_name}/ exists**:
-   If missing, error (in {communication_language}):
-   ```
-   specs/{feature_name}/ folder not found.
+   If missing → auto-create + guide:
+   a. Create `specs/{feature_name}/inputs/`
+   b. Generate `specs/{feature_name}/inputs/brief.md` template:
+      ```markdown
+      # {feature_name}
 
-   To start a Sprint:
-   1. Create folder: mkdir -p specs/{feature_name}/inputs/
-   2. Add materials: place meeting notes, Brief, references in inputs/
-   3. Re-run: /sprint {feature_name}
-   ```
+      ## 배경
+      (이 기능이 필요한 이유를 작성하세요)
+
+      ## 만들어야 할 기능
+      (구체적인 기능을 설명하세요)
+
+      ## 참고 소스
+
+      ### GitHub
+      <!-- 기존 서비스 코드가 있으면 URL과 탐색 힌트를 작성하세요 -->
+      <!-- - https://github.com/{owner}/{repo} -->
+      <!--   탐색 힌트: 관련 모듈 경로, 주의사항 등 -->
+
+      ### Figma
+      <!-- Figma 디자인 URL이 있으면 작성하세요 -->
+      <!-- - https://figma.com/design/{fileKey}/... -->
+
+      ### 정책 문서
+      <!-- Scanner가 우선 탐색할 정책/도메인 문서명 -->
+      <!-- - document-name.md -->
+
+      ### 탐색 메모
+      <!-- Brownfield 탐색 시 참고할 자유 형식 메모 -->
+      ```
+   c. Message (in {communication_language}):
+      ```
+      Sprint 프로젝트 생성 완료: {feature_name}
+
+      specs/{feature_name}/inputs/brief.md
+
+      brief.md를 작성한 후 다시 실행하세요:
+        /sprint {feature_name}
+
+      참조 문서(회의록, 기획서 등)가 있으면 inputs/에 함께 넣어주세요.
+      brief.md 하단의 '참고 소스' 섹션에 GitHub repo URL, Figma URL을 선언하면
+      Sprint이 기존 시스템을 자동으로 분석합니다.
+      ```
+   d. Exit (brief.md 작성 대기)
 
 4. **Full scan** — scan `specs/{feature_name}/` contents at once:
 
@@ -246,25 +281,50 @@ See `_bmad/docs/sprint-input-format.md` for reference analysis format.
    - 5 or fewer: include all (default: included in Sprint scope)
    - Over 5: include top 3, rest as "next Sprint candidates"
 4. **Contradiction detection**: Record contradictions between Brief and references in Detected Contradictions (no auto-resolution)
-5. **Figma URL auto-detection**:
+5. **Parse '참고 소스' section from brief.md** (if exists):
+   - Detect heading: `## 참고 소스` / `## Reference Sources` / `## References`
+   - Parse sub-sections:
+     - `### GitHub`: extract URLs + per-URL notes (indented text below URL)
+       - URL pattern: `https://github.com/{owner}/{repo}` (`.git` suffix auto-strip)
+       - Notes: non-URL indented lines below each URL
+     - `### Figma`: extract URLs + notes
+       - URL pattern: `https://figma.com/design/{fileKey}/...` or `.../file/{fileKey}/...`
+     - `### 정책 문서` / `### Policy Docs`: collect document names (line items)
+     - `### 탐색 메모` / `### Scan Notes`: collect as free-text
+   - 참고 소스 섹션의 GitHub repos는 사용자 명시 의도 → AskUserQuestion 없이 다운로드 대상 확정
+   - 섹션이 없거나 비어있으면 → skip (기존 auto-detect만 사용)
+   - HTML 주석으로 감싸인 라인 (`<!-- ... -->`)은 skip (템플릿 상태 그대로)
+6. **Figma URL auto-detection + merge**:
    While reading inputs/ files (steps 1-3 above), detect Figma URL patterns in all file contents:
    - Pattern: `https://figma.com/design/{fileKey}/...` or `https://figma.com/file/{fileKey}/...`
    - Extract `fileKey` from each matched URL
-   - If multiple URLs found: collect all unique fileKeys
-   - Record in sprint-input.md `external_resources` field:
-     ```yaml
-     external_resources:
-       figma:
-         - file_key: "abc123def456"
-           source_file: "brief.md"
-         - file_key: "xyz789"
-           source_file: "design-notes.md"
-         status: not-configured  # updated in Step 0f after MCP check
+   - Merge with step 5 Figma URLs → deduplicate by `fileKey`
+   - 참고 소스 섹션 출처: `source_file: "brief.md#참고-소스"`, auto-detect 출처: detected filename
+   - If no Figma URLs found (neither 참고 소스 nor auto-detect): omit `external_resources.figma`
+7. **GitHub repo URL auto-detection + merge**:
+   While reading inputs/ files (steps 1-3 above), detect GitHub repo URL patterns in all file contents:
+   - Pattern: `https://github.com/{owner}/{repo}` (path, query, fragment after repo name are ignored)
+   - Extract `owner/repo` from each matched URL. Collect unique pairs.
+   - Deduplicate with step 5 GitHub repos (by `owner/repo` unit)
+   - **Auto-detected repos NOT in 참고 소스 섹션** → present via AskUserQuestion (in {communication_language}):
      ```
-   - If no Figma URLs found: omit `external_resources` field entirely (Scanner will skip Figma)
-6. **Write sprint-input.md**: Generate SSOT at `specs/{feature_name}/inputs/sprint-input.md`
-7. **Set tracking_source**: `tracking_source: brief` — Sprint route always uses BRIEF-N based tracking
-8. **Causal Chain extraction**:
+     GitHub 리포지토리 URL이 감지되었습니다: {owner}/{repo}
+     이 리포지토리의 코드를 Sprint에 반영하면 기존 시스템 분석 정확도가 향상됩니다.
+     (읽기 전용 스냅샷 다운로드, clone이 아닙니다)
+
+     [1] 다운로드하여 반영 (Recommended)
+     [2] URL만 참고 정보로 기록
+     [3] 무시
+     ```
+     - [1] selected → mark as download target
+     - [2] selected → mark as `reference-only` (no download)
+     - [3] selected → do not record
+   - **Repos already in 참고 소스 섹션** → skip AskUserQuestion (already confirmed by user)
+   - Non-GitHub URLs (GitLab, Bitbucket, etc.) detected → inform (in {communication_language}):
+     "현재 GitHub URL만 자동 감지됩니다. GitLab/Bitbucket은 git clone + claude --add-dir로 추가하세요."
+   - If no GitHub URLs found (neither 참고 소스 nor auto-detect): omit `external_resources.github_repos`
+8. **Set tracking_source**: `tracking_source: brief` — Sprint route always uses BRIEF-N based tracking
+9. **Causal Chain extraction**:
    Structure the background of the feature request from Core Brief + Reference Materials.
 
    **Layer structure**:
@@ -432,6 +492,57 @@ If Step 0d detected Figma URLs and recorded them in sprint-input.md `external_re
 
 If no Figma URLs were detected in Step 0d → skip this sub-step entirely (no prompt).
 
+##### Sub-step 0f-2C: GitHub Repo Snapshot (when external_resources.github_repos has status: pending items)
+
+If Step 0d detected GitHub repo URLs and user selected [1] (download):
+
+1. **gh auth check**: Run `gh auth status`
+   - Failure → present via AskUserQuestion (in {communication_language}):
+     ```
+     GitHub 인증이 필요합니다.
+     [1] gh auth login 실행 후 재시도
+     [2] 해당 repo 없이 계속
+     ```
+     - [1] selected: guide user to run `gh auth login`, then re-check
+     - [2] selected: update github_repos status to `not-configured`, proceed
+
+2. **For each repo with status: pending**:
+   a. Progress message (in {communication_language}): "원격 리포지토리 스냅샷 다운로드 중... ({N}/{total}: {owner_repo})"
+   b. Create temp directory: `mkdir -p /tmp/sprint-{feature}-{name} && chmod 700 /tmp/sprint-{feature}-{name}`
+      - `{name}` = `{owner}-{repo}` (slash replaced with hyphen)
+   c. Download + extract: `gh api repos/{owner_repo}/tarball/HEAD | tar xz -C /tmp/sprint-{feature}-{name} --strip-components=1`
+   d. **On success** → add to `external_resources.external_repos`:
+      ```yaml
+      - name: "{owner}-{repo}"
+        path: "/tmp/sprint-{feature}-{name}/"
+        access_method: "tarball-snapshot"
+        source_url: "https://github.com/{owner_repo}"
+      ```
+      Update github_repos status to `configured`
+   e. **On failure** → classify error and present via AskUserQuestion (in {communication_language}):
+
+      | Error Pattern | Message |
+      |---------------|---------|
+      | HTTP 404 | "리포지토리를 찾을 수 없습니다. URL을 확인하세요." |
+      | HTTP 403 | "접근 권한이 없습니다. gh auth login을 확인하세요." |
+      | DNS/network | "네트워크 연결을 확인하세요." |
+      | Other | "다운로드 실패: {error}" |
+
+      Options:
+      - [1] 재시도
+      - [2] 해당 repo 없이 계속
+      - [3] --add-dir로 수동 접근
+
+      - [1] selected: retry step 2c (max 1 retry)
+      - [2] selected: update github_repos status to `not-configured`, proceed
+      - [3] selected: guide user to clone + --add-dir, update github_repos status to `not-configured`
+
+   f. Completion message (in {communication_language}): "다운로드 완료 ({total}/{total}, {elapsed}초)"
+
+3. **Update github_repos status**: `configured` (all succeeded) / `not-configured` (any failed)
+
+If no github_repos with status: pending → skip this sub-step entirely.
+
 ##### Sub-step 0f-3: Topology Determination + brownfield_status Decision
 
 **Build tool file detection**: If any of these files exist at project root → "build tools present":
@@ -520,9 +631,14 @@ Record topology detection result in sprint-log.md (create if not exists):
 
 This is a log entry only — no user confirmation or interrupt required. Topology is visible at JP1 if the user wants to verify.
 
-#### Step 0g: Validation Checksum (Self-Check)
+#### Step 0g: sprint-input.md Generation + Validation Checksum
 
-Verify sprint-input.md was generated correctly:
+1. **Generate sprint-input.md**: Integrate all data collected in Steps 0d~0f and Write to `specs/{feature_name}/inputs/sprint-input.md` (single Write — no prior Edit).
+   - 참고 소스 섹션의 `policy_docs`, `scan_notes` → `external_resources`에 포함
+   - `github_repos`에 `notes` 필드 전달 (참고 소스 섹션에서 추출된 per-URL notes)
+   - All "record in sprint-input.md" instructions in Steps 0d~0f are in-memory accumulation → materialized here as a single file Write
+
+2. **Validation checksum** — verify sprint-input.md was generated correctly:
 
 ```
 - Brief original included: Y/N
@@ -615,7 +731,7 @@ Then AskUserQuestion (in {communication_language}):
 | **Adjust** | Modify goals/complexity/Discovered Requirements (free input → update sprint-input.md → re-confirm) |
 | **Exit** | Abort (inputs/ preserved; edit brief.md then `/sprint {feature_name}` to restart) |
 
-**Adjust handling**: User free input → update goals, complexity, discovered_requirements in sprint-input.md → re-display Step 0h confirmation.
+**Adjust handling**: User free input → update goals, complexity, discovered_requirements in memory → delete existing sprint-input.md → re-Write sprint-input.md with updated data (hook allows Write when file does not exist) → re-display Step 0h confirmation.
 
 **Exit handling message** (in {communication_language}):
 ```
