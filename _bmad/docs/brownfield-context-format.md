@@ -5,6 +5,13 @@
 ```yaml
 ---
 feature: {feature_name}
+scan_metadata:
+  topology: co-located | monorepo | msa | standalone
+  merge_priority: local | mcp   # local for co-located/monorepo, mcp for msa/standalone
+  local_stages_executed: [1, 2, 3, 4]  # which local stages ran (empty for standalone)
+  mcp_servers:
+    attempted: ["backend-docs", "client-docs"]
+    succeeded: ["backend-docs"]
 layers:
   - name: L1
     source_step: create-product-brief/step-01-init
@@ -15,8 +22,8 @@ layers:
     sources:
       - type: mcp
         name: svc-map
-      - type: mcp
-        name: figma
+      - type: figma
+        name: abc123def456  # fileKey from external_resources
     discovered:
       domain_concepts: 5
       user_flows: 3
@@ -146,18 +153,53 @@ layers:
 | matchTutor() | PodoScheduleServiceImplV2.java | Add exclusion filter param |
 ```
 
+## data_sources 구조
+
+`data_sources`는 동적으로 구성된다. 하드코딩된 서버명이 아니라 실제 감지/설정된 소스를 기록한다.
+
+```yaml
+data_sources:
+  document-project: ok | not-configured | parse-error
+  local-codebase: ok | not-configured | scan-error
+  # MCP servers — dynamically listed from brownfield_sources
+  # (server names come from .mcp.json, not hard-coded)
+  {mcp_server_1}: ok | timeout | error | empty-result
+  {mcp_server_2}: ok | timeout | error | empty-result
+  figma: ok | timeout | error | not-configured  # only when external_resources.figma exists
+```
+
 ## Source Types
 
 `sources` 배열의 각 항목은 `type`과 `name`으로 구성된다:
 
 | type | 설명 | name 예시 |
 |------|------|----------|
-| `mcp` | MCP 서버에서 수집한 데이터 | `svc-map`, `backend-docs`, `client-docs`, `figma` |
+| `mcp` | MCP 서버에서 수집한 데이터 | 동적 — `.mcp.json`에 설정된 서버명 사용 |
 | `document-project` | BMad document-project 워크플로우 산출물 | `project-overview.md`, `api-contracts.md`, `data-models.md` |
 | `local-codebase` | 로컬 코드베이스 직접 스캔 결과 | `src/`, `lib/`, `app/` |
+| `figma` | Figma 디자인 데이터 (external_resources 경유) | `figma` |
 
 - 하나의 레이어에 여러 타입의 소스가 혼합될 수 있다
 - 동일 정보가 여러 소스에서 발견되면 양쪽 모두 기록하고 우선순위를 명시한다
+
+## Entity Index
+
+Pass 2 완료 후 brownfield-context.md 본문 말미에 생성한다. Pass 1 완료 시에는 섹션 헤더 + 빈 테이블만 예약한다.
+
+```markdown
+## Entity Index
+
+| Entity | L1 | L2 | L3 | L4 | Primary Source |
+|--------|----|----|----|----|----------------|
+| User   | domain concept | GET /api/users | UserService | src/services/user.ts | local-codebase |
+| Lesson | flow: lesson-booking | POST /api/lessons | LessonController | src/controllers/lesson.ts | mcp:backend-docs |
+| Tutor  | domain concept | - | - | - | document-project |
+```
+
+규칙:
+- 각 셀에는 해당 레이어에서 발견된 핵심 정보 1줄, 미발견 시 `-`
+- Primary Source: 해당 엔티티의 가장 상세한 정보를 제공한 소스
+- Pass 2 완료 후 자동 생성 (brownfield-scanner Rules 참조)
 
 ## 키 원칙
 

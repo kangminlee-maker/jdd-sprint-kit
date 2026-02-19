@@ -246,9 +246,25 @@ See `_bmad/docs/sprint-input-format.md` for reference analysis format.
    - 5 or fewer: include all (default: included in Sprint scope)
    - Over 5: include top 3, rest as "next Sprint candidates"
 4. **Contradiction detection**: Record contradictions between Brief and references in Detected Contradictions (no auto-resolution)
-5. **Write sprint-input.md**: Generate SSOT at `specs/{feature_name}/inputs/sprint-input.md`
-6. **Set tracking_source**: `tracking_source: brief` — Sprint route always uses BRIEF-N based tracking
-7. **Causal Chain extraction**:
+5. **Figma URL auto-detection**:
+   While reading inputs/ files (steps 1-3 above), detect Figma URL patterns in all file contents:
+   - Pattern: `https://figma.com/design/{fileKey}/...` or `https://figma.com/file/{fileKey}/...`
+   - Extract `fileKey` from each matched URL
+   - If multiple URLs found: collect all unique fileKeys
+   - Record in sprint-input.md `external_resources` field:
+     ```yaml
+     external_resources:
+       figma:
+         - file_key: "abc123def456"
+           source_file: "brief.md"
+         - file_key: "xyz789"
+           source_file: "design-notes.md"
+         status: not-configured  # updated in Step 0f after MCP check
+     ```
+   - If no Figma URLs found: omit `external_resources` field entirely (Scanner will skip Figma)
+6. **Write sprint-input.md**: Generate SSOT at `specs/{feature_name}/inputs/sprint-input.md`
+7. **Set tracking_source**: `tracking_source: brief` — Sprint route always uses BRIEF-N based tracking
+8. **Causal Chain extraction**:
    Structure the background of the feature request from Core Brief + Reference Materials.
 
    **Layer structure**:
@@ -352,20 +368,58 @@ Detect current project's Brownfield sources using **cumulative (AND)** approach.
    [1] selected: run `Skill("bmad:bmm:workflows:document-project")` → re-run Sub-step 0f-1 on completion
    [2] selected: proceed with `document_project_path: null`
 
-##### Sub-step 0f-2: MCP Source Detection
+##### Sub-step 0f-2: External Data Source Detection
 
-1. Read `.mcp.json` → extract registered MCP server list
-2. Verify accessibility of each filesystem server's path (Glob for at least 1 file)
-3. If any server is inaccessible, present alternatives via AskUserQuestion (in {communication_language}):
+Detect accessible external data sources. Two access methods exist:
+
+**A. `--add-dir` directories (recommended for local clones)**
+
+1. Check which `--add-dir` directories are accessible by attempting Glob on known paths
+   - For each role (backend-docs, client-docs, svc-map): attempt `Glob("**/*.md", path={dir})` or similar
+   - If files found → record as accessible external source
+2. If a known external repo path is inaccessible:
    ```
-   Cannot access MCP server '{server_name}' path '{path}'.
+   External repo path '{path}' is not accessible.
+   Add it via --add-dir flag when launching Claude Code:
+     claude --add-dir {path}
    ```
-   - [1] Add data to `specs/{feature}/inputs/` manually, then re-check
-   - [2] Fix path in `.mcp.json`, then re-check
-   - [3] Proceed without Brownfield data (reduced accuracy)
+   - [1] Restart Claude Code with --add-dir, then re-check
+   - [2] Add data to `specs/{feature}/inputs/` manually, then re-check
+   - [3] Proceed without this external data (reduced accuracy)
 
    [1] or [2] selected: re-run Sub-step 0f-2 once after user action.
-   [3] selected: record server as failed and proceed.
+   [3] selected: record source as unavailable and proceed.
+
+**B. MCP servers (for non-filesystem sources)**
+
+1. Read `.mcp.json` → extract registered MCP server list
+2. For non-filesystem MCP servers (e.g., Figma): verify connectivity
+3. Filesystem MCP servers in `.mcp.json` → warn and recommend `--add-dir` instead:
+   ```
+   Filesystem MCP server '{server_name}' detected in .mcp.json.
+   Filesystem MCP servers are restricted to the project root by Claude Code security.
+   Use --add-dir for external repo access instead:
+     claude --add-dir {path}
+   ```
+
+##### Sub-step 0f-2b: Figma MCP Check (when external_resources.figma exists)
+
+If Step 0d detected Figma URLs and recorded them in sprint-input.md `external_resources.figma`:
+
+1. Attempt Figma MCP connectivity: call `whoami` via Figma MCP
+2. **Success** → update sprint-input.md `external_resources.figma.status: configured`
+3. **Failure** (MCP not connected) → present options via AskUserQuestion (in {communication_language}):
+   ```
+   Figma design URL detected, but Figma MCP is not connected.
+   Connecting allows Sprint to analyze existing design data.
+
+   [1] Connect now (opens browser for OAuth)
+   [2] Continue without Figma
+   ```
+   - [1] selected: guide `claude mcp add --transport http figma https://mcp.figma.com/mcp` → after auth, re-check `whoami` → update status to `configured`
+   - [2] selected: update status to `not-configured`, Sprint continues without Figma data
+
+If no Figma URLs were detected in Step 0d → skip this sub-step entirely (no prompt).
 
 ##### Sub-step 0f-3: Topology Determination + brownfield_status Decision
 
@@ -375,25 +429,85 @@ Detect current project's Brownfield sources using **cumulative (AND)** approach.
 **Monorepo detection**: If any of these files exist at project root → "monorepo":
 `pnpm-workspace.yaml`, `lerna.json`, `nx.json`, `rush.json`, `project-parts.json`, `turbo.json`
 
+**MSA detection refinement**: External sources + Build Tools does not always mean MSA. Additional heuristics:
+- If build tools present AND external sources configured AND local codebase has `src/` or `app/` at root level → likely `co-located` (not MSA)
+- MSA is indicated when: external sources reference services NOT found in local codebase, or endpoint URLs point to different hosts/ports
+- When ambiguous between co-located and MSA: default to `co-located` (local-first is safer)
+
+**Monorepo vs co-located disambiguation**:
+- Monorepo requires an explicit workspace config file (listed above). Multiple `package.json` in subdirectories alone does not qualify.
+- If monorepo file exists but only 1 package is defined → treat as `co-located` (effectively single-package)
+
 **Decision matrix**:
 
-If monorepo files detected, topology is `monorepo`. Otherwise follow the matrix:
+Detection priority order: monorepo → co-located → msa → standalone.
 
-| document-project | MCP | Build Tools | Monorepo | topology | brownfield_status |
-|-----------------|-----|-------------|----------|----------|-------------------|
-| any | any | any | yes | `monorepo` | `configured` (if doc-project/MCP has at least one) or `local-only` |
-| yes | yes | yes | no | `msa` | `configured` |
-| yes | no | yes | no | `co-located` | `configured` |
-| yes | yes | no | no | `standalone` | `configured` |
-| no | yes | no | no | `standalone` | `configured` |
-| no | yes | yes | no | `msa` | `configured` |
+1. If monorepo config file detected AND 2+ packages defined → `monorepo`
+2. If build tools present AND no external sources → `co-located`
+3. If build tools present AND external sources → check local codebase for service code:
+   - Service code found locally → `co-located`
+   - No local service code (only configs/scripts) → `msa`
+4. If no build tools AND external sources → `standalone`
+5. If nothing → `standalone` + `greenfield`
+
+**Fallback decision matrix** (when heuristics above are inconclusive):
+
+| document-project | External Sources | Build Tools | Monorepo | topology | brownfield_status |
+|-----------------|-----------------|-------------|----------|----------|-------------------|
+| any | any | any | yes (2+ pkgs) | `monorepo` | `configured` (if doc-project/external has at least one) or `local-only` |
+| any | any | yes | no | `co-located` | `configured` or `local-only` |
+| any | yes | no | no | `standalone` | `configured` |
 | no | no | yes | no | `co-located` | `local-only` |
 | no | no | no | no | `standalone` | `greenfield` |
 
-- Partial MCP failure: `partial-failure` (topology determined by working servers)
+- Partial source failure: `partial-failure` (topology determined by working sources)
 - Record `brownfield_topology` and `brownfield_status` in sprint-input.md frontmatter
 
 Record results in sprint-input.md Brownfield Status section and frontmatter.
+
+##### Sub-step 0f-3b: Monorepo Package Scoping (only when topology=monorepo)
+
+When topology is determined as `monorepo`:
+
+1. **Parse workspace config**: Read the detected workspace config file (pnpm-workspace.yaml, lerna.json, etc.) to extract package list
+2. **AI recommends relevant packages**: Based on Brief keywords + goals, recommend packages that are likely relevant to this Sprint
+3. **Present to user** via AskUserQuestion (in {communication_language}):
+   ```
+   Monorepo detected. {N} packages found.
+
+   AI-recommended packages for this Sprint:
+   ✓ packages/auth — likely relevant (matches: "login", "user")
+   ✓ apps/web — likely relevant (matches: "UI", "screen")
+   ✓ packages/shared — shared utilities
+
+   Excluded (can override):
+   ✗ packages/billing — not related to Brief
+   ✗ apps/admin — not related to Brief
+
+   [1] Accept recommendations (Recommended)
+   [2] Modify selection
+   ```
+   - [1] selected: use recommended packages
+   - [2] selected: user specifies which to include/exclude → update selection
+4. **Record in sprint-input.md frontmatter**:
+   ```yaml
+   monorepo_packages:
+     - path: "packages/auth"
+       reason: "matches Brief keyword: login"
+     - path: "apps/web"
+       reason: "matches Brief keyword: UI"
+     - path: "packages/shared"
+       reason: "shared utilities"
+   ```
+
+##### Sub-step 0f-4: Topology Log (no user interrupt)
+
+Record topology detection result in sprint-log.md (create if not exists):
+```markdown
+| {timestamp} | Topology Detection | topology={topology}, brownfield_status={status}, sources: document-project={dp_status}, external={N} sources, local={local_status}, figma={figma_status} |
+```
+
+This is a log entry only — no user confirmation or interrupt required. Topology is visible at JP1 if the user wants to verify.
 
 #### Step 0g: Validation Checksum (Self-Check)
 

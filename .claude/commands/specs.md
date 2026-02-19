@@ -139,8 +139,9 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     Input files:
     - Architecture: specs/{feature}/planning-artifacts/architecture.md
     - Epics: specs/{feature}/planning-artifacts/epics-and-stories.md
+    - topology: {brownfield_topology from sprint-input.md frontmatter, default: 'standalone'}
     brownfield_path: specs/{feature}/planning-artifacts/brownfield-context.md
-    Append L3 + L4 layers to existing file."
+    Append L3 + L4 layers to existing file. After L3+L4 complete, populate the Entity Index table."
 ```
 
 > Frozen snapshot copy is handled by `@deliverable-generator` Stage 2.
@@ -165,10 +166,13 @@ First, perform quick topology detection (same logic as sprint.md Step 0f-3):
 | Build tools or MCP present | AskUserQuestion (in {communication_language}): "Existing system detected. Running Brownfield scan enables more accurate Specs." [1] Run (Broad + Targeted) [2] Skip |
 
 [1] selected:
-1. Run @brownfield-scanner broad mode → generate L1+L2
+1. Determine topology using sprint.md Step 0f-3 logic (build tools + .mcp.json + monorepo files)
+2. Run @brownfield-scanner broad mode → generate L1+L2
    - `sprint_input_path: specs/{feature}/inputs/sprint-input.md` (created in Step 0d)
-2. Follow with Targeted Scan (L3+L4) → append to brownfield-context.md
-3. **Update sprint-input.md frontmatter**:
+   - `topology: {detected topology}`
+   - `local_codebase_root: {if topology is co-located/msa/monorepo then '.' else null}`
+3. Follow with Targeted Scan (L3+L4, passing same topology) → append to brownfield-context.md
+4. **Update sprint-input.md frontmatter**:
    - `brownfield_status` → `configured` / `local-only` based on scan results
    - `brownfield_topology` → detection result (`standalone` / `co-located` / `msa` / `monorepo`)
 

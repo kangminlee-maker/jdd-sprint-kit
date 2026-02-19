@@ -1,16 +1,24 @@
 {
   "mcpServers": {
-    "my-backend-docs": {
-      "command": "sh",
-      "args": ["-c", "npx -y @modelcontextprotocol/server-filesystem ~/path/to/backend-docs"]
-    },
-    "my-client-docs": {
-      "command": "sh",
-      "args": ["-c", "npx -y @modelcontextprotocol/server-filesystem ~/path/to/client-docs"]
-    },
-    "my-svc-map": {
-      "command": "sh",
-      "args": ["-c", "npx -y @modelcontextprotocol/server-filesystem path/to/svc-map-data"]
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp"
     }
-  }
+  },
+  "_comment": [
+    "External Repository Access:",
+    "",
+    "For local clones of external repos (backend-docs, client-docs, svc-map),",
+    "use --add-dir instead of filesystem MCP servers:",
+    "",
+    "  claude --add-dir /path/to/backend-docs \\",
+    "         --add-dir /path/to/client-docs \\",
+    "         --add-dir /path/to/svc-map",
+    "",
+    "--add-dir directories are accessible via Glob, Grep, Read — no MCP needed.",
+    "Filesystem MCP servers are NOT recommended because Claude Code's MCP",
+    "security restricts them to the project root directory.",
+    "",
+    "For remote repos without local clones (Phase B), see docs/reviews/."
+  ]
 }

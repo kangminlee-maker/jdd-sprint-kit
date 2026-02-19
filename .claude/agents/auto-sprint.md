@@ -127,9 +127,11 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     Execute Broad Scan (mode='broad').
     Input:
     - sprint_input_path: specs/{feature_name}/inputs/sprint-input.md
-      (Read this file to extract keywords for Brownfield scanning from Core Brief + Reference Materials + Discovered Requirements)
+      (Read this file to extract keywords for Brownfield scanning from Core Brief + Reference Materials + Discovered Requirements.
+       Also read external_resources for Figma fileKeys.)
     - document_project_path: {document_project_path or null}
     - local_codebase_root: {if brownfield_topology is co-located/msa/monorepo then '.' else null}
+    - topology: {brownfield_topology}
     brownfield_path: specs/{feature_name}/planning-artifacts/brownfield-context.md
     Produce L1 + L2 layers."
   max_turns: {budget}
@@ -342,8 +344,9 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     - Epics: specs/{feature_name}/planning-artifacts/epics-and-stories.md
     - document_project_path: {document_project_path or null}
     - local_codebase_root: {if brownfield_topology is co-located/msa/monorepo then '.' else null}
+    - topology: {brownfield_topology}
     brownfield_path: specs/{feature_name}/planning-artifacts/brownfield-context.md
-    Append L3 + L4 layers to existing file."
+    Append L3 + L4 layers to existing file. After L3+L4 complete, populate the Entity Index table."
   max_turns: {budget}
 ```
 
@@ -402,6 +405,7 @@ Extract **metadata only** from artifacts to generate JP1 visualization. Do not r
 - design.md: Brownfield integration points
 - tasks.md: Task Summary table
 - sprint-input.md: tracking_source, brief_sentences (if present)
+- brownfield-context.md (YAML frontmatter only): scan_metadata, data_sources, gaps
 
 **Info banner generation**:
 
@@ -413,18 +417,31 @@ Extract the following data from readiness.md to generate the banner:
 | AI-inferred items | 0 | 1 or more |
 | Existing system risk | 0 HIGH side-effects | 1+ HIGH |
 | Structural verification | All Scope Gates PASS | FAIL exists |
+| Brownfield data quality | All layers have sources + no CRITICAL gaps | Layers missing sources or CRITICAL/HIGH gaps |
 
 Banner output (in {communication_language}):
 
 ```
 ## Judgment Point 1: {feature_name}
 
-{when all 4 conditions pass}
+{when all 5 conditions pass}
 Pass: Requirements tracking complete ({N}/{N}) | Pass: No AI-inferred items | Pass: No existing system risk | Pass: Structural verification passed
+Brownfield: L1~L4 collected / {N} sources OK
 
 {when some conditions have warnings}
 Warning: Requirements tracking {N}/{M} | Warning: {N} AI-inferred items | Pass: No existing system risk | Pass: Structural verification passed
+Brownfield: {brownfield quality 1-line summary}
 ```
+
+**Brownfield quality 1-line summary** — generate from brownfield-context.md YAML frontmatter:
+- Read `scan_metadata` and `data_sources` from brownfield-context.md frontmatter (do not read full body)
+- Format: `"L1~L{max_layer} collected / {N} sources OK{, gap note if applicable}"`
+- Examples:
+  - `"L1~L4 collected / 3 sources OK"` — all good
+  - `"L1~L2 collected / L3 partial (MCP timeout)"` — gap present
+  - `"L1~L4 collected / L3 partial (cross-service gap, MCP required)"` — MSA topology gap
+  - `"greenfield — no existing system data"` — greenfield project
+- If brownfield-context.md doesn't exist: `"greenfield — no existing system data"`
 
 When `force_jp1_review: true`, add warning (in {communication_language}):
 ```
