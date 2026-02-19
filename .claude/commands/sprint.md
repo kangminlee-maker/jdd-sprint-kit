@@ -370,7 +370,7 @@ Detect current project's Brownfield sources using **cumulative (AND)** approach.
 
 ##### Sub-step 0f-2: External Data Source Detection
 
-Detect accessible external data sources. Two access methods exist:
+Detect accessible external data sources and record them in sprint-input.md.
 
 **A. `--add-dir` directories (recommended for local clones)**
 
@@ -389,6 +389,17 @@ Detect accessible external data sources. Two access methods exist:
 
    [1] or [2] selected: re-run Sub-step 0f-2 once after user action.
    [3] selected: record source as unavailable and proceed.
+
+3. **Record detected repos in sprint-input.md** `external_resources.external_repos`:
+   For each accessible `--add-dir` directory, add an entry:
+   ```yaml
+   external_resources:
+     external_repos:
+       - name: "{directory-name}"  # derived from path basename
+         path: "{full accessible path}"
+         access_method: "add-dir"
+   ```
+   Scanner reads this field from sprint-input.md to discover external sources (same pattern as `external_resources.figma`).
 
 **B. MCP servers (for non-filesystem sources)**
 

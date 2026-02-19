@@ -19,7 +19,7 @@ Systematic and exhaustive. Reports what was found, what was searched, and what g
 - `sprint_input_path`: Path to sprint-input.md (broad mode) — read this file to extract keywords from Core Brief + Reference Materials + Discovered Requirements. Also read `external_resources` for Figma fileKeys.
 - `input_files`: Architecture/Epics file paths (targeted mode)
 - `brownfield_path`: Output path for brownfield-context.md
-- `brownfield_sources`: Configured external data source list. Includes both `--add-dir` local paths and MCP servers. Each entry has a `role` (e.g., backend-docs, client-docs, svc-map), an `access_method` (`local-path` or `mcp`), and a `path` or `server_name`.
+- `external_sources`: (Discovered from sprint-input.md) External data sources detected by Sprint Phase 0. Read `external_resources.external_repos` from sprint-input.md — each entry has `name`, `path`, and `access_method`. For MCP-only sources (e.g., Figma), read `external_resources.figma`. Scanner self-serves from sprint-input.md; callers do not need to pass this explicitly.
 - `document_project_path`: (Optional) Path to document-project output directory. When non-null, Stage 0 runs first to consume these artifacts as seed data.
 - `local_codebase_root`: (Optional) Root path for local codebase scanning. When non-null, local scan runs **in parallel with** external source scanning (not as replacement). Typically `"."` for co-located topologies.
 - `topology`: Project topology — `"co-located"` | `"monorepo"` | `"msa"` | `"standalone"`. Default: `"standalone"`. Determines scan strategy (see Topology Strategy below).
@@ -87,13 +87,14 @@ Read artifacts from `document_project_path` and extract seed data for L1~L4:
 
 #### Stage 1: Index Reading
 
-Read external data source indexes to identify relevant sections. Use the `brownfield_sources` parameter to determine which sources are configured. If Stage 0 produced seed data, use it to focus searches and skip already-covered keywords.
+Read external data source indexes to identify relevant sections. **Discover sources from sprint-input.md** (read `external_resources` field). If Stage 0 produced seed data, use it to focus searches and skip already-covered keywords.
 
-**External data sources — generic processing**:
-For each configured source in `brownfield_sources`:
-- **`local-path` sources** (--add-dir directories): Use Glob to read directory structure, then Grep/Read to identify sections related to Brief keywords. Same tools as Local Codebase Scan.
-- **`mcp` sources**: Use MCP server tools to read index/listing files → identify relevant sections.
-- For all sources: Read flow/map data → identify relevant flows and domain concepts. Record which sections were identified.
+**External repos** (when `external_resources.external_repos` exists in sprint-input.md):
+For each repo entry:
+- Use Glob to read directory structure at the recorded `path`
+- Use Grep/Read to identify sections related to Brief keywords
+- Same tools as Local Codebase Scan
+- Tag data as `(source: external/{name}/{relative_path})`
 
 **Figma processing** (when `external_resources.figma` exists in sprint-input.md):
 - Read `external_resources.figma` from sprint-input.md
@@ -102,6 +103,11 @@ For each configured source in `brownfield_sources`:
   - Call `get_metadata(fileKey={file_key}, nodeId="0:1")` → get page-level structure
   - Call `get_design_context(fileKey={file_key}, nodeId="0:1")` → get design data for relevant frames
 - Tag all Figma data as `(source: figma/{file_key})`
+
+**MCP servers** (when `.mcp.json` has non-filesystem servers):
+- Use MCP server tools to read index/listing files → identify relevant sections
+
+For all sources: Read flow/map data → identify relevant flows and domain concepts. Record which sections were identified for each source.
 
 Record which sections were identified for each external data source.
 
