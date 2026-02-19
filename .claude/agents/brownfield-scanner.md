@@ -215,7 +215,7 @@ After collection, perform self-check:
 
 | Check | Result |
 |-------|--------|
-| Topology Compliance | topology={topology}, local_stages={N}, mcp_attempted={N}, merge_priority={local/mcp} — COMPLIANT / NON-COMPLIANT |
+| Topology Compliance | topology={topology}, local_stages={N}, external_attempted={N}, merge_priority={local/external} — COMPLIANT / NON-COMPLIANT |
 | Source Coverage | L1: {sources}, L2: {sources} — per-layer source existence check |
 | Keyword Coverage | {N}/{M} Brief keywords have ≥1 result from any source (weighted: goal-related keywords count 2x) |
 | Ontology Coverage | {N}/{M} document-project entities found in scan results (or "N/A" if document_project_path is null) |
@@ -264,7 +264,7 @@ Classify each external data source result into one of these categories:
 | `scan-error` | Path accessible but read/parse failed | `local-path` sources | File permission or format issue |
 | `timeout` | Server did not respond within time limit | `mcp` sources | Network or server issue |
 | `error` | Connection refused, auth failed, or other error | `mcp` sources | Configuration or access issue |
-| `not-configured` | Source not in brownfield_sources | All sources | Not set up for this project |
+| `not-configured` | Source not listed in sprint-input.md external_resources | All sources | Not set up for this project |
 
 ### Severity Assessment (topology-aware)
 
@@ -303,9 +303,9 @@ scan_metadata:
   topology: {topology parameter value}
   merge_priority: {local or mcp, per topology strategy}
   local_stages_executed: {list of stages that ran, e.g., [1, 2, 3, 4] or [1, 2] or []}
-  mcp_servers:
-    attempted: [{list of server names attempted}]
-    succeeded: [{list of server names that returned ok}]
+  external_sources:
+    attempted: [{list of source names attempted}]
+    succeeded: [{list of source names that returned ok}]
 layers:
   - name: L1
     source_step: auto-sprint/brownfield-scan-pass-1
@@ -315,7 +315,7 @@ layers:
       - type: document-project
         name: project-overview.md
       - type: external
-        name: {source name from brownfield_sources}
+        name: {source name from external_resources}
       - type: local-codebase
         name: src/
     discovered:
@@ -330,7 +330,7 @@ layers:
       - type: document-project
         name: api-contracts.md
       - type: external
-        name: {source name from brownfield_sources}
+        name: {source name from external_resources}
       - type: local-codebase
         name: src/
     discovered:
@@ -340,7 +340,7 @@ layers:
 data_sources:
   document-project: ok | not-configured | parse-error
   local-codebase: ok | not-configured | scan-error
-  # Dynamic — list actual source names from brownfield_sources
+  # Dynamic — list actual source names from external_resources
   # For local-path sources (--add-dir): ok | not-configured | scan-error
   # For MCP sources: ok | timeout | error | empty-result
   {source_name}: ok | timeout | error | empty-result | not-configured | scan-error
@@ -387,7 +387,7 @@ After Pass 2 completes, scan all L1~L4 content and build the Entity Index:
 ## Rules
 1. **Never skip stages** — even if Stage 1 finds "nothing relevant", proceed to Stage 4 keyword search
 2. **Full reads, not snippets** — Stage 2 reads complete sections, not grep excerpts
-3. **Source attribution** — every data point must have a source tag: `(source: {mcp_server})`, `(source: document-project/{filename})`, or `(source: local-codebase/{path})`
+3. **Source attribution** — every data point must have a source tag: `(source: external/{name}/{path})`, `(source: document-project/{filename})`, `(source: local-codebase/{path})`, or `(source: figma/{file_key})`
 4. **No silent gaps** — every source failure or empty result is explicitly recorded
 5. **Existing keywords check** — before searching, read existing brownfield-context.md layers to avoid duplicate searches
 6. **Max 3 hops** in Structural Traversal (external sources) and Import Tracing (Local) to prevent unbounded exploration

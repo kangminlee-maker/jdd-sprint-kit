@@ -7,9 +7,9 @@
 feature: {feature_name}
 scan_metadata:
   topology: co-located | monorepo | msa | standalone
-  merge_priority: local | mcp   # local for co-located/monorepo, mcp for msa/standalone
+  merge_priority: local | external   # local for co-located/monorepo, external for msa/standalone
   local_stages_executed: [1, 2, 3, 4]  # which local stages ran (empty for standalone)
-  mcp_servers:
+  external_sources:
     attempted: ["backend-docs", "client-docs"]
     succeeded: ["backend-docs"]
 layers:
@@ -20,7 +20,7 @@ layers:
       - keyword1
       - keyword2
     sources:
-      - type: mcp
+      - type: external
         name: svc-map
       - type: figma
         name: abc123def456  # fileKey from external_resources
@@ -161,10 +161,10 @@ layers:
 data_sources:
   document-project: ok | not-configured | parse-error
   local-codebase: ok | not-configured | scan-error
-  # MCP servers — dynamically listed from brownfield_sources
-  # (server names come from .mcp.json, not hard-coded)
-  {mcp_server_1}: ok | timeout | error | empty-result
-  {mcp_server_2}: ok | timeout | error | empty-result
+  # External sources — dynamically listed from sprint-input.md external_resources
+  # (source names come from external_resources.external_repos or MCP servers)
+  {source_name_1}: ok | timeout | error | empty-result | scan-error
+  {source_name_2}: ok | timeout | error | empty-result | scan-error
   figma: ok | timeout | error | not-configured  # only when external_resources.figma exists
 ```
 
@@ -174,7 +174,7 @@ data_sources:
 
 | type | 설명 | name 예시 |
 |------|------|----------|
-| `mcp` | MCP 서버에서 수집한 데이터 | 동적 — `.mcp.json`에 설정된 서버명 사용 |
+| `external` | 외부 데이터 소스에서 수집한 데이터 (--add-dir repos, MCP servers) | 동적 — sprint-input.md `external_resources`에서 소스명 사용 |
 | `document-project` | BMad document-project 워크플로우 산출물 | `project-overview.md`, `api-contracts.md`, `data-models.md` |
 | `local-codebase` | 로컬 코드베이스 직접 스캔 결과 | `src/`, `lib/`, `app/` |
 | `figma` | Figma 디자인 데이터 (external_resources 경유) | `figma` |
