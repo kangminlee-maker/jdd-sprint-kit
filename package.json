@@ -16,9 +16,9 @@
     "compat/"
   ],
   "dependencies": {
-    "commander": "^12.0.0",
-    "@clack/prompts": "^0.9.0",
-    "fs-extra": "^11.0.0"
+    "@clack/prompts": "^1.0.1",
+    "commander": "^14.0.3",
+    "fs-extra": "^11.3.3"
   },
   "engines": {
     "node": ">=18"
