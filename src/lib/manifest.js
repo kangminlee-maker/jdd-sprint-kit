@@ -20,7 +20,7 @@ export const SPRINT_KIT_FILES = {
     'judge-quality.md', 'judge-security.md', 'judge-business.md',
   ],
   commands: [
-    'sprint.md', 'specs.md', 'preview.md', 'parallel.md',
+    'sprint.md', 'specs.md', 'preview.md', 'crystallize.md', 'parallel.md',
     'validate.md', 'circuit-breaker.md', 'summarize-prd.md',
   ],
   rules: [

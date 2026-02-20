@@ -4,6 +4,13 @@ All notable changes to JDD Sprint Kit will be documented in this file.
 
 ---
 
+## [0.5.1] - 2026-02-20
+
+### Fixed
+- **npm package missing `crystallize.md`** — `/crystallize` command was not included in the `SPRINT_KIT_FILES.commands` manifest, so `npx jdd-sprint-kit init/update` would not install it. Added to manifest.
+
+---
+
 ## [0.5.0] - 2026-02-20
 
 ### Added
