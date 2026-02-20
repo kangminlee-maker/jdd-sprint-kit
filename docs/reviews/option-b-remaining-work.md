@@ -1,12 +1,14 @@
 # Delta-Driven Design: Remaining Work
 
 > **Date**: 2026-02-21
-> **Status**: Phase 0 + Phase 1 + Phase 2 complete. Phase 3 + Adversarial Layer + Backlog remaining.
+> **Status**: Phase 0-3 + Adversarial Layer complete. Backlog + Phase 3-3 (real Sprint measurement) remaining.
 > **Completed commits**:
 > - `da1118a` Phase 0: Documentation (delta-driven-design.md, terminology, JDD, blueprint)
 > - `3d419ae` Phase 1: LLD Foundation (PRD format, Scope Gate, deliverable-generator, auto-sprint, crystallize, protocol)
 > - `ce43767` Option B remaining work tracking
 > - `64d7899` Phase 2: Crystallize mandatory + Delta Manifest + JP2 menu restructure
+> - `a73e198` Phase 3: Delta-typed validation (judge-business §7 + crystallize S5b verification)
+> - `14e7d0f` Adversarial Layer: Devil's Advocate agent + BDD + MSW + pipeline integration
 > **Related**: [`delta-driven-design.md`](../delta-driven-design.md), [`lld-gap-analysis-and-implementation-plan.md`](lld-gap-analysis-and-implementation-plan.md)
 
 ---
@@ -61,34 +63,40 @@
 | README: Mermaid + pipeline + descriptions | `README.md` | Done |
 | delta-driven-design.md §11 update | `delta-driven-design.md` | Done |
 
+### Phase 3: Validation ✅
+
+| Task | File | Status |
+|---|---|---|
+| S5b delta completeness self-validation | `crystallize.md` | Done |
+| §7 Delta Verification (delta-typed checks) | `judge-business.md` | Done |
+| §7 Carry-forward verification (defined/deferred/new) | `judge-business.md` | Done |
+| Input References {feature_dir}/ parameterization | `judge-business.md` | Done |
+
+### Adversarial Layer ✅
+
+| Task | File | Status |
+|---|---|---|
+| Devil's Advocate agent (7 Lenses + deduplication + conditional) | `devils-advocate.md` (NEW) | Done |
+| Stage 6 adversarial-transitions.feature | `deliverable-generator.md` | Done |
+| MSW state transition validation | `deliverable-generator.md` | Done |
+| readiness.md endpoint_count | `deliverable-generator.md` | Done |
+| Step 5-D pipeline integration | `auto-sprint.md` | Done |
+| JP2 Section 3 adversarial results | `auto-sprint.md` | Done |
+| §8 Adversarial Scenario Verification | `judge-business.md` | Done |
+| Specs File Pattern update | `jdd-sprint-protocol.md` | Done |
+| Crystallize S4 adversarial copy | `crystallize.md` | Done |
+
 ---
 
 ## Remaining
 
-### Phase 3: Validation
+### Phase 3-3: Carry-Forward Ratio Measurement (requires real Sprint)
 
-Delta-typed verification that makes the delta manifest actionable during execution.
+| # | Task | Content | Prerequisite |
+|---|---|---|---|
+| 3-3 | Measure carry-forward ratio | On real Sprint, measure `translate(Prototype)` vs `carry-forward` proportion from delta-manifest.md origin field | Real Sprint run with Crystallize |
 
-| # | Task | File | Content | Prerequisite | Risk |
-|---|---|---|---|---|---|
-| 3-1 | Delta completeness check | `scope-gate.md` | Verify all positive/modification delta manifest items have corresponding tasks in tasks.md | Phase 2 done | LOW |
-| 3-2 | Zero delta regression scope | `validate.md` / `judge-business.md` | Delta-typed verification criteria: positive=implement, modification=change, zero=regression, negative=removal | Phase 2 done | MEDIUM |
-| 3-3 | Measure carry-forward ratio | (analysis, not code) | On real Sprint, measure `translate(Prototype)` vs `carry-forward` proportion from delta-manifest.md origin field | Phase 2 done + real Sprint run | N/A |
-
-**Estimated effort**: ~30 lines across 2 files (3-1, 3-2) + 1 analysis session (3-3).
-
-### Adversarial Layer
-
-Dedicated adversarial verification step that hunts for edge/fail cases missed by happy-path-focused generation.
-
-| # | Task | File | Content | Risk |
-|---|---|---|---|---|
-| A-1 | Devil's Advocate agent definition | `.claude/agents/devils-advocate.md` (NEW) | 7 Adversarial Lenses + Negative Scenario Generator + severity classification + conditional execution | MEDIUM |
-| A-2 | BDD adversarial scenarios | `deliverable-generator.md` | @adversarial tagged scenarios for invalid transitions, concurrent conflicts, invariant violations | LOW |
-| A-3 | MSW state transition validation | `deliverable-generator.md` | MSW handlers validate transition legality when state-machines/ exists, return 422 on invalid | LOW |
-| A-4 | Pipeline integration (Step 5-D) | `auto-sprint.md` | Devil's Advocate Pass after Scope Gate deliverables, before JP2 | MEDIUM |
-
-**Estimated effort**: ~400 lines (300 new agent + 100 across existing files).
+**Decision gate**: Result determines Option C (full Crystallize T1-T6 redesign) viability.
 
 ### Backlog (deferred, trigger-based)
 
@@ -123,11 +131,12 @@ After Phase 3-3 (carry-forward ratio measurement on real Sprint):
 
 ---
 
-## Suggested Next Steps
+## Next Steps
 
 ```
-Next:     Phase 3-1 + 3-2 (delta-typed verification in scope-gate + validate)
-Parallel: Adversarial Layer A-1 (agent definition) — independent
-Then:     A-2 + A-3 + A-4 (BDD + MSW + pipeline integration)
-Gate:     Phase 3-3 (real Sprint run) → measure carry-forward ratio → decide Option C
+All implementation phases complete (Phase 0-3 + Adversarial Layer).
+
+Next:   Run a real Sprint to validate changes end-to-end
+Then:   Phase 3-3 — measure carry-forward ratio from delta-manifest.md
+Gate:   carry-forward ratio → decide Option C (full Crystallize T1-T6 redesign)
 ```
