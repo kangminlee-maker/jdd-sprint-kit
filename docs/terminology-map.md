@@ -49,6 +49,25 @@ Korean-English canonical term reference for JDD Sprint Kit. All files use the **
 | 비용 투명성 | cost transparency | JP Comment: user sees cost before choosing |
 | 고객 여정 서사 | customer journey narrative | JP1 presentation format |
 
+## Delta-Driven Design Terms
+
+| Korean | English (Canonical) | Context |
+|--------|-------------------|---------|
+| 사용자 문법 | user grammar | language the system's actual users speak; form adapts to user type |
+| 개발 문법 | development grammar | language of implementation (API, DB, state machines, algorithms) |
+| 번역 | translation | rule-based conversion from user grammar to development grammar |
+| 번역 규칙 | translation rules | mapping table: user grammar element → development grammar equivalent |
+| 델타 | delta | difference between target state (translated prototype) and brownfield |
+| 양성 델타 | positive delta | delta type: must create or add (new element) |
+| 수정 델타 | modification delta | delta type: must change existing element |
+| 음성 델타 | negative delta | delta type: must remove or deprecate existing element |
+| 영 델타 | zero delta | delta type: no change needed (regression test target) |
+| 델타 매니페스트 | delta manifest | Crystallize output: classified list of all delta items by type |
+| 캐리포워드 | carry-forward | development grammar elements with no user grammar counterpart (NFR, security, migration) |
+| 캐리포워드 생명주기 | carry-forward lifecycle | birth → registration → survival → injection → verification → delta classification |
+| 왕복 검증 | round-trip verification | translation accuracy check: specs → re-derive structure → compare with prototype |
+| 3패스 패턴 | 3-pass pattern | Answer Discovery → Translation & Delta Extraction → Delta Execution |
+
 ## Sprint Flow Terms
 
 | Korean | English (Canonical) | Context |
@@ -90,4 +109,4 @@ Mary (Analyst), John (PM), Winston (Architect), Amelia (Dev), Bob (SM), Sally (U
 `/sprint`, `/specs`, `/preview`, `/parallel`, `/validate`, `/circuit-breaker`, `/summarize-prd`
 
 ### Technical Terms (already English)
-Entropy Tolerance, File Ownership, DAG, SSOT, Scope Gate, Circuit Breaker, Brownfield, Greenfield, Conductor, Worker, Judge, MSW, Specmatic, OpenAPI, DBML, BDD, Gherkin
+Entropy Tolerance, File Ownership, DAG, SSOT, Scope Gate, Circuit Breaker, Brownfield, Greenfield, Conductor, Worker, Judge, MSW, Specmatic, OpenAPI, DBML, BDD, Gherkin, User Grammar, Development Grammar, Delta Manifest, Translation Rules, Carry-Forward, Round-Trip Verification

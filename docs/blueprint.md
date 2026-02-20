@@ -110,6 +110,7 @@ This is Sprint Kit's sole principle. Every other design judgment exists to reali
 Design judgments Sprint Kit has made to realize the core principle.
 
 > Philosophical background and discussion for each judgment: [`docs/judgment-driven-development.md`](judgment-driven-development.md)
+> Delta-Driven Design (conceptual foundation): [`docs/delta-driven-design.md`](delta-driven-design.md)
 
 ### Artifacts as Medium
 
@@ -568,7 +569,7 @@ JP2 presentation format and Comment handling flow details in S5.3.
 
 ### Crystallize (Optional)
 
-**Rationale**: Regeneration Over Modification + Artifacts as Medium — after multiple JP2 iterations, the prototype has become the most accurate product definition, but upstream documents (PRD, Architecture, Epics) still reflect the initial generation. Crystallize reconciles all documents with the finalized prototype.
+**Rationale**: Regeneration Over Modification + Artifacts as Medium — after multiple JP2 iterations, the prototype has become the most accurate product definition, but upstream documents (PRD, Architecture, Epics) still reflect the initial generation. Crystallize translates the JP2-approved prototype into development grammar and extracts the delta from the brownfield baseline, producing a reconciled artifact set where all documents match the finalized prototype.
 
 **User perspective**: At JP2, select **[S] Crystallize** instead of [C] Continue. The system analyzes the prototype code, then reconciles (rewrites to match) all upstream documents so they accurately reflect what the prototype actually does. Original documents are preserved untouched — reconciled versions are written to a separate `reconciled/` directory.
 
