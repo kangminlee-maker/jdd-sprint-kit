@@ -18,11 +18,16 @@ After Specs + Deliverables generation is complete. Run after JP2 approval.
 
 `$ARGUMENTS`: not used
 
+Parameters (when invoked from auto-sprint):
+- `specs_root`: Base directory for specs files. Default: `specs/{feature}/`. After Crystallize: `specs/{feature}/reconciled/`.
+
 Prerequisites:
-- `specs/{feature}/tasks.md` exists
-- `specs/{feature}/brownfield-context.md` exists
+- `{specs_root}/tasks.md` exists
+- `{specs_root}/brownfield-context.md` exists (or `{specs_root}/planning-artifacts/brownfield-context.md` for reconciled/)
 - File Ownership assignment complete
 - Interface contracts (shared types) defined
+
+**Path resolution**: All specs file references in this command use `{specs_root}` as base path. When `specs_root` is not provided, default to `specs/{feature}/`.
 
 ## Procedure
 

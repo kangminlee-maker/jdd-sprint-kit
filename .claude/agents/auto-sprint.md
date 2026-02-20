@@ -68,7 +68,8 @@ Specify `model: "sonnet"` parameter on Task invocation. When unspecified, parent
 2. Set budget: simple=20, medium=40, complex=60 max_turns per sub-agent
 3. Ensure `specs/{feature_name}/planning-artifacts/` directory exists
 4. If `force_jp1_review` flag → show Grade C Brief warning banner at JP1
-5. Initialize Sprint Log: Create `specs/{feature_name}/sprint-log.md` with Timeline table header + Decisions Made + Issues Encountered sections
+5. Initialize Sprint Log: Create `specs/{feature_name}/sprint-log.md` with Timeline table header + JP Interactions + Decisions Made + Issues Encountered sections
+6. Initialize Decision Diary: Create `specs/{feature_name}/decision-diary.md` with Sprint Context (complexity, topology, goals) + Decisions table header
 6. Record Sprint start time for adaptive time estimation
 7. Display initial progress with complexity-based time estimate from sprint-input.md
 
@@ -578,8 +579,10 @@ When feedback arises from any path (A, P, or F), process with the same mechanism
    - **[M] Apply fix + propagate**: Edit all dependent files bidirectionally (upstream + downstream) per feedback item → Scope Gate verification → on PASS return to JP, on FAIL show missing items + offer additional fix or switch to regenerate
      - At JP1: Scope Gate `stage=spec`
      - At JP2: Scope Gate `stage=spec` + `stage=deliverables` (run both)
-   - **[R] Regenerate**: Record feedback in `specs/{feature_name}/planning-artifacts/feedback-log.md` → re-run pipeline from affected Phase (includes Scope Gate)
-5. **Record feedback**: Regardless of processing method, record feedback content + selected method + result in `feedback-log.md`
+   - **[R] Regenerate**: Record feedback → re-run pipeline from affected Phase (includes Scope Gate)
+5. **Record interaction**: Regardless of processing method:
+   - Append full exchange to sprint-log.md **JP Interactions** section (Visual Summary presented, user input, impact analysis, processing choice, result)
+   - Append structured row to decision-diary.md **Decisions** table (JP, Type, Content, Processing, Result)
 
 ### Step 5: Deliverables Generation
 
@@ -703,15 +706,16 @@ npm install && npm run dev
 
 > To provide feedback, select [F] Comment. Apply-fix/regenerate options will be presented with cost.
 
-#### Step 6b: A/P/C Menu
+#### Step 6b: A/P/S/C Menu
 
-Present 5 options via AskUserQuestion (same structure as JP1, in {communication_language}):
+Present 6 options via AskUserQuestion (in {communication_language}):
 
 | Option | Label | Description |
 |--------|-------|-------------|
 | **A** | Advanced Elicitation | Deep exploration of Deliverables (API Spec, BDD, Prototype focus) |
 | **P** | Party Mode | Multi-perspective review by full BMad agent panel |
-| **C** | Continue | Approve JP2 → proceed to Execute (parallel implementation) |
+| **S** | Crystallize | Finalize all documents to match prototype, then proceed to execution |
+| **C** | Continue | Approve JP2 → proceed to Execute with current documents |
 | **F** | Comment | Enter feedback → impact analysis → apply-fix/regenerate choice |
 | **X** | Exit | Abort Sprint |
 
@@ -721,11 +725,24 @@ Present 5 options via AskUserQuestion (same structure as JP1, in {communication_
 |-----------|--------|
 | **A** | Ask user for exploration target (api-spec/bdd/prototype/schema) → read full file → present 3~5 questions from Advanced Elicitation Protocol JP2 set → on feedback: execute **Comment handling flow** → regenerate Visual Summary → return to menu |
 | **P** | Invoke Party Mode workflow (`Skill("bmad:core:workflows:party-mode")`, pass JP2 artifact paths) → discussion summary → ask user to accept/reject → on accept: execute **Comment handling flow** → regenerate Visual Summary → return to menu |
-| **C** | Proceed to Execute (parallel implementation) |
+| **S** | Execute **Crystallize pipeline** (see below) → on completion proceed to Execute with `specs_root=reconciled/` |
+| **C** | Proceed to Execute (parallel implementation) with `specs_root=specs/{feature_name}/` |
 | **F** | Execute **Comment handling flow** (see Step 4c) → regenerate Visual Summary → return to menu |
 | **X** | Abort Sprint, inform that artifacts are preserved (`specs/{feature_name}/` is retained) |
 
-**Iteration limit**: A/P/F selections combined max 5 times. On exceed, warn (in {communication_language}): "5 review/edit rounds complete. Select [C] Continue or [X] Exit."
+**Iteration limit**: A/P/F selections combined max 5 times. On exceed, warn (in {communication_language}): "5 review/edit rounds complete. Select [S] Crystallize, [C] Continue, or [X] Exit."
+
+#### [S] Crystallize Pipeline
+
+When [S] is selected, execute the Crystallize pipeline as defined in `.claude/commands/crystallize.md`.
+
+1. Record `[S] Crystallize` selection in decision-diary.md
+2. Append to sprint-log.md JP Interactions: `**[User] Selection: [S] Crystallize**`
+3. Execute the full Crystallize pipeline (S1-S6) as defined in crystallize.md, passing `feature_name`
+4. On Crystallize S6 [C] Continue: proceed to Execute with `specs_root=specs/{feature_name}/reconciled/`
+5. On Crystallize S6 [X] Exit: return to JP2 menu (reconciled/ is preserved)
+
+**Budget**: Crystallize has its own budget (~85-120 turns) separate from JP2 iteration budget (5 rounds). [S] does not count against the 5-round iteration limit.
 
 ## Conductor Roles
 

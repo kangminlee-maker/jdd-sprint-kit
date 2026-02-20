@@ -23,6 +23,7 @@ Progress-oriented. Reports each pipeline stage completion with counts (e.g., "Op
   - **full**: Run the complete 10-Stage pipeline
   - **specs-only**: Run Stage 1-2 only (invoked by /specs — generates Entity Dictionary + Specs 4-file only)
   - **deliverables-only**: Run Stage 3-10 only (invoked by /preview or Auto Sprint after JP1 approval — requires pre-existing Specs 4-file)
+- `prototype_analysis_path` (optional): Path to prototype-analysis.md — used as cross-reference during specs-only mode when invoked by /crystallize. When present, use the prototype analysis to validate entity naming, verify API endpoint coverage, and cross-check user flows against PRD FRs. When absent, behavior is unchanged (backward compatible).
 
 ## Execution Protocol — 10-Stage Pipeline
 

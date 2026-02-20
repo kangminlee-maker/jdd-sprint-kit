@@ -70,7 +70,8 @@ specs/{feature}/
 │   ├── epics-and-stories.md    # Epics & Stories
 │   └── brownfield-context.md   # L1~L4 raw collection (appended during work)
 │
-├── sprint-log.md               # Sprint execution log (timeline + decisions + issues)
+├── sprint-log.md               # Sprint execution log (timeline + decisions + issues + JP Interactions)
+├── decision-diary.md           # JP decision summary table (replaces feedback-log.md)
 ├── brownfield-context.md       # Frozen snapshot (L1~L4, for Workers)
 ├── entity-dictionary.md        # Entity Dictionary
 ├── requirements.md             # PRD → requirements
@@ -86,7 +87,27 @@ specs/{feature}/
 ├── traceability-matrix.md      # FR → Design → Task → BDD → API mapping
 ├── key-flows.md                # Key user flows step-by-step (for JP2 verification)
 ├── readiness.md                # JP1/JP2 Readiness data (for Layer 0 auto-approval)
-└── preview/                    # React + MSW prototype (npm run dev)
+├── preview/                    # React + MSW prototype (npm run dev)
+│
+└── reconciled/                 # Crystallize output (prototype-reconciled artifact set)
+    ├── prototype-analysis.md   # Prototype structure analysis
+    ├── planning-artifacts/     # Reconciled planning artifacts
+    │   ├── prd.md              # PRD final (reconciled with prototype)
+    │   ├── architecture.md     # Architecture final (reconciled)
+    │   ├── epics-and-stories.md # Epics final (reconciled)
+    │   └── brownfield-context.md # Copy (unchanged)
+    ├── entity-dictionary.md    # Reconciled entity dictionary
+    ├── requirements.md         # Reconciled requirements
+    ├── design.md               # Reconciled design
+    ├── tasks.md                # Reconciled tasks (with Entropy + File Ownership)
+    ├── api-spec.yaml           # Verified/regenerated API contract
+    ├── api-sequences.md        # Verified/regenerated sequence diagrams
+    ├── schema.dbml             # Verified/regenerated DB schema
+    ├── bdd-scenarios/          # Regenerated acceptance tests
+    ├── key-flows.md            # Regenerated key flows
+    ├── traceability-matrix.md  # Rebuilt traceability
+    ├── decision-log.md         # Merged decision history
+    └── decision-diary.md       # Copy of JP decision summary
 ```
 
 ## Handoff Rules
@@ -176,3 +197,95 @@ Guide for determining regeneration start point based on feedback magnitude:
 
 This table is a reference for the system when calculating regeneration scope during impact analysis.
 Users see the calculated cost alongside the options.
+
+## Crystallize Flow (Sprint-route only)
+
+After JP2 prototype iteration, [S] Crystallize reconciles all upstream artifacts with the finalized prototype. Creates `reconciled/` directory with the definitive artifact set.
+
+**Availability**: Sprint-route only. Depends on Sprint artifacts (decision-diary.md, sprint-log.md JP Interactions). Not available for Guided/Direct routes.
+
+### Crystallize Pipeline
+
+```
+[S] Crystallize at JP2
+  S1: Prototype Analysis        → reconciled/prototype-analysis.md
+  S2: Reconcile Planning        → reconciled/planning-artifacts/ (PRD, Architecture, Epics)
+  S2-G: Cross-Artifact Gate     → PASS/FAIL
+  S3: Generate Execution Specs  → reconciled/ (entity-dict, requirements, design, tasks)
+  S3-G: Scope Gate (spec)       → PASS/FAIL
+  S4: Reconcile Deliverables    → reconciled/ (api-spec, bdd, key-flows, traceability, etc.)
+  S5: Cross-Artifact Consistency → PASS/FAIL (gap=0 required)
+  S6: Summary → [C] /parallel with specs_root=reconciled/
+```
+
+### Reconciliation Principles
+
+- **From prototype**: screens, features, API endpoints, data model, user flows
+- **Carry-forward from existing docs**: NFRs, security, deployment, scaling, monitoring, ADRs
+- **Product Brief excluded**: defines problem space, not derivable from prototype
+
+### Source Attribution Tags (Crystallize)
+
+| Tag | Meaning |
+|-----|---------|
+| `(source: PROTO, origin: BRIEF-N)` | Confirmed in prototype, originally from brief sentence N |
+| `(source: PROTO, origin: DD-N)` | Confirmed in prototype, originated from decision-diary entry N |
+| `(source: carry-forward, origin: BRIEF-N)` | Not in prototype, carried from original doc, originally from brief |
+| `(source: carry-forward)` | Not in prototype, carried from original doc (NFR, security, etc.) |
+
+Items carried forward from existing documents are marked with `[carry-forward]` inline tag in the reconciled artifact text.
+
+### Downstream Integration
+
+After Crystallize, `/parallel` and `/validate` use `specs_root` parameter to read from `reconciled/` instead of the base `specs/{feature}/` directory. Original artifacts remain untouched.
+
+## Sprint Log Extension: JP Interactions
+
+sprint-log.md is extended with a **JP Interactions** section that records the full text of each JP exchange.
+
+```markdown
+## JP Interactions
+
+### JP1 Round 1
+**[System] Visual Summary**
+{Visual Summary full text}
+
+**[User] Selection: [F] Comment**
+{user feedback text}
+
+**[System] Impact Analysis**
+{analysis result}
+
+**[User] Choice: [M] Apply fix**
+
+**[System] Result**
+Files modified: {list}
+Scope Gate: PASS
+```
+
+**Recording points**: After each AskUserQuestion response at JP1 (Step 4b/4c) and JP2 (Step 6b/6c), append the exchange to sprint-log.md JP Interactions section.
+
+## Decision Diary
+
+decision-diary.md is a structured table of JP decisions and feedback. Replaces feedback-log.md.
+
+**Role differentiation**:
+- **sprint-log.md**: execution timeline + JP interaction full text (for AI context and audit)
+- **decision-diary.md**: structured decision summary (for product expert quick reference)
+
+**Format**:
+```markdown
+# Decision Diary: {feature_name}
+
+## Sprint Context
+- Complexity: {simple/medium/complex}
+- Topology: {co-located/msa/monorepo/standalone}
+- Goals: {goals list}
+- Crystallize: {Yes/No}
+
+## Decisions
+| # | JP | Type | Content | Processing | Result |
+|---|-----|------|---------|------------|--------|
+```
+
+**Recording point**: After each Comment Handling Flow completion, append a row to the Decisions table.

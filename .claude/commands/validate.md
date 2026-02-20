@@ -18,10 +18,15 @@ After Worker implementation is complete. Run after PARALLEL completion + merge.
 
 `$ARGUMENTS`: not used
 
+Parameters (when invoked from auto-sprint):
+- `specs_root`: Base directory for specs files. Default: `specs/{feature}/`. After Crystallize: `specs/{feature}/reconciled/`.
+
 Prerequisites:
 - PARALLEL complete: all Worker tasks done
 - Code merged into main branch
 - Build succeeds
+
+**Path resolution**: All specs file references in this command use `{specs_root}` as base path. When `specs_root` is not provided, default to `specs/{feature}/`. This ensures Judges verify against reconciled artifacts when Crystallize was used.
 
 ## Procedure
 
@@ -42,8 +47,8 @@ Phase 1 failure → request fix from file's owning Worker → re-run Phase 1 aft
 ### Phase 2: AI Judge Verification (Medium + Low Entropy)
 Run Judge agents in parallel. Pass each Judge:
 - `changed_files`: result of `git diff --name-only {base_branch}...HEAD`
-- `feature_dir`: `specs/{feature}/`
-- `brownfield_path`: `specs/{feature}/brownfield-context.md`
+- `feature_dir`: `{specs_root}` (default: `specs/{feature}/`)
+- `brownfield_path`: `{specs_root}/brownfield-context.md` (or `{specs_root}/planning-artifacts/brownfield-context.md` for reconciled/)
 
 1. **Code Quality Judge** (`judge-quality`):
    - Code structure, patterns, duplication

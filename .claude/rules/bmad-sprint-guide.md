@@ -61,6 +61,7 @@ Place materials in specs/{feature}/inputs/ → /sprint {feature-name}
   → JP1: "Is this the right product for the customer?" (requirements judgment)
   Phase 2: Deliverables (OpenAPI + DBML + BDD + Prototype)
   → JP2: "Is this the experience the customer wants?" (prototype judgment)
+  → [S] Crystallize (optional): reconcile all artifacts with finalized prototype → reconciled/
   → On approval: /parallel → /validate
 ```
 
@@ -140,6 +141,7 @@ Routes are not fixed. Adapt as needed:
 - `/sprint` — **Sprint route**: Brief/materials → auto Specs + Deliverables + Prototype (2 JPs)
 - `/specs` — **Specs generation**: Planning Artifacts → Specs 4-file
 - `/preview` — **Deliverables generation**: Specs → OpenAPI + DBML + BDD + Prototype
+- `/crystallize` — **Prototype reconciliation**: Finalized prototype → reconciled/ artifact set (Sprint-route only)
 - `/parallel` — Multi-agent parallel execution
 - `/validate` — 3-Phase verification pipeline
 - `/circuit-breaker` — Course correction
