@@ -1,8 +1,8 @@
 ---
-synced_to: "b60cda7"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
+synced_to: "8938cde"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
 audience: "non-developer product expert"
 product: "JDD Sprint Kit"
-version: "0.3.1"
+version: "0.4.1"
 ---
 
 # JDD Sprint Kit Blueprint
@@ -114,7 +114,7 @@ Design judgments Sprint Kit has made to realize the core principle.
 
 People answer imprecisely to "what matters in the search feature?" but respond accurately to "is this search screen right?"
 
-**Sprint Kit implementation — 2-JP model**: Judgment is requested at exactly 2 points in the process. JP1 presents the PRD + requirements as a **customer journey narrative** for judgment. JP2 provides a **working prototype** for hands-on judgment. Both points request judgment only on top of concrete artifacts.
+**Sprint Kit implementation — 2-JP model**: Judgment is requested at exactly 2 points in the process. JP1 presents the PRD (Product Requirements Document — a structured document defining what to build) + requirements as a **customer journey narrative** for judgment. JP2 provides a **working prototype** for hands-on judgment. Both points request judgment only on top of concrete artifacts.
 
 ### Input Reduces Cycles
 
@@ -127,7 +127,7 @@ Rich upfront input:    generation count ↓, judgment count ↓  → total cost 
 No upfront input:      generation count ↑, judgment count ↑  → total cost ↑
 ```
 
-**Sprint Kit implementation — inputs/ directory + Brownfield Scanner**: Place meeting notes and references in `specs/{feature}/inputs/`. Brownfield Scanner automatically collects existing system context from MCP + local codebase. If you have the product team's kickoff meeting notes, simply placing them in inputs/ significantly improves the AI's first PRD generation quality.
+**Sprint Kit implementation — inputs/ directory + Brownfield Scanner**: Place meeting notes and references in `specs/{feature}/inputs/`. Brownfield Scanner automatically collects existing system context from external sources (existing service repos, Figma designs) + local codebase. If you have the product team's kickoff meeting notes, simply placing them in inputs/ significantly improves the AI's first PRD generation quality.
 
 ### Regeneration Over Modification
 
@@ -177,7 +177,16 @@ AI collects:                                Presented to human:
  tutor_block_list table missing in DB"       experience. Do you approve?"
 ```
 
-**Sprint Kit implementation — Brownfield auto-collection + customer-impact translation**: Brownfield Scanner auto-collects from MCP, document-project, and local codebase. Data is organized in brownfield-context.md in layers: L1 (Domain) → L2 (Behavior) → L3 (Component) → L4 (Code). At JP1/JP2, technical data is **translated into customer impact** for presentation.
+**Sprint Kit implementation — Brownfield auto-collection + customer-impact translation**: Brownfield Scanner auto-collects from document-project, external sources (repos, Figma), and local codebase. Data is organized in brownfield-context.md in 4 layers, each going deeper into the existing system:
+
+- **L1 (Domain)**: What business concepts exist (e.g., "Tutor", "Lesson", "Matching")
+- **L2 (Behavior)**: How those concepts behave (e.g., "POST /api/tutors creates a tutor record")
+- **L3 (Component)**: Which code modules are involved (e.g., "TutorService in src/services/")
+- **L4 (Code)**: Specific code locations and interfaces that the new feature will touch
+
+The layered approach exists because early planning (PRD) needs only domain/behavior context (L1+L2), while later stages (Architecture, implementation) need component/code-level detail (L3+L4). Collecting everything upfront would be wasteful and inaccurate before the feature scope is defined.
+
+At JP1/JP2, technical data is **translated into customer impact** for presentation.
 
 ## 2.3 Preconditions
 
@@ -238,7 +247,7 @@ Real user examples:
 | **Sprint Kit** | BMad execution extension: auto-pipeline, Specs, Deliverables, Prototype |
 | **Claude Code** | AI IDE — agent execution environment |
 | **Claude Code Native Teams** | Agent coordination, task dependency tracking |
-| **MCP Servers** | External data access (backend-docs, client-docs, svc-map, figma) |
+| **MCP (Figma)** | Figma design data access. MCP (Model Context Protocol) is a protocol that lets AI access external data sources via authenticated connections. Currently used for Figma only — other external data uses `--add-dir` or tarball snapshot (see Brownfield Data Sources below) |
 | **Git Worktree** | Conflict-free parallel implementation environment |
 | **GitHub CLI (`gh`)** | Issue/PR management, task tracking |
 | **Specmatic** | OpenAPI contract-based automated testing (Worker self-verification) |
@@ -248,7 +257,7 @@ Real user examples:
 
 #### Tool Selection Rationale
 
-Most tools above are platform givens (BMad, Claude Code) or have no practical alternatives (GitHub CLI, MCP). The following were deliberate choices:
+Most tools above are platform givens (BMad, Claude Code) or have no practical alternatives (GitHub CLI, MCP for Figma). The following were deliberate choices:
 
 **MSW (Mock Service Worker)** — Selected for prototype fidelity. Requirement: JP2 judgment requires a prototype that behaves like a real service (stateful CRUD across flows). MSW intercepts at the network level via browser Service Worker, so the React app calls APIs with the same code as production — unaware it's mocked. Previously used Prism (OpenAPI proxy mock), but Prism could not maintain cross-request state (e.g., "POST creates a record → GET returns it"), making realistic user journeys impossible.
 
@@ -282,7 +291,7 @@ Sprint Kit uses agents in three tiers.
 |-------|------|----------------|------|
 | **@auto-sprint** | Sprint orchestration + Conductor 4 roles (Goal Tracking, Scope Gate, Budget, Redirect) | sprint-input.md → all planning-artifacts/ | Entire Sprint |
 | **@scope-gate** | 3-stage validation: Structured Probe + Checklist + Holistic Review | Previous artifact + goals → Pass/Fail + gap report | After each BMad step + after deliverables |
-| **@brownfield-scanner** | Brownfield data collection from MCP + local codebase (L1~L4) | MCP + local code → brownfield-context.md | Pass 1 (broad) + Pass 2 (targeted) |
+| **@brownfield-scanner** | Brownfield data collection from external sources + local codebase (L1~L4) | external sources + local code → brownfield-context.md | Pass 1 (broad) + Pass 2 (targeted) |
 | **@deliverable-generator** | Full-stack deliverable generation | planning-artifacts/ → Specs + Deliverables + MSW Mocks + readiness.md + Prototype | Specs/Deliverables stage |
 
 **Execute Agents** — Implementation + verification:
@@ -296,22 +305,23 @@ Sprint Kit uses agents in three tiers.
 
 ### Brownfield Data Sources
 
-Three sources for collecting existing system context and their availability by topology.
+Four sources for collecting existing system context. Each source has a different access method and a reason for using that method.
 
-| Source | Description | Collection Method |
-|--------|-------------|-------------------|
-| **document-project** | Structured docs generated by BMad `/document-project` workflow | Direct file read |
-| **MCP Servers** (4 types) | backend-docs, client-docs, svc-map, figma | MCP protocol |
-| **Local codebase** | Source code in the same repository | Glob, Grep, Read |
+| Source | Description | Access Method | Why This Method |
+|--------|-------------|---------------|-----------------|
+| **document-project** | Structured docs generated by BMad `/document-project` workflow (project overview, API contracts, data models) | Direct file read | Already local files — no special access needed |
+| **External repos** (`--add-dir` / tarball) | Existing service code repositories. Two access methods: (1) `--add-dir` — a Claude Code launch option that adds a local directory to the AI's accessible file scope. Use when you have a local clone. (2) tarball snapshot — the system downloads a read-only copy of a GitHub repo's current files via `gh api tarball/HEAD`. Use when you don't have a local clone and just have a GitHub URL. | Glob, Grep, Read (same tools as local files) | Until v0.3.x, external repos were accessed via MCP (filesystem MCP servers). However, Claude Code's MCP security restricts MCP servers to the project root directory, blocking access to repos stored elsewhere. `--add-dir` and tarball bypass this restriction by making external files directly readable. |
+| **Figma** | Live design data (wireframes, components, design tokens) | MCP protocol (OAuth authentication) | Unlike code repos, Figma data is not downloadable as files — it exists only as live data on Figma's servers. MCP is the only way to query it. |
+| **Local codebase** | Source code in the current project | Glob, Grep, Read | Already part of the project — no special access needed |
 
-**Topology-Source Availability Matrix**:
+**Topology** — the Scanner auto-detects the project's deployment structure and adjusts its scan strategy:
 
-| Topology | document-project | MCP | Local code | Notes |
-|----------|-----------------|-----|------------|-------|
-| **standalone** | N/A | Available | N/A | Greenfield or external system |
-| **co-located** | Available | Available | Available | Monolithic, code is local |
-| **msa** | Available | Available | Partial | Microservices, only some local |
-| **monorepo** | Available | Available | Available | Monorepo, all code local |
+| Topology | What It Means | External Sources | Local Code | Scan Strategy |
+|----------|---------------|------------------|------------|---------------|
+| **standalone** | Greenfield or external-only system | Available | N/A | External sources are the sole data source |
+| **co-located** | Monolithic — all code is in this repository | Available | Full scan | Local code is primary; external sources supplement |
+| **msa** | Microservices — only some services are local | Available | Partial | External sources are primary (cross-service visibility); local scan limited to L1-L2 |
+| **monorepo** | Multiple packages in one repository | Available | Full scan (relevant packages) | Local code is primary; scoped to relevant packages only |
 
 Greenfield projects work without any Brownfield sources.
 
@@ -321,15 +331,15 @@ brownfield-context.md organizes existing system context in L1~L4 layers. Sprint 
 
 **Auto-generation (Sprint route)**: @brownfield-scanner generates it automatically when `/sprint` is run.
 
-1. Phase 0 determines topology — detects document-project availability, MCP connection status, build tools to determine project type (`standalone` / `co-located` / `msa` / `monorepo`).
+1. Phase 0 determines topology — detects document-project availability, external data sources (`--add-dir` paths, GitHub repo URLs, Figma MCP), and build tools to determine project type (`standalone` / `co-located` / `msa` / `monorepo`).
 2. Pass 1 (Broad Scan) collects domain concepts (L1) and behavior patterns (L2) based on Brief keywords.
 3. Pass 2 (Targeted Scan) collects integration points (L3) and code-level details (L4) after Architecture/Epics completion.
 
 Results are written to `specs/{feature}/planning-artifacts/brownfield-context.md`. Detailed per-pass behavior is described in S4.2 Pipeline below.
 
-**Pre-preparation — document-project (recommended)**: Running the BMad `/document-project` workflow before Sprint improves Brownfield scan quality. This workflow analyzes the existing codebase and generates structured documents (project overview, API contracts, data models, etc.). Sprint's Brownfield Scanner uses these as seed data, narrowing MCP/local scan scope and reducing gaps.
+**Pre-preparation — document-project (recommended)**: Running the BMad `/document-project` workflow before Sprint improves Brownfield scan quality. This workflow analyzes the existing codebase and generates structured documents (project overview, API contracts, data models, etc.). Sprint's Brownfield Scanner uses these as seed data, narrowing scan scope and reducing gaps.
 
-**Manual preparation (without MCP)**: When MCP servers cannot be configured, you can write brownfield-context.md manually and place it at `specs/{feature}/brownfield-context.md` or `specs/{feature}/planning-artifacts/brownfield-context.md`. Sprint detects existing files and reuses covered levels without re-scanning. The format is defined in `_bmad/docs/brownfield-context-format.md`.
+**Manual preparation (without external sources)**: When external data sources cannot be configured, you can write brownfield-context.md manually and place it at `specs/{feature}/brownfield-context.md` or `specs/{feature}/planning-artifacts/brownfield-context.md`. Sprint detects existing files and reuses covered levels without re-scanning. The format is defined in `_bmad/docs/brownfield-context-format.md`.
 
 **Greenfield**: No preparation needed for new projects without existing systems. Auto-detected in Phase 0; Brownfield scan is skipped.
 
@@ -343,17 +353,31 @@ Results are written to `specs/{feature}/planning-artifacts/brownfield-context.md
 
 **Rationale**: Input Reduces Cycles — input quality determines the regeneration count of the entire downstream pipeline.
 
-**User perspective**: Two ways to start.
+**User perspective**: Three ways to start.
 
 ```bash
-# Method 1: Inline Brief
+# Method 1: Inline Brief — start immediately with a one-line description
 /sprint "A feature that lets students block specific tutors after lessons"
 
-# Method 2: feature-name (after placing materials in inputs/ directory)
+# Method 2: Feature Name — start with prepared materials in inputs/
 /sprint tutor-exclusion
+
+# Method 3: New Feature — folder does not exist yet
+/sprint tutor-exclusion
+# → system creates specs/tutor-exclusion/inputs/brief.md template → exits
+# → user fills in brief.md → re-runs /sprint tutor-exclusion
 ```
 
 For Method 2, place materials in `specs/tutor-exclusion/inputs/`. **brief.md is not required** — even with just meeting notes or references, AI auto-generates the Brief.
+
+For Method 3, the system auto-creates `specs/{feature}/inputs/` and a **brief.md template**. The template includes a **Reference Sources** (`## Reference Sources`) section with 4 sub-sections:
+
+- **GitHub**: Declare existing service repo URLs (e.g., `https://github.com/org/backend-api`). The system downloads a tarball snapshot (a read-only copy of the current files via `gh api tarball/HEAD`, not a git clone) and the Brownfield Scanner analyzes that code. URLs declared here are downloaded without confirmation — declaring them is the user's explicit intent.
+- **Figma**: Declare Figma design URLs. The system connects via Figma MCP to read live design data.
+- **Policy Docs**: List document names that the Scanner should prioritize (e.g., `matching-policy.md`).
+- **Scan Notes**: Free-text guidance for Brownfield scan direction (e.g., "focus on matching engine and reservation flow").
+
+After filling in brief.md, run `/sprint feature-name` again to start the Sprint.
 
 **System internals**:
 
@@ -362,7 +386,8 @@ Entry point branching:
 | Input Form | Behavior |
 |-----------|----------|
 | Inline Brief (`"..."`) | Auto-creates `specs/{slug}/inputs/brief.md` → analysis |
-| feature-name | **Full scan** of `specs/{name}/` → input state assessment → optimal route branching |
+| feature-name (folder exists) | **Full scan** of `specs/{name}/` → input state assessment → optimal route branching |
+| feature-name (folder does not exist) | **Auto-create** `specs/{name}/inputs/brief.md` template → display guidance → exit |
 
 Full scan (feature-name entry): Scans `specs/{feature}/` at once to detect inputs/ file list, brownfield-context.md existence + levels, planning-artifacts/ completeness, and BMad outputs (`_bmad-output/`).
 
@@ -371,13 +396,15 @@ Full scan (feature-name entry): Scans `specs/{feature}/` at once to detect input
 | brief.md + references | **Normal Sprint** |
 | References only (no brief.md) | **AI auto-generates Brief** → Normal Sprint |
 | Planning artifacts complete | **Direct route suggested** (`/specs` guidance) |
-| No input | **Error** (material placement guidance) |
+| Folder exists but inputs/ empty | **Error** (material placement guidance) |
 
 Subsequent system processing:
 - Brief parsing + Reference Materials analysis (under 200 lines: full inclusion / over: summarized)
-- Brief Sentences extraction: sentence-level decomposition + BRIEF-N ID assignment → used for source tagging on each PRD FR
+- Reference Sources section parsing: extract GitHub repo URLs, Figma URLs, policy doc names, scan notes from brief.md
+- GitHub repo URL auto-detection: scan all inputs/ files for GitHub URLs not declared in Reference Sources → ask user whether to download
+- Brief Sentences extraction: sentence-level decomposition + BRIEF-N ID assignment → used for source tagging on each PRD FR (Functional Requirement — a specific function the system must provide)
 - Causal Chain extraction (optional, opt-in): Phenomenon → Root Cause → Solution Rationale → Feature Request
-- Brownfield status detection: check existing brownfield-context.md → search for document-project → MCP connection test → local codebase build tool detection → topology determination
+- Brownfield status detection: check existing brownfield-context.md → search for document-project → detect external data sources (`--add-dir` directories, GitHub repos from Reference Sources, Figma MCP) → local codebase build tool detection → topology determination
 
 Brief grade assessment:
 
@@ -389,7 +416,7 @@ Brief grade assessment:
 
 **User perspective — Confirmation screen**: Presents scan result summary (inputs/ file list, brownfield status, planning-artifacts status) + Sprint start confirmation (extracted goals, complexity, estimated time, contradiction warnings).
 
-**Artifact**: `specs/{feature}/inputs/sprint-input.md` — Phase 0's SSOT. All downstream agents reference this file.
+**Artifact**: `specs/{feature}/inputs/sprint-input.md` — Phase 0's SSOT (Single Source of Truth). All downstream agents reference this file instead of re-reading the original inputs.
 
 **On failure**: Fallback 1 (full analysis success) → Fallback 2 (only brief.md analyzable) → Fallback 3 (inline Brief only) → Fallback 4 (no input, Sprint aborted).
 
@@ -404,11 +431,11 @@ Brief grade assessment:
 **System internals**: If existing brownfield-context.md found, check L1+L2 levels and reuse; supplement missing levels only. If absent, @brownfield-scanner runs in broad mode.
 
 - Stage 0: Consume document-project outputs (if available, build initial context)
-- Stage 1-4: Collect L1 (Domain) + L2 (Behavior) via MCP + local scan
+- Stage 1-4: Collect L1 (Domain) + L2 (Behavior) via external sources + local scan
 
 **Artifact**: `specs/{feature}/planning-artifacts/brownfield-context.md` (L1 + L2)
 
-**On failure**: MCP connection failure → record `brownfield_status: partial-failure` + proceed with available sources only. Greenfield → skip.
+**On failure**: External source access failure → record `brownfield_status: partial-failure` + proceed with available sources only. Greenfield → skip.
 
 ---
 
@@ -464,7 +491,7 @@ specs/{feature}/planning-artifacts/
 
 ### Specs Generation
 
-**Rationale**: Regeneration Over Modification — Specs are the execution stage's SSOT and regenerable consumables.
+**Rationale**: Regeneration Over Modification — Specs are the execution stage's SSOT (Single Source of Truth — the one authoritative file that all other components reference; when information conflicts, SSOT wins) and regenerable consumables.
 
 **User perspective**: Automatic. No user intervention.
 
@@ -474,7 +501,7 @@ specs/{feature}/planning-artifacts/
 - **Stage 2: Specs 4-file generation**:
   - `requirements.md` — PRD → structured requirements (each item with source tagging)
   - `design.md` — Architecture → structured design (components, interfaces)
-  - `tasks.md` — Epics → parallelizable task list (Entropy Tolerance + file ownership assignment)
+  - `tasks.md` — Epics → parallelizable task list (Entropy Tolerance — each task's uncertainty level [Low/Medium/High] indicating the probability of unexpected issues — + file ownership assignment)
   - `brownfield-context.md` (frozen) — frozen snapshot copied from planning-artifacts/ (referenced by Workers)
 
 SSOT reference priority: `api-spec.yaml` > `design.md` API section / `schema.dbml` > `design.md` data model section.
@@ -511,18 +538,18 @@ JP1 presentation format and Comment handling flow details in S5.2.
 
 **System internals**: @deliverable-generator runs in full mode.
 
-| Deliverable | File | Role |
-|-------------|------|------|
-| OpenAPI 3.1 YAML | `api-spec.yaml` | API contract — shared by MSW Mock + Specmatic contract tests |
-| API Sequences | `api-sequences.md` | Mermaid sequence diagrams |
-| DBML Schema | `schema.dbml` | Database design |
-| BDD/Gherkin | `bdd-scenarios/` | Given-When-Then acceptance tests |
-| State Machines | `state-machines/` | XState definitions (only when applicable) |
-| Decision Log | `decision-log.md` | ADR + AI reasoning trace |
-| Traceability Matrix | `traceability-matrix.md` | FR → Design → Task → BDD → API mapping |
-| Key Flows | `key-flows.md` | Key user flow Step-by-Step (for JP2 verification) |
-| MSW Mocks | `preview/src/mocks/` | MSW handlers (browser.ts, handlers.ts, store.ts, seed.ts) |
-| Prototype | `preview/` | React + MSW stateful prototype |
+| Deliverable | File | What It Is and Why It Exists |
+|-------------|------|------------------------------|
+| OpenAPI 3.1 YAML | `api-spec.yaml` | API contract — a machine-readable specification of every API endpoint (URL, request/response format, data types). This single file drives 3 things: MSW mock generation, Specmatic contract tests, and implementation verification. Without it, mocks and tests would be manually written and diverge from the actual API design. |
+| API Sequences | `api-sequences.md` | Mermaid sequence diagrams showing the order of API calls in key user flows. Used to verify that no flow requires data that hasn't been fetched yet. |
+| DBML Schema | `schema.dbml` | Database design in DBML (Database Markup Language) — a human-readable format for defining tables, columns, and relationships. Can be visualized as an ERD (Entity-Relationship Diagram) on dbdiagram.io. |
+| BDD/Gherkin | `bdd-scenarios/` | Acceptance tests in Given-When-Then format. BDD (Behavior-Driven Development) describes expected behavior in natural language. Gherkin is the specific syntax (Given/When/Then). These scenarios become automated tests during implementation. |
+| State Machines | `state-machines/` | XState (a state machine library) definitions. Generated only when the feature involves complex state transitions (e.g., order status: pending → confirmed → shipped → delivered). |
+| Decision Log | `decision-log.md` | ADR (Architecture Decision Record) — documents each design decision, alternatives considered, and the rationale for the chosen approach. Also includes AI's reasoning trace. |
+| Traceability Matrix | `traceability-matrix.md` | End-to-end mapping: FR → Design → Task → BDD → API. Ensures every requirement has a corresponding design, task, test, and API endpoint. Gaps in this mapping indicate missing coverage. |
+| Key Flows | `key-flows.md` | Key user flow step-by-step walkthrough (used as the JP2 verification guide) |
+| MSW Mocks | `preview/src/mocks/` | MSW handlers that make the prototype behave like a real service (see S5.3 for how MSW works) |
+| Prototype | `preview/` | React + MSW stateful prototype — the clickable application the product expert judges at JP2 |
 
 ---
 
@@ -542,11 +569,11 @@ JP2 presentation format and Comment handling flow details in S5.3.
 
 **System internals**:
 
-1. **Interface Contract creation** — shared types/interface files created before PARALLEL starts
-2. **GitHub Issues creation** — `gh issue create` for each task as an Issue (dependencies, file ownership, Entropy)
-3. **Git Worktree setup** — independent worktree per Worker, file conflicts eliminated at the source
-4. **Native Teams @worker creation** — Workers created in parallel via Claude Code Task tool
-5. **Parallel execution** — each Worker implements tasks independently, self-verifies API contracts via Specmatic, on completion: TaskUpdate + `gh issue close` + SendMessage
+1. **Interface Contract creation** — shared type/interface files (data structures that multiple tasks reference) are created before parallel work starts. Without this, Workers would define conflicting versions of the same data types.
+2. **GitHub Issues creation** — each task is registered as a GitHub Issue via `gh issue create`, recording dependencies, file ownership, and Entropy. This provides a trackable record of what each Worker is doing.
+3. **Git Worktree setup** — Git Worktree creates independent working directories that share the same repository history. Each Worker gets its own worktree, so multiple Workers can modify files simultaneously without filesystem conflicts.
+4. **Native Teams @worker creation** — Claude Code Native Teams (the built-in agent coordination system) spawns multiple @worker agents in parallel, one per task.
+5. **Parallel execution** — each Worker implements its task independently, self-verifies API conformance via Specmatic (generates contract tests from `api-spec.yaml`), and on completion closes its GitHub Issue and notifies dependent Workers.
 6. **Merge & Integration** — merge worktrees in dependency order + integration test
 
 File ownership: `tasks.md` specifies owned files per task. Workers modify only assigned files. When shared file modification is needed, request through team leader.
@@ -561,7 +588,7 @@ File ownership: `tasks.md` specifies owned files per task. Workers modify only a
 
 **System internals**:
 - **Phase 1: @judge-quality** — code structure, patterns, duplication, conventions + Specmatic contract compliance
-- **Phase 2: @judge-security** — OWASP Top 10, injection, auth bypass
+- **Phase 2: @judge-security** — OWASP Top 10 (a standard list of the 10 most critical web application security vulnerabilities, maintained by the Open Web Application Security Project), injection, auth bypass
 - **Phase 3: @judge-business** — implementation verification against PRD acceptance criteria; (when causal_chain provided) confirms core FRs actually resolve root_cause
 
 **On failure**: 3 consecutive failures in same category or 5 cumulative failures → Circuit Breaker auto-triggers.
@@ -715,7 +742,7 @@ Requirements, user scenarios, feature scope, priorities.
 - "When a customer is in situation A and tries to do B, the system provides C"
 - Key scenarios described in non-technical language
 
-**Section 2: Original Intent ↔ FR Mapping Table**
+**Section 2: Original Intent ↔ FR (Functional Requirement) Mapping Table**
 - If tracking_source is `brief`: Brief sentences (BRIEF-N) ↔ FR mapping
 - If tracking_source is `success-criteria`: PRD Success Criteria ↔ FR mapping
 - Unmapped items shown as warnings
@@ -756,7 +783,7 @@ Prototype, screen flows, interactions.
 2. Follow key scenario guide (based on key-flows.md) and click through
 3. Debug/reset state with DevPanel (MSW in-memory store based)
 
-MSW Service Worker intercepts API requests at network level based on `api-spec.yaml`, providing stateful responses. The React SPA calls APIs with the same code as the real service (unaware of MSW's existence).
+How the prototype works without a real backend: MSW (Mock Service Worker) installs a Service Worker in the browser that intercepts all API requests before they reach the network. When the React application (a single-page web application) calls an API endpoint, MSW catches the request and returns a mock response generated from `api-spec.yaml`. These responses are stateful — creating a record via POST means a subsequent GET returns that record. The application code is identical to what would run against a real backend; it does not know MSW exists. This is why the prototype can demonstrate realistic user flows (e.g., "create a tutor block → verify it appears in the block list") without any server running.
 
 Changes/supplements after JP1 are recorded in readiness.md's `jp1_to_jp2_changes` field and auto-displayed in JP2 Section 0.
 
@@ -834,7 +861,7 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 
 - **Persistent Memory**: Environment facts already covered by brownfield-context.md. Judgment correction (applying previous Sprint results to next) has self-reinforcing error risk → deferred.
 - **Teams Debate**: Quality improvement through inter-agent debate beyond 3-Judge verification → evaluate after current `/validate` 3-Judge validation.
-- **Sprint Kit → BMad Phase 4 auto-transition**: planning-artifacts are compatible, but tasks.md-specific info (DAG, Entropy, File Ownership) requires manual transfer.
+- **Sprint Kit → BMad Phase 4 auto-transition**: planning-artifacts are compatible, but tasks.md-specific info (DAG — Directed Acyclic Graph, the task dependency ordering that determines which tasks must complete before others can start — Entropy, File Ownership) requires manual transfer.
 
 ---
 
@@ -846,7 +873,7 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 | Regeneration cost is manageable (5-15 min/cycle) | "Consumable treatment" impossible → regression to patch-based modification | Single cycle duration > 30 min |
 | Upfront input improves first-generation quality | Same quality regardless of input → inputs/ becomes meaningless | No difference in JP1 Comment rate between Grade A vs Grade C Briefs |
 | Product expert knows customers well | Judgments diverge from customer reality → right product doesn't emerge | Low usage rate post-launch |
-| MCP servers operate reliably | Brownfield scan failures → existing system context gaps | `brownfield_status: partial-failure` frequency |
+| External data sources are accessible (repos via `--add-dir`/tarball, Figma via MCP) | Brownfield scan gaps → existing system context missing from planning. For co-located projects, local codebase scan provides a fallback. | `brownfield_status: partial-failure` frequency |
 | Prototype fidelity is sufficient for judgment | JP2 judgment impossible → "it'll probably be different in reality" | JP2 Comment "can't judge from prototype" |
 
 ---
@@ -855,15 +882,15 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 
 ## 8.1 Current Version
 
-**v0.3.1** (2026-02-18)
+**v0.4.1** (2026-02-20)
 
-Key changes:
-- Blueprint rewritten to generic 8-Section structure + new Blueprint Format Guide
-- MSW Mock Layer fully replaces Prism (stateful prototype)
-- Comment handling flow introduced (impact analysis → cost-based apply-fix/regenerate selection)
-- API Data Sufficiency verification (Scope Gate deliverables stage)
-- SSOT Reference Priority rules specified
-- JP feedback model simplified (3-choice → 2-choice: Confirm/Comment)
+Key changes since v0.3.1:
+- **Brownfield Scanner improvement**: topology-aware scanning — the Scanner auto-detects the project's deployment structure (co-located, monorepo, MSA, standalone) and adjusts its scan strategy accordingly
+- **External data access expansion**: MCP servers were previously the only way to access external service data. Now 3 methods exist: (1) `--add-dir` for local clones, (2) tarball snapshot for GitHub repos, (3) MCP for Figma. The change was driven by Claude Code's MCP security restricting filesystem MCP servers to the project root directory.
+- **brief.md Reference Sources section**: product experts can declare GitHub repo URLs, Figma design URLs, policy docs, and scan notes directly in brief.md. Declared GitHub repos are automatically downloaded and analyzed during Sprint.
+- **Sprint start auto-setup**: `/sprint feature-name` auto-creates the project template with brief.md when the folder does not exist yet
+- **Language support**: system messages follow `communication_language`, generated documents follow `document_output_language` (configured in `_bmad/bmm/config.yaml`)
+- **English Pack**: all agents, commands, and format guides rewritten English-first + Language Protocol introduced for multi-language output
 
 > Full change history: `CHANGELOG.md`
 
@@ -878,7 +905,7 @@ Key changes:
 ## 8.3 Unvalidated Hypotheses
 
 - **Sprint has never been run with an actual product team** — all tests are developer simulations
-- **MCP-based scan has never been run on an actual Brownfield project** — Brownfield Scanner L3/L4 quality unverified
+- **Brownfield scan has never been run on an actual Brownfield project** — Scanner L3/L4 quality unverified with real external sources (repos via `--add-dir`/tarball, Figma via MCP)
 - **Whether prototype fidelity is sufficient for judgment is unverified** — whether MSW stateful mocks are adequate for real judgment
 - **Cost formula coefficients are uncalibrated** — relative magnitudes of upfront input cost, generation cost, and judgment cost unmeasured
 - **Post-JP2 pipeline (Parallel, Validate, Circuit Breaker) is unverified in practice** — agent definitions are complete but no end-to-end execution test
@@ -916,14 +943,16 @@ If BMad Method is not detected during installation, an error with guidance messa
 
 ## Hook System
 
-Sprint Kit provides 4 Hook scripts for runtime protection and user experience.
+Hooks are shell scripts that Claude Code automatically executes when specific events occur. They run without user intervention and provide runtime protection and notifications.
+
+Sprint Kit provides 4 Hook scripts:
 
 | Hook | Trigger | Role |
 |------|---------|------|
-| **desktop-notify.sh** | JP1/JP2 reached, Sprint complete, error | Desktop notification (macOS/Linux) |
-| **protect-readonly-paths.sh** | File modification attempt | Protects read-only paths: `_bmad/`, `specs/*/inputs/`, etc. |
-| **sprint-pre-compact.sh** | Before context window compaction | Saves Sprint state to sprint-log.md |
-| **sprint-session-recovery.sh** | Session start | Restores previous state from sprint-log.md |
+| **desktop-notify.sh** | JP1/JP2 reached, Sprint complete, error | Desktop notification (macOS/Linux) — alerts the user when human judgment is needed |
+| **protect-readonly-paths.sh** | File modification attempt | Prevents accidental modification of read-only paths: `_bmad/`, `specs/*/inputs/`, etc. |
+| **sprint-pre-compact.sh** | Before context window compaction (when the AI's conversation history exceeds its memory limit and older messages are compressed) | Saves Sprint state to sprint-log.md so progress is not lost |
+| **sprint-session-recovery.sh** | Session start | Restores previous Sprint state from sprint-log.md if the session was interrupted |
 
 ## Multi-IDE Compatibility
 
@@ -1003,7 +1032,14 @@ specs/{feature}/
 | **Comment handling flow** | Unified mechanism executed when Comment is given at JP. Impact analysis → cost-based [apply fix + propagate] / [regenerate] selection → execute → return to JP |
 | **feedback-log.md** | Comment handling record. Located under planning-artifacts/, logs feedback content + chosen approach + result |
 | **document-project** | BMad workflow. Scans existing codebase to generate structured documents |
-| **MCP** | Model Context Protocol. Protocol for AI to access external data sources |
+| **MCP** | Model Context Protocol. Protocol for AI to access external data sources via authenticated connections. Currently used for Figma design data. Other external data (code repos) uses `--add-dir` or tarball snapshot |
+| **`--add-dir`** | Claude Code launch option that adds an external directory to the AI's accessible file scope. Used for accessing local clones of external service repos. Example: `claude --add-dir /path/to/backend-repo` |
+| **tarball snapshot** | A read-only copy of a GitHub repository's current files, downloaded via `gh api tarball/HEAD`. Not a git clone — contains no git history. Used when you have a GitHub URL but no local clone |
+| **topology** | The project's deployment structure, auto-detected by the Brownfield Scanner: `standalone` (no local code), `co-located` (all code in one repo), `msa` (microservices across multiple repos), `monorepo` (multiple packages in one repo). Determines scan strategy |
+| **Reference Sources section** | A structured section in brief.md (`## Reference Sources`) where the user declares GitHub repos, Figma URLs, policy docs, and scan notes. Declared repos are automatically downloaded and analyzed |
+| **PRD** | Product Requirements Document. A structured document defining what to build — features, scenarios, constraints, success criteria |
+| **FR** | Functional Requirement. A specific function or capability the system must provide (e.g., "users can block a tutor") |
+| **SSOT** | Single Source of Truth. The one authoritative file that all other components reference. When information conflicts between files, the SSOT wins |
 | **readiness.md** | JP1/JP2 Readiness data. YAML frontmatter includes jp1_to_jp2_changes field for tracking post-JP1 changes |
 | **/summarize-prd** | PRD summary/analysis + feedback application command. Used for quickly understanding existing PRDs |
 | **Scope Gate** | 3-stage verification performed by @scope-gate agent: Structured Probe + Checklist + Holistic Review. Runs after each BMad step and after Deliverables |
