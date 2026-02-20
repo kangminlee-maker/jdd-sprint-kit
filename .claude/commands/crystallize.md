@@ -451,6 +451,13 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     | Zero | {N} |
     | Carry-Forward ratio | {carry-forward count}/{total} ({%}) |
 
+    Verify delta completeness before writing:
+    - Every positive/modification item must have a non-null task_id referencing tasks.md
+    - Every negative item must have task_id or explicit justification in resource column
+    - Zero delta items must NOT have task_id (no unintended work on unchanged items)
+    - carry-forward:deferred items must NOT have task_id (deferred = not this Sprint)
+    If violations found, append WARN section to delta-manifest.md with violation list.
+
     Output: Write to specs/{feature}/reconciled/delta-manifest.md"
 ```
 

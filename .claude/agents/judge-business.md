@@ -49,16 +49,33 @@ Requirements-focused. References spec document sections and acceptance criteria 
 - Is the solution_rationale reflected in the implementation?
 - Do enabling/supporting FRs properly support their corresponding core FR implementations?
 
+### 7. Delta Verification (when delta-manifest.md available)
+
+When `{feature_dir}/delta-manifest.md` exists, apply delta-typed verification:
+
+| Delta Type | Verification Focus |
+|---|---|
+| **positive** | Implementation exists and matches spec. No pre-existing code conflict. |
+| **modification** | Changed behavior matches spec. Original behavior correctly replaced. |
+| **zero** | Verify changed_files do NOT include files that would alter zero-delta resources. If uncertain, flag as WARN for manual review. |
+| **negative** | Deprecated resource is no longer accessible. No orphan references remain. |
+
+**Carry-forward verification**:
+- `carry-forward:defined` → verify the requirement is reflected in implementation
+- `carry-forward:deferred` → verify task_id is null in delta-manifest (not implemented this Sprint). If task_id exists, flag as SCOPE_CREEP WARNING
+- `carry-forward:new` → verify it exists in implementation with appropriate justification
+
 ## Input References
 - `changed_files`: List of files to verify (`git diff --name-only {base_branch}...HEAD`)
-- `specs/{feature}/requirements.md` - Acceptance criteria source
-- `specs/{feature}/design.md` - Technical design constraints
-- `specs/{feature}/tasks.md` - Per-task owned file list
-- `specs/{feature}/brownfield-context.md` - Existing system context
-- BMad PRD (`specs/{feature}/planning-artifacts/prd.md`) - Original requirements (including UX requirements)
+- `{feature_dir}/requirements.md` - Acceptance criteria source
+- `{feature_dir}/design.md` - Technical design constraints
+- `{feature_dir}/tasks.md` - Per-task owned file list
+- `{feature_dir}/brownfield-context.md` (fallback: `{feature_dir}/planning-artifacts/brownfield-context.md`) - Existing system context
+- BMad PRD (`{feature_dir}/planning-artifacts/prd.md`) - Original requirements (including UX requirements)
 - **configured backend-docs MCP** — Existing domain policies, API specs for business rule verification
 - **configured svc-map MCP** — Existing customer journey consistency verification
-- `specs/{feature}/inputs/sprint-input.md` - Causal chain (phenomenon, root_cause, solution_rationale)
+- `specs/{feature}/inputs/sprint-input.md` - Causal chain (always original path, not affected by Crystallize)
+- `{feature_dir}/delta-manifest.md` - Delta classification (when available, after Crystallize)
 
 ## Output Format
 ```markdown
@@ -81,7 +98,16 @@ Requirements-focused. References spec document sections and acceptance criteria 
 
 > Omit this section if sprint-input.md has no causal_chain or chain_status is feature_only.
 
-**Summary**: X/Y ACs passed | Verdict: PASS/FAIL
+### Delta Verification (when delta-manifest.md available)
+| delta_id | type | resource | Status | Notes |
+|----------|------|----------|--------|-------|
+| DM-001 | positive | POST /api/v2/blocks | PASS | Implemented |
+| DM-003 | zero | GET /api/lessons | PASS | No related files in changed_files |
+
+### Carry-Forward Ratio
+Proto: {N} | Carry-forward: {M} | Total: {N+M} | Ratio: {M/(N+M)}%
+
+**Summary**: X/Y ACs passed | Delta: {N}/{M} verified | Verdict: PASS/FAIL
 ```
 
 ## Rules
