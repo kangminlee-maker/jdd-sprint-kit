@@ -4,6 +4,17 @@ All notable changes to JDD Sprint Kit will be documented in this file.
 
 ---
 
+## [0.5.2] - 2026-02-20
+
+### Added
+- **S0 Decision Context Analysis** — New step before prototype analysis (S1). Reads decision-diary.md or jp2-review-log.md to understand JP2 modification intent and context. S1 prototype analyzer uses this to distinguish deliberate business decisions from implementation details.
+
+### Fixed
+- **prototype-analysis.md written in wrong language** — S1 Task prompt lacked `{document_output_language}` directive, causing output to default to English. Now explicitly includes language instruction.
+- **Crystallize pipeline step count** — Updated from 6 steps (S1-S6) to 7 steps (S0-S6) across crystallize.md, auto-sprint.md, and bmad-sprint-protocol.md.
+
+---
+
 ## [0.5.1] - 2026-02-20
 
 ### Fixed
