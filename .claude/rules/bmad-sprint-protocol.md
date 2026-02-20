@@ -209,13 +209,14 @@ After JP2 prototype iteration, [S] Crystallize reconciles all upstream artifacts
 
 ```
 [S] Crystallize at JP2
-  S1: Prototype Analysis        → reconciled/prototype-analysis.md
-  S2: Reconcile Planning        → reconciled/planning-artifacts/ (PRD, Architecture, Epics)
-  S2-G: Cross-Artifact Gate     → PASS/FAIL
-  S3: Generate Execution Specs  → reconciled/ (entity-dict, requirements, design, tasks)
-  S3-G: Scope Gate (spec)       → PASS/FAIL
-  S4: Reconcile Deliverables    → reconciled/ (api-spec, bdd, key-flows, traceability, etc.)
-  S5: Cross-Artifact Consistency → PASS/FAIL (gap=0 required)
+  S0: Decision Context Analysis  → reconciled/decision-context.md (JP2 modification intent)
+  S1: Prototype Analysis         → reconciled/prototype-analysis.md (informed by S0)
+  S2: Reconcile Planning         → reconciled/planning-artifacts/ (PRD, Architecture, Epics)
+  S2-G: Cross-Artifact Gate      → PASS/FAIL
+  S3: Generate Execution Specs   → reconciled/ (entity-dict, requirements, design, tasks)
+  S3-G: Scope Gate (spec)        → PASS/FAIL
+  S4: Reconcile Deliverables     → reconciled/ (api-spec, bdd, key-flows, traceability, etc.)
+  S5: Cross-Artifact Consistency  → PASS/FAIL (gap=0 required)
   S6: Summary → [C] /parallel with specs_root=reconciled/
 ```
 

@@ -738,7 +738,7 @@ When [S] is selected, execute the Crystallize pipeline as defined in `.claude/co
 
 1. Record `[S] Crystallize` selection in decision-diary.md
 2. Append to sprint-log.md JP Interactions: `**[User] Selection: [S] Crystallize**`
-3. Execute the full Crystallize pipeline (S1-S6) as defined in crystallize.md, passing `feature_name`
+3. Execute the full Crystallize pipeline (S0-S6) as defined in crystallize.md, passing `feature_name`
 4. On Crystallize S6 [C] Continue: proceed to Execute with `specs_root=specs/{feature_name}/reconciled/`
 5. On Crystallize S6 [X] Exit: return to JP2 menu (reconciled/ is preserved)
 

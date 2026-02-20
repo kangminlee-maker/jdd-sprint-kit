@@ -6,7 +6,7 @@ description: "Reconcile all artifacts from finalized prototype (Sprint-route onl
   Purpose: Finalized prototype → reconciled/ artifact set
   Dispatch: Runs directly (orchestrates BMad agents + @deliverable-generator)
   Inputs: $ARGUMENTS (feature-name)
-  Key Steps: Precondition → Analyze → Reconcile Planning → Generate Specs → Reconcile Deliverables → Verify → Summary
+  Key Steps: Precondition → Decision Context → Analyze → Reconcile Planning → Generate Specs → Reconcile Deliverables → Verify → Summary
   Route: Sprint-route only (depends on decision-diary.md, sprint-log.md JP Interactions)
 -->
 
@@ -49,17 +49,48 @@ On validation failure: report missing items (in {communication_language}) and ab
 
 Load config per Language Protocol in bmad-sprint-guide.md.
 
+### Step S0: Decision Context Analysis
+
+Analyze JP2 decision records to understand the intent and context behind prototype modifications BEFORE analyzing the code. This enables S1 to distinguish deliberate business decisions from implementation details.
+
+**Progress**: `"[S0/7] Analyzing JP2 decision context..."`
+
+1. Create `specs/{feature}/reconciled/` directory and `reconciled/planning-artifacts/`
+2. Copy immutable files:
+   - `specs/{feature}/planning-artifacts/brownfield-context.md` → `reconciled/planning-artifacts/brownfield-context.md`
+   - `specs/{feature}/decision-diary.md` → `reconciled/decision-diary.md` (if exists)
+3. Read JP2 decision records:
+   - Primary: `specs/{feature}/decision-diary.md` (if exists)
+   - Fallback: `specs/{feature}/jp2-review-log.md` (if exists, serves equivalent role)
+   - Also: `specs/{feature}/sprint-log.md` "JP Interactions" section (if exists)
+4. Produce decision context summary (Conductor writes directly — lightweight synthesis, not a Task):
+
+Write to `specs/{feature}/reconciled/decision-context.md`:
+
+```markdown
+# Decision Context: {feature_name}
+
+## JP2 Modification Intent Summary
+| # | Change | Intent | Business Decision | Affected Area |
+|---|--------|--------|-------------------|---------------|
+
+## Key Business Decisions
+| ID | Decision | Rationale |
+|----|----------|-----------|
+
+## Context for Prototype Analysis
+(Free-text summary: what to look for in the code, which changes are deliberate business decisions vs implementation adjustments)
+```
+
+If no decision records exist, skip this step and proceed to S1 without decision context.
+
 ### Step S1: Prototype Analysis
 
 Analyze the finalized prototype code and produce a structured analysis document.
 
-**Progress**: `"[S1/6] Analyzing prototype structure..."`
+**Progress**: `"[S1/7] Analyzing prototype structure..."`
 
-1. Create `specs/{feature}/reconciled/` directory
-2. Copy immutable files:
-   - `specs/{feature}/planning-artifacts/brownfield-context.md` → `reconciled/planning-artifacts/brownfield-context.md`
-   - `specs/{feature}/decision-diary.md` → `reconciled/decision-diary.md` (if exists)
-3. Invoke prototype analyzer:
+Invoke prototype analyzer:
 
 ```
 Task(subagent_type: "general-purpose", model: "sonnet")
@@ -68,6 +99,15 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     Do NOT assume fixed file paths — discover them.
 
     Read every discovered file and extract a structured analysis.
+
+    IMPORTANT: Write ALL output in {document_output_language}.
+
+    {if decision-context.md exists}
+    Decision context (read this FIRST to understand WHY changes were made):
+      specs/{feature}/reconciled/decision-context.md
+    Use this context to annotate business rules with their decision origin
+    (e.g., 'Business Rule: 용어 변경 → D2 결정에 의한 의도적 선택').
+    {end if}
 
     Output format — write to specs/{feature}/reconciled/prototype-analysis.md:
 
@@ -97,7 +137,7 @@ Reconcile PRD, Architecture, and Epics using the prototype analysis as primary i
 
 **Product Brief is excluded** — it defines the problem space, which the prototype cannot supply.
 
-**Progress**: `"[S2/6] Reconciling PRD..."` → `"...Architecture..."` → `"...Epics..."` → `"...Cross-artifact validation..."`
+**Progress**: `"[S2/7] Reconciling PRD..."` → `"...Architecture..."` → `"...Epics..."` → `"...Cross-artifact validation..."`
 
 #### Reconciliation Principles
 
@@ -224,7 +264,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 Generate Specs 4-file from reconciled planning artifacts.
 
-**Progress**: `"[S3/6] Generating execution specs (requirements + design + tasks)..."`
+**Progress**: `"[S3/7] Generating execution specs (requirements + design + tasks)..."`
 
 ```
 Task(subagent_type: "general-purpose", model: "sonnet")
@@ -253,7 +293,7 @@ After specs generation:
 
 Verify existing deliverables against prototype. Regenerate where needed.
 
-**Progress**: `"[S4/6] Verifying API spec..."` → `"...Regenerating BDD scenarios..."` → ...
+**Progress**: `"[S4/7] Verifying API spec..."` → `"...Regenerating BDD scenarios..."` → ...
 
 #### Verify Phase
 
@@ -285,7 +325,7 @@ Always regenerate these (source documents have changed):
 
 Verify mutual consistency across the entire reconciled/ artifact set.
 
-**Progress**: `"[S5/6] Cross-artifact consistency check..."`
+**Progress**: `"[S5/7] Cross-artifact consistency check..."`
 
 ```
 Task(subagent_type: "general-purpose", model: "sonnet")
@@ -313,7 +353,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 Present reconciliation results to user (in {communication_language}).
 
-**Progress**: `"[S6/6] Generating summary..."`
+**Progress**: `"[S6/7] Generating summary..."`
 
 **Output format**:
 
@@ -350,10 +390,11 @@ Select: [C] Continue to /parallel | [R] Review reconciled/ | [X] Exit
 
 ## Budget
 
-~85-120 turns across 9 Task invocations. Separate from JP2 iteration budget.
+~85-125 turns across 9 Task invocations. Separate from JP2 iteration budget. S0 runs inline (no Task invocation).
 
 | Step | Model | Est. Turns |
 |------|-------|------------|
+| S0 Decision Context | Conductor (inline) | 0 (no Task) |
 | S1 Prototype Analysis | Sonnet | 5-8 |
 | S2a PRD | Opus | 15-20 |
 | S2b Architecture | Opus | 15-20 |
@@ -367,6 +408,7 @@ Select: [C] Continue to /parallel | [R] Review reconciled/ | [X] Exit
 
 ```
 specs/{feature}/reconciled/
+├── decision-context.md
 ├── prototype-analysis.md
 ├── planning-artifacts/
 │   ├── prd.md
