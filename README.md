@@ -13,19 +13,19 @@ User inputs (meeting notes, references, existing system context) raise AI's firs
 
 ```mermaid
 flowchart TD
-    A["1. Provide Brief\n& Materials"] --> B["2. Analyze\nExisting System"]
-    B --> C["3. AI Generates\nPRD & Design"]
-    C --> D["4. Generate\nSpecs"]
+    A["1. Provide Brief & Materials"] --> B["2. Analyze Existing System\n(Brownfield Scan)"]
+    B --> C["3. AI Generates PRD & Design\n(Auto-Pipeline)"]
+    C --> D["4. Generate Specs"]
     D --> JP1{{"JP1\nIs this the right\nproduct?"}}
-    JP1 -->|Approve| E["5. Generate\nPrototype"]
+    JP1 -->|Approve| E["5. Generate Prototype\n(Deliverables)"]
     JP1 -->|Revise| C
     E --> JP2{{"JP2\nIs this the right\nexperience?"}}
-    JP2 -->|Approve| F["6. Build\n(Implement)"]
+    JP2 -->|Approve| F["6. Build\n(Parallel Implementation)"]
     JP2 -->|Revise| E
     JP2 -.->|Re-examine requirements| JP1
-    F --> G["7. Quality\nCheck"]
+    F --> G["7. Quality Check\n(Validate)"]
     G -->|Pass| H["Done"]
-    G -->|Repeated failure| CB["Course\nCorrection"]
+    G -->|Repeated failure| CB["Course Correction\n(Circuit Breaker)"]
     CB --> C
 
     style JP1 fill:#FFD700,stroke:#333

@@ -25,21 +25,21 @@ version: "0.4.1"
 
 ```mermaid
 flowchart TD
-    A["1. Provide Brief\n& Materials"] --> B["2. Analyze\nExisting System"]
-    B --> C["3. AI Generates\nPRD & Design"]
-    C --> D["4. Deep-dive\nExisting System"]
-    D --> E["5. Generate\nSpecs"]
+    A["1. Provide Brief & Materials\n(Phase 0)"] --> B["2. Analyze Existing System\n(Brownfield Broad Scan)"]
+    B --> C["3. AI Generates PRD & Design\n(BMad Auto-Pipeline)"]
+    C --> D["4. Deep-dive Existing System\n(Brownfield Targeted Scan)"]
+    D --> E["5. Generate Specs"]
     E --> JP1{{"JP1\nIs this the right\nproduct for customers?"}}
-    JP1 -->|Confirm| F["6. Generate\nPrototype"]
-    JP1 -->|Comment| JP1_FB["Revise\nor Regenerate"]
+    JP1 -->|Confirm| F["6. Generate Prototype\n(Deliverables)"]
+    JP1 -->|Comment| JP1_FB["Revise or Regenerate\n(Impact Analysis)"]
     JP1_FB --> JP1
     F --> JP2{{"JP2\nIs this the experience\ncustomers want?"}}
-    JP2 -->|Confirm| G["7. Build\n(Implement)"]
-    JP2 -->|Comment| JP2_FB["Revise\nor Regenerate"]
+    JP2 -->|Confirm| G["7. Build\n(Parallel Implementation)"]
+    JP2 -->|Comment| JP2_FB["Revise or Regenerate\n(Impact Analysis)"]
     JP2_FB --> JP2
-    G --> H["8. Quality\nCheck"]
+    G --> H["8. Quality Check\n(Validate)"]
     H -->|Pass| I["Done"]
-    H -->|Repeated Failure| CB["Course\nCorrection"]
+    H -->|Repeated Failure| CB["Course Correction\n(Circuit Breaker)"]
     CB --> C
 
     style JP1 fill:#FFD700,stroke:#333
