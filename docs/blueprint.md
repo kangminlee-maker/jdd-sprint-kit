@@ -24,7 +24,7 @@ version: "0.4.1"
 ## Overall Flow
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["1. Input\n(Phase 0)"] --> B["2. Brownfield\nBroad Scan"]
     B --> C["3. BMad\nAuto-Pipeline"]
     C --> D["4. Brownfield\nTargeted Scan"]

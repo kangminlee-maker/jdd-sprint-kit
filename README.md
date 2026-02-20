@@ -12,7 +12,7 @@ User inputs (meeting notes, references, existing system context) raise AI's firs
 ## Overall Flow
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["1. Brief Input"] --> B["2. Existing System\n(Brownfield Scan)"]
     B --> C["3. Planning\n(BMAD Auto-Pipeline)"]
     C --> D["4. Specs\n(Specs Generation)"]
