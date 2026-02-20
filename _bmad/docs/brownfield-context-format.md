@@ -163,10 +163,19 @@ data_sources:
   local-codebase: ok | not-configured | scan-error
   # External sources — dynamically listed from sprint-input.md external_resources
   # (source names come from external_resources.external_repos or MCP servers)
-  {source_name_1}: ok | timeout | error | empty-result | scan-error
-  {source_name_2}: ok | timeout | error | empty-result | scan-error
+  # For tarball-snapshot sources, include provenance from sprint-input.md:
+  #   snapshot_commit, snapshot_branch, snapshot_at
+  {source_name_1}:
+    status: ok | timeout | error | empty-result | scan-error
+    snapshot_commit: "a1b2c3d"  # (tarball-snapshot only) commit SHA at download time
+    snapshot_branch: "main"     # (tarball-snapshot only) branch or "HEAD"
+    snapshot_at: "2026-02-20T14:30:00Z"  # (tarball-snapshot only) commit timestamp
+  {source_name_2}:
+    status: ok | timeout | error | empty-result | scan-error
   figma: ok | timeout | error | not-configured  # only when external_resources.figma exists
 ```
+
+When writing `data_sources` for tarball-snapshot repos, read `snapshot_commit`, `snapshot_branch`, and `snapshot_at` from `sprint-input.md` `external_resources.external_repos[]` and include them. For `add-dir` repos, omit snapshot fields (not applicable).
 
 ## Source Types
 

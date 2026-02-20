@@ -513,18 +513,36 @@ If Step 0d detected GitHub repo URLs and user selected [1] (download):
 
 2. **For each repo with status: pending**:
    a. Progress message (in {communication_language}): "원격 리포지토리 스냅샷 다운로드 중... ({N}/{total}: {owner_repo})"
-   b. Create temp directory: `mkdir -p /tmp/sprint-{feature}-{name} && chmod 700 /tmp/sprint-{feature}-{name}`
+   b. **Extract branch from URL** (if present):
+      - URL pattern `https://github.com/{owner}/{repo}/tree/{branch}` → extract `{branch}`
+      - URL pattern `https://github.com/{owner}/{repo}` (no `/tree/`) → default `{ref}` = `HEAD`
+      - Store `{ref}` for tarball API call and commit query
+   c. **Repo size pre-check**: `gh api repos/{owner_repo} --jq '.size'` (returns KB)
+      - Size < 1GB (< 1048576 KB): proceed silently
+      - Size >= 1GB: warn (in {communication_language}), then proceed without blocking:
+        ```
+        ⚠ {owner_repo}: approximately {size_mb}MB. Download may take several minutes.
+          For partial access (specific directories only), use: git clone + claude --add-dir
+          Downloading...
+        ```
+   d. **Create cache directory**: `mkdir -p ~/docs-cache/{feature}/{name} && chmod 700 ~/docs-cache/{feature}/{name}`
       - `{name}` = `{owner}-{repo}` (slash replaced with hyphen)
-   c. Download + extract: `gh api repos/{owner_repo}/tarball/HEAD | tar xz -C /tmp/sprint-{feature}-{name} --strip-components=1`
-   d. **On success** → add to `external_resources.external_repos`:
+   e. **Download + extract**: `gh api repos/{owner_repo}/tarball/{ref} | tar xz -C ~/docs-cache/{feature}/{name} --strip-components=1`
+   f. **Record snapshot version**: `gh api repos/{owner_repo}/commits/{ref} --jq '.sha + " " + .commit.committer.date'`
+      - Parse output: `{snapshot_commit}` = first field (SHA), `{snapshot_at}` = second field (ISO 8601)
+      - `{snapshot_branch}` = `{ref}` if explicitly extracted from URL, otherwise `"HEAD"`
+   g. **On success** → add to `external_resources.external_repos`:
       ```yaml
       - name: "{owner}-{repo}"
-        path: "/tmp/sprint-{feature}-{name}/"
+        path: "~/docs-cache/{feature}/{name}/"
         access_method: "tarball-snapshot"
         source_url: "https://github.com/{owner_repo}"
+        snapshot_commit: "{snapshot_commit}"
+        snapshot_branch: "{snapshot_branch}"
+        snapshot_at: "{snapshot_at}"
       ```
       Update github_repos status to `configured`
-   e. **On failure** → classify error and present via AskUserQuestion (in {communication_language}):
+   h. **On failure** → classify error and present via AskUserQuestion (in {communication_language}):
 
       | Error Pattern | Message |
       |---------------|---------|
@@ -538,11 +556,13 @@ If Step 0d detected GitHub repo URLs and user selected [1] (download):
       - [2] 해당 repo 없이 계속
       - [3] --add-dir로 수동 접근
 
-      - [1] selected: retry step 2c (max 1 retry)
+      - [1] selected: retry step 2e (max 1 retry)
       - [2] selected: update github_repos status to `not-configured`, proceed
       - [3] selected: guide user to clone + --add-dir, update github_repos status to `not-configured`
 
-   f. Completion message (in {communication_language}): "다운로드 완료 ({total}/{total}, {elapsed}초)"
+      Note: if only the version query (step 2f) fails, proceed with download success — record `snapshot_commit: "unknown"`.
+
+   i. Completion message (in {communication_language}): "다운로드 완료 ({total}/{total}, {elapsed}초)"
 
 3. **Update github_repos status**: `configured` (all succeeded) / `not-configured` (any failed)
 

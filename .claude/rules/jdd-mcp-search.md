@@ -26,12 +26,13 @@ For data sources that cannot be cloned locally (e.g., Figma live design data), c
 
 > **Do not use filesystem MCP servers for local clones.** Claude Code's MCP security restricts filesystem MCP servers to the project root directory. Use `--add-dir` instead.
 
-#### Method 3: GitHub Repo Snapshot (원격 repo, clone 없이)
+#### Method 3: GitHub Repo Snapshot (remote repo, no clone)
 
-brief.md의 `## 참고 소스` 섹션에 GitHub repo URL을 선언하거나, inputs/ 파일에 URL을 포함하면 Sprint 시작 시 자동으로 읽기 전용 스냅샷을 다운로드합니다.
-clone이 아닙니다 — git history 없이 현재 파일만 다운로드하여 temp 디렉토리에 추출합니다.
-Scanner는 추출된 파일에 Glob/Grep/Read로 접근합니다 (--add-dir와 동일한 방식).
-GitHub URL만 지원됩니다. GitLab/Bitbucket은 --add-dir를 사용하세요.
+Declare GitHub repo URLs in the `## Reference Sources` section of brief.md, or include them in inputs/ files. Sprint auto-downloads a read-only snapshot at Phase 0 start.
+Not a clone — downloads current files only via `gh api tarball` (no git history) to a persistent cache directory (`~/docs-cache/{feature}/{name}/`).
+Snapshot provenance (commit SHA, branch, timestamp) is recorded in sprint-input.md for traceability.
+Scanner accesses extracted files via Glob/Grep/Read (same as --add-dir).
+GitHub URLs only. For GitLab/Bitbucket, use --add-dir.
 
 ### External Data Source Roles
 

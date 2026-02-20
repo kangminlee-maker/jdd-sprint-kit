@@ -79,9 +79,12 @@ external_resources:
     status: configured | not-configured | reference-only
   external_repos:
     - name: "{repo-name}"
-      path: "{accessible local path}"
+      path: "{accessible local path}"  # ~/docs-cache/{feature}/{name}/ for tarball-snapshot
       access_method: "add-dir"  # or "tarball-snapshot"
       source_url: ""  # present when access_method is tarball-snapshot
+      snapshot_commit: ""  # commit SHA at download time (tarball-snapshot only)
+      snapshot_branch: ""  # branch name or "HEAD" (tarball-snapshot only)
+      snapshot_at: ""  # commit timestamp ISO 8601 (tarball-snapshot only)
   policy_docs:
     - "matching-policy.md"
   scan_notes: "매칭 엔진과 예약 플로우 중심으로 탐색"
@@ -124,9 +127,12 @@ flags:
 | `external_resources.github_repos.status` | (Y if github_repos exists) | `configured` (downloaded) / `not-configured` (download failed) / `reference-only` (URL only) |
 | `external_resources.external_repos` | N | External repo paths detected via `--add-dir` or tarball snapshot |
 | `external_resources.external_repos[].name` | (Y if external_repos exists) | Repo identifier (derived from directory name) |
-| `external_resources.external_repos[].path` | (Y if external_repos exists) | Accessible local path to the repo |
+| `external_resources.external_repos[].path` | (Y if external_repos exists) | Accessible local path to the repo (`~/docs-cache/{feature}/{name}/` for tarball-snapshot) |
 | `external_resources.external_repos[].access_method` | (Y if external_repos exists) | How the path was provided (`add-dir` / `tarball-snapshot`) |
 | `external_resources.external_repos[].source_url` | N | Original URL (for tarball re-download; present when access_method is `tarball-snapshot`) |
+| `external_resources.external_repos[].snapshot_commit` | N | Commit SHA at download time (tarball-snapshot only; `"unknown"` if query failed) |
+| `external_resources.external_repos[].snapshot_branch` | N | Branch name extracted from URL, or `"HEAD"` if default (tarball-snapshot only) |
+| `external_resources.external_repos[].snapshot_at` | N | Commit timestamp ISO 8601 (tarball-snapshot only) |
 | `external_resources.github_repos[].notes` | N | 탐색 힌트 (brief.md 참고 소스 섹션에서 전달). Scanner가 참조 |
 | `external_resources.policy_docs` | N | Scanner 우선 탐색 대상 문서명 목록 (brief.md 참고 소스 섹션에서 전달) |
 | `external_resources.scan_notes` | N | 전체 탐색 자유 형식 메모 (brief.md 참고 소스 섹션에서 전달) |
