@@ -5,4 +5,7 @@ node_modules/
 templates/
 .omc
 .env
-specs/duplicate-ticket-purchase/
+# Sprint feature artifacts (per-feature, not framework code)
+# test-tutor-excl is the tutorial example — kept in repo
+specs/*
+!specs/test-tutor-excl
