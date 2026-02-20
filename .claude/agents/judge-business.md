@@ -65,6 +65,15 @@ When `{feature_dir}/delta-manifest.md` exists, apply delta-typed verification:
 - `carry-forward:deferred` → verify task_id is null in delta-manifest (not implemented this Sprint). If task_id exists, flag as SCOPE_CREEP WARNING
 - `carry-forward:new` → verify it exists in implementation with appropriate justification
 
+### 8. Adversarial Scenario Verification (when adversarial-scenarios.md available)
+
+When `{feature_dir}/adversarial-scenarios.md` exists:
+- Read CRITICAL and HIGH severity adversarial scenarios
+- Verify each CRITICAL scenario has defensive implementation in the code (e.g., state transition guards, input validation, concurrency controls)
+- CRITICAL scenarios without defensive implementation → finding severity CRITICAL
+- HIGH scenarios without defensive implementation → finding severity HIGH
+- MEDIUM scenarios → informational only, do not block
+
 ## Input References
 - `changed_files`: List of files to verify (`git diff --name-only {base_branch}...HEAD`)
 - `{feature_dir}/requirements.md` - Acceptance criteria source
@@ -76,6 +85,7 @@ When `{feature_dir}/delta-manifest.md` exists, apply delta-typed verification:
 - **configured svc-map MCP** — Existing customer journey consistency verification
 - `specs/{feature}/inputs/sprint-input.md` - Causal chain (always original path, not affected by Crystallize)
 - `{feature_dir}/delta-manifest.md` - Delta classification (when available, after Crystallize)
+- `{feature_dir}/adversarial-scenarios.md` - Adversarial analysis (when available, from Devil's Advocate)
 
 ## Output Format
 ```markdown

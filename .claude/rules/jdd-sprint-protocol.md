@@ -82,7 +82,8 @@ specs/{feature}/
 ├── api-spec.yaml               # OpenAPI 3.1 (API contract — shared by MSW Mock + Specmatic)
 ├── api-sequences.md            # Mermaid sequence diagrams
 ├── schema.dbml                 # Database schema (DBML)
-├── bdd-scenarios/              # Gherkin acceptance tests
+├── bdd-scenarios/              # Gherkin acceptance tests (including adversarial-*.feature)
+├── adversarial-scenarios.md    # Adversarial analysis report (when applicable)
 ├── state-machines/             # XState definitions (when applicable)
 ├── decision-log.md             # ADRs + AI reasoning trace
 ├── traceability-matrix.md      # FR → Design → Task → BDD → API mapping
@@ -104,7 +105,8 @@ specs/{feature}/
     ├── api-spec.yaml           # Verified/regenerated API contract
     ├── api-sequences.md        # Verified/regenerated sequence diagrams
     ├── schema.dbml             # Verified/regenerated DB schema
-    ├── bdd-scenarios/          # Regenerated acceptance tests
+    ├── bdd-scenarios/          # Regenerated acceptance tests (including adversarial)
+    ├── adversarial-scenarios.md # Adversarial analysis (copied from base)
     ├── key-flows.md            # Regenerated key flows
     ├── traceability-matrix.md  # Rebuilt traceability
     ├── decision-log.md         # Merged decision history

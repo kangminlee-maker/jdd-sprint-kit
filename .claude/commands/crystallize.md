@@ -368,6 +368,8 @@ Task(subagent_type: "general-purpose", model: "sonnet")
        Mark superseded ADRs. Write to reconciled/decision-log.md."
 ```
 
+8. adversarial-scenarios.md: If `specs/{feature}/adversarial-scenarios.md` exists, copy to `reconciled/adversarial-scenarios.md`. Adversarial BDD feature files in `bdd-scenarios/adversarial-*.feature` are included in item 4 (BDD regeneration) above.
+
 **Scope Gate**: Invoke @scope-gate with `stage=deliverables` on reconciled/ deliverables.
 
 ### Step S5: Cross-Artifact Consistency Check

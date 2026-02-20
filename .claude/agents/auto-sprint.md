@@ -624,6 +624,33 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 **On FAIL**: Apply Redirect — regenerate deliverables (`mode: deliverables-only`).
 
+### Step 5-D: Devil's Advocate Pass (conditional)
+
+Read `endpoint_count` from readiness.md JP2 Data. Read `complexity` from sprint-input.md.
+**Skip** when complexity = simple AND endpoint_count <= 3. Log "Devil's Advocate skipped: simple project with {N} endpoints" in progress.
+
+Report progress (in {communication_language}): "Devil's Advocate Pass starting — adversarial edge case detection"
+
+```
+Task(subagent_type: "general-purpose", model: "sonnet")
+  prompt: "You are @devils-advocate. Read and follow your agent definition at .claude/agents/devils-advocate.md.
+    api_spec: specs/{feature_name}/api-spec.yaml
+    schema: specs/{feature_name}/schema.dbml
+    key_flows: specs/{feature_name}/key-flows.md
+    bdd_dir: specs/{feature_name}/bdd-scenarios/
+    state_machines: specs/{feature_name}/state-machines/
+    prd: specs/{feature_name}/planning-artifacts/prd.md
+    brownfield: specs/{feature_name}/brownfield-context.md
+    design: specs/{feature_name}/design.md
+
+    Output:
+    - Write specs/{feature_name}/adversarial-scenarios.md
+    - Write specs/{feature_name}/bdd-scenarios/adversarial-*.feature (CRITICAL + HIGH only)"
+  max_turns: {budget}
+```
+
+Report progress (in {communication_language}): "Devil's Advocate Pass complete — {N} adversarial scenarios found ({C} critical, {H} high)"
+
 ### Step 6: Judgment Point 2 — Sprint Output Review
 
 When Deliverables generation is complete, generate a visual summary and present an interactive menu.
@@ -638,6 +665,7 @@ Extract metadata only from Deliverables to generate the 3-Section JP2 visualizat
 - traceability-matrix.md: FR→BDD mapping
 - readiness.md: Readiness data + jp1_to_jp2_changes (YAML frontmatter)
 - brownfield-context.md: Brownfield interaction info
+- adversarial-scenarios.md: Adversarial analysis results (if exists, from Step 5-D)
 
 Output format (in {communication_language}):
 
@@ -716,8 +744,13 @@ Warning: Items exceeding auto-reinforcement scope:
 | TypeScript compilation | tsc PASS/FAIL |
 | BDD → FR coverage | {N}/{M} covered |
 | Traceability Gap | {N} gaps |
+| Devil's Advocate | {N} scenarios ({C} critical, {H} high) — or "Skipped (simple project)" |
 
-{when all items pass}
+{when adversarial CRITICAL findings exist}
+**Warning**: {C} CRITICAL adversarial scenarios detected. Review `adversarial-scenarios.md` before approving.
+→ Recommended: Select [F] Comment to address critical edge cases.
+
+{when all items pass AND no adversarial CRITICAL}
 **READY** — Select [A] Approve & Build to finalize documents and start implementation.
 
 {when some items fail}

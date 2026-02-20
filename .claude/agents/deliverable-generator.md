@@ -243,6 +243,12 @@ Generate `{output_base}/{feature_name}/bdd-scenarios/`:
 - Use Entity Dictionary terms as Given/When/Then actors
 - Tag scenarios: `@p0`, `@p1`, `@brownfield`, `@new`
 
+**Adversarial scenarios** (conditional — when design.md contains `### State Transitions` section):
+- Generate `adversarial-transitions.feature` in bdd-scenarios/ with `@adversarial @p0 @state-transition` tag
+- Include: invalid transition attempts (e.g., EXPIRED → ACTIVE directly), concurrent transition conflicts, invariant violation attempts, terminal state re-entry
+- Source: design.md State Transitions table (mechanically derived from transition matrix — test every undefined from→event combination)
+- These are structural edge cases derivable from the state machine definition. Cross-concern scenarios (concurrency + state, business rule + state) are handled by Devil's Advocate agent at Step 5-D.
+
 ### Stage 7: XState State Machines (conditional)
 
 Generate `{output_base}/{feature_name}/state-machines/` when design.md contains a `### State Transitions` section:
@@ -350,6 +356,7 @@ Spec validation is handled by OpenAPI lint (`@redocly/cli`) + `tsc --noEmit`.
 - DELETE: Remove from store + decrement related counts
 - Cross-endpoint state: When one endpoint's action affects another endpoint's query results (e.g., rating+block POST → block list GET), directly manipulate the store within handlers to maintain linkage
 - Always include `POST /__reset` + `GET /__store` + `resetStore()` function
+- **State transition validation** (conditional: only when `state-machines/` directory exists in output): Import valid transitions from state-machines/ TypeScript definitions. For endpoints that trigger state transitions, validate the requested transition is legal before applying. On invalid transition, return 422 with `{ error: "Invalid state transition", from: currentState, to: requestedState, valid_transitions: [...] }`. When state-machines/ does not exist, skip this rule entirely — do not hardcode state transitions in handlers.
 
 **Spec Validation** (run after Stage 10 code generation):
 
@@ -413,6 +420,7 @@ Verify the following and include in Output Summary:
    - Spec Validation results: redocly lint PASS/FAIL, tsc PASS/FAIL
    - BDD→FR coverage: N/M covered
    - Traceability Gap: N items
+   - endpoint_count: Number of path x method combinations in api-spec.yaml (used by Conductor for Devil's Advocate skip condition)
 
 10. **JP1→JP2 change log**: Count of auto-corrected items from Stage 4b. Verify readiness.md `jp1_to_jp2_changes` array length matches actual correction count. Include auto-reinforcement-impossible WARN count in Output Summary.
 
