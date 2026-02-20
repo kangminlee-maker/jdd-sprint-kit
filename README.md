@@ -21,8 +21,10 @@ flowchart TD
     JP1 -->|Revise| C
     E --> JP2{{"JP2\nIs this the right\nexperience?"}}
     JP2 -->|Approve| F["6. Build\n(Parallel Implementation)"]
+    JP2 -->|Crystallize| CR["6b. Reconcile Documents\n(Crystallize)"]
     JP2 -->|Revise| E
     JP2 -.->|Re-examine requirements| JP1
+    CR --> F
     F --> G["7. Quality Check\n(Validate)"]
     G -->|Pass| H["Done"]
     G -->|Repeated failure| CB["Course Correction\n(Circuit Breaker)"]
@@ -30,10 +32,11 @@ flowchart TD
 
     style JP1 fill:#FFD700,stroke:#333
     style JP2 fill:#FFD700,stroke:#333
+    style CR fill:#87CEEB,stroke:#333
     style CB fill:#FF6B6B,stroke:#333
 ```
 
-Human involvement happens at exactly **2 points** (JP1, JP2) — everything else runs autonomously. If JP2 reveals issues with the requirements themselves, it loops back to JP1 — this is not a failure, but a normal discovery prompted by concrete deliverables.
+Human involvement happens at exactly **2 points** (JP1, JP2) — everything else runs autonomously. If JP2 reveals issues with the requirements themselves, it loops back to JP1 — this is not a failure, but a normal discovery prompted by concrete deliverables. After multiple JP2 revisions, **Crystallize** optionally reconciles all documents to match the finalized prototype before implementation begins.
 
 ---
 
@@ -115,6 +118,7 @@ This is a scenario for adding a "tutor exclusion" feature to a fictional EduTalk
 
 ```
 [Input + Brownfield + BMad] → [Specs] → JP1 → [Deliverables] → JP2 → [Execute]
+                                                                  ↳ [Crystallize] (optional)
 
 Sprint:   |←──────────────── Fully Auto ───────────────────────→|
 Guided:   |←── BMad Dialog ──→|←────────── Auto ───────────────→|
@@ -232,7 +236,8 @@ For Greenfield projects with no existing system, Sprint works normally without B
 │       ├── api-spec.yaml            # OpenAPI 3.1
 │       ├── schema.dbml              # DB schema
 │       ├── bdd-scenarios/           # Gherkin acceptance tests
-│       └── preview/                 # React + MSW prototype
+│       ├── preview/                 # React + MSW prototype
+│       └── reconciled/              # Crystallize output (prototype-reconciled artifacts)
 └── docs/                            # Framework documentation
 ```
 

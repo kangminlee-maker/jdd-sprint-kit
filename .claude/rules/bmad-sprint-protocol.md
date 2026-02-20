@@ -17,6 +17,7 @@ Brownfield data is used at every Sprint phase. Sources are cumulatively collecte
 | **Specs generation** (`/specs`) | Copy frozen snapshot (@deliverable-generator Stage 2) |
 | **Parallel** (`/parallel`) | Workers read frozen snapshot |
 | **Validate** (`/validate`) | Judges verify against brownfield-context.md |
+| **Crystallize** (`/crystallize`) | Copy brownfield-context.md to reconciled/planning-artifacts/ (unchanged) |
 
 ## Causal Chain Propagation Flow (Optional)
 
@@ -163,7 +164,7 @@ See `docs/judgment-driven-development.md` Customer-Lens Judgment Points.
 
 - **Judgment target**: prototype, screen flows, interactions
 - **Presentation format**: working prototype + key scenario walkthrough guide
-- **Response**: Confirm / Comment
+- **Response**: Confirm / Crystallize (Sprint-route only) / Comment
 
 ### Comment Handling Flow
 

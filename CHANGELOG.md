@@ -33,6 +33,15 @@ All notable changes to JDD Sprint Kit will be documented in this file.
 - **deliverable-generator** — Added optional `prototype_analysis_path` parameter for specs-only mode cross-reference during Crystallize
 - **Specs File Pattern** — `reconciled/` subdirectory added to protocol, mirroring existing structure minus excluded items (product-brief, sprint-log, readiness, inputs/, preview/)
 
+### Verified
+- **Crystallize pipeline tested on `duplicate-ticket-purchase`** — real Sprint feature with 14 JP2 revisions (test predated decision-diary.md naming; used jp2-review-log.md which served equivalent role)
+  - S1: 13 source files analyzed → 6 screens, 17 API endpoints, 9 entities, 13 user flows extracted
+  - S2: PRD (16→39 FRs), Architecture (5→12 ADRs), Epics (6/26→8/36) reconciled. S2-G cross-artifact PASS
+  - S3: Specs 4-file generated (36 tasks, 4 Workers, DAG with critical path)
+  - S4: api-spec.yaml verified (3 missing endpoints discovered and added: hold, hold/cancel, refund-convert), BDD regenerated (5 feature files)
+  - S5: 8 gaps found → all fixed (api-spec +3 endpoints, BDD +4 scenarios, task ID naming unified). Re-verified PASS
+  - S6: reconciled/ directory with 21 files, 39/39 FR traceability, 15/15 API coverage
+
 ### Design Decisions
 - Party Mode 2-round review (8 BMad agents) validated the design
   - Round 1: 2 CRITICAL + 6 HIGH findings → all resolved in v2

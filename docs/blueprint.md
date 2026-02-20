@@ -949,15 +949,17 @@ Key changes in v0.4.0:
 |---------|--------|-------|
 | Phase 0 → JP1 (planning) | Implemented, partially verified | Developer simulation confirmed |
 | JP1 → JP2 (Deliverables + prototype) | Implemented, partially verified | Developer simulation confirmed |
+| JP2 → Crystallize | **Implemented, verified** | Tested on `duplicate-ticket-purchase` (14 JP2 revisions, 39 FRs reconciled, 21 files generated, S5 8 gaps found and fixed) |
 | Post-JP2 (Parallel + Validate + Circuit Breaker) | **Implemented, unverified** | No actual execution test performed |
 
 ## 8.3 Unvalidated Hypotheses
 
 - **Sprint has never been run with an actual product team** — all tests are developer simulations
 - **Brownfield scan has never been run on an actual Brownfield project** — Scanner L3/L4 quality unverified with real external sources (repos via `--add-dir`/tarball, Figma via MCP)
-- **Whether prototype fidelity is sufficient for judgment is unverified** — whether MSW stateful mocks are adequate for real judgment
+- **Whether prototype fidelity is sufficient for judgment** — partially validated: `duplicate-ticket-purchase` Sprint confirmed that MSW stateful prototype was sufficient for a product expert to make 14 rounds of JP2 revisions (product naming, UX copy, business logic changes, new feature additions). Full validation requires more diverse feature types.
 - **Cost formula coefficients are uncalibrated** — relative magnitudes of upfront input cost, generation cost, and judgment cost unmeasured
 - **Post-JP2 pipeline (Parallel, Validate, Circuit Breaker) is unverified in practice** — agent definitions are complete but no end-to-end execution test
+- **Crystallize quality at scale is unverified** — tested on 1 feature (14 JP2 revisions). Behavior with larger features (50+ FRs) or minimal JP2 revisions (1-2 changes) is untested
 
 ## 8.4 Known Gaps
 
@@ -1053,15 +1055,18 @@ specs/{feature}/
 │
 └── reconciled/                      # Crystallize output (prototype-reconciled artifact set)
     ├── prototype-analysis.md        # Prototype structure analysis
-    ├── planning-artifacts/          # Reconciled planning artifacts (PRD, Architecture, Epics)
+    ├── planning-artifacts/          # Reconciled PRD, Architecture, Epics, brownfield-context
     ├── entity-dictionary.md         # Reconciled entity dictionary
     ├── requirements.md              # Reconciled requirements
     ├── design.md                    # Reconciled design
     ├── tasks.md                     # Reconciled tasks (with Entropy + File Ownership)
     ├── api-spec.yaml                # Verified/regenerated API contract
+    ├── api-sequences.md             # Verified/regenerated sequence diagrams
+    ├── schema.dbml                  # Verified/regenerated DB schema
     ├── bdd-scenarios/               # Regenerated acceptance tests
+    ├── key-flows.md                 # Regenerated key flows
     ├── traceability-matrix.md       # Rebuilt traceability
-    └── ...                          # (mirrors parent structure, excluding Product Brief, sprint-log, readiness)
+    └── decision-log.md              # Merged decision history (original ADR + JP + Crystallize)
 ```
 
 ---
