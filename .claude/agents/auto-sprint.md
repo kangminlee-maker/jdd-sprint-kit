@@ -782,7 +782,7 @@ When drift is detected (Scope Gate FAIL or goal drift):
 5. **3 consecutive FAILs on optional stages** → skip stage + include warning in final output
 
 **B. Upstream Issue** (`failure_source: upstream:{stage}`):
-1. Record Scope Gate's `suggested_fix` in `planning-artifacts/feedback-log.md`
+1. Record Scope Gate's `suggested_fix` in `decision-diary.md`
 2. Re-invoke cause stage (`{stage}`) agent — include feedback in prompt:
    "Previous artifact received the following feedback:
    <feedback>{suggested_fix content}</feedback>
@@ -815,7 +815,7 @@ When Comment handling flow executes at a JP, process according to user's selecte
 
 When user selects [M] Apply fix + propagate:
 
-1. Record feedback items in `specs/{feature_name}/planning-artifacts/feedback-log.md`
+1. Record feedback items in `specs/{feature_name}/decision-diary.md`
 2. For each feedback item, traverse affected files bidirectionally and edit:
    - **upstream** (specs → planning-artifacts): edit planning-artifacts files where the concept is expressed
    - **downstream** (planning-artifacts → specs → deliverables): edit specs/deliverables files where the concept is expressed
@@ -830,7 +830,7 @@ When user selects [M] Apply fix + propagate:
 
 When user selects [R] Regenerate:
 
-1. Record feedback text in `specs/{feature_name}/planning-artifacts/feedback-log.md`
+1. Record feedback text in `specs/{feature_name}/decision-diary.md`
 2. Back up existing artifacts then overwrite (preserve previous versions)
 3. Include feedback in prompt when invoking restart stage agent:
    ```

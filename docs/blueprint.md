@@ -1,8 +1,8 @@
 ---
-synced_to: "8938cde"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
+synced_to: "ef0f6cd"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
 audience: "non-developer product expert"
 product: "JDD Sprint Kit"
-version: "0.4.1"
+version: "0.5.0"
 ---
 
 # JDD Sprint Kit Blueprint
@@ -35,8 +35,10 @@ flowchart TD
     JP1_FB --> JP1
     F --> JP2{{"JP2\nIs this the experience\ncustomers want?"}}
     JP2 -->|Confirm| G["7. Build\n(Parallel Implementation)"]
+    JP2 -->|Crystallize| CR["6b. Reconcile All Documents\n(Crystallize)"]
     JP2 -->|Comment| JP2_FB["Revise or Regenerate\n(Impact Analysis)"]
     JP2_FB --> JP2
+    CR --> G
     G --> H["8. Quality Check\n(Validate)"]
     H -->|Pass| I["Done"]
     H -->|Repeated Failure| CB["Course Correction\n(Circuit Breaker)"]
@@ -44,6 +46,7 @@ flowchart TD
 
     style JP1 fill:#FFD700,stroke:#333
     style JP2 fill:#FFD700,stroke:#333
+    style CR fill:#87CEEB,stroke:#333
     style CB fill:#FF6B6B,stroke:#333
 ```
 
@@ -563,6 +566,43 @@ JP2 presentation format and Comment handling flow details in S5.3.
 
 ---
 
+### Crystallize (Optional)
+
+**Rationale**: Regeneration Over Modification + Artifacts as Medium — after multiple JP2 iterations, the prototype has become the most accurate product definition, but upstream documents (PRD, Architecture, Epics) still reflect the initial generation. Crystallize reconciles all documents with the finalized prototype.
+
+**User perspective**: At JP2, select **[S] Crystallize** instead of [C] Continue. The system analyzes the prototype code, then reconciles (rewrites to match) all upstream documents so they accurately reflect what the prototype actually does. Original documents are preserved untouched — reconciled versions are written to a separate `reconciled/` directory.
+
+**When to use**: After iterating on the prototype through multiple Comment rounds at JP2 until it matches the desired product. Crystallize is optional — when only minor adjustments were made at JP2 or the prototype closely matches the initial generation, [C] Continue proceeds directly to implementation without reconciliation.
+
+**System internals**:
+
+| Step | Action | Output |
+|------|--------|--------|
+| S1 | Analyze prototype code (pages, components, API handlers, data model) | `reconciled/prototype-analysis.md` |
+| S2 | Reconcile PRD + Architecture + Epics with prototype | `reconciled/planning-artifacts/` |
+| S3 | Generate Specs from reconciled planning artifacts | `reconciled/requirements.md`, `design.md`, `tasks.md` |
+| S4 | Verify/regenerate Deliverables (API spec, BDD, key flows) | `reconciled/api-spec.yaml`, `bdd-scenarios/`, etc. |
+| S5 | Cross-artifact consistency check (gap=0 required) | PASS/FAIL |
+| S6 | Summary + proceed to Parallel with reconciled artifacts | — |
+
+**Reconciliation principles**: The prototype provides what the product **does** (screens, features, API endpoints, data model, user flows). Items that the prototype cannot supply — NFRs (Non-Functional Requirements), security architecture, deployment strategy, scaling — are carried forward from the original documents and marked with `[carry-forward]`. Product Brief is excluded from reconciliation because it defines the problem space, not the solution.
+
+**Source attribution**: Each requirement in the reconciled PRD is tagged with its origin chain. In this notation, `source` indicates where the requirement was confirmed (prototype or carried from original), and `origin` indicates where it was first proposed:
+- `(source: PROTO, origin: BRIEF-3)` — confirmed in prototype, originally from brief sentence 3
+- `(source: PROTO, origin: DD-2)` — confirmed in prototype, originated from decision-diary entry 2
+- `(source: carry-forward, origin: BRIEF-3)` — not in prototype, carried from original document, originally from brief sentence 3
+- `(source: carry-forward)` — not in prototype, carried from original document (NFR, security, etc.)
+
+This preserves traceability from the original Brief through JP2 iteration to the final reconciled artifacts.
+
+**Budget**: ~85-120 turns (separate from JP2 iteration budget). Does not count against the 5-round JP2 iteration limit.
+
+**Artifact**: `specs/{feature}/reconciled/` — mirrors the existing `specs/{feature}/` structure, minus excluded items (Product Brief, sprint-log, readiness, inputs/, preview/).
+
+**Availability**: Sprint-route only. Requires Sprint artifacts (decision-diary.md, sprint-log.md JP Interactions). Guided/Direct route support is a future enhancement.
+
+---
+
 ### Parallel Implementation
 
 **User perspective**: Automatic. Progress can be monitored.
@@ -635,6 +675,7 @@ Place materials in specs/{feature}/inputs/ → /sprint {feature-name}
   → @auto-sprint (automatic)
   Pass 1 → BMad Auto-Pipeline → Pass 2 → Specs
   → JP1 → Deliverables → JP2
+  → [S] Crystallize (optional): reconcile all documents → reconciled/
   → /parallel → /validate
 ```
 
@@ -791,7 +832,8 @@ Any changes made after JP1 approval (e.g., from the Deliverables generation proc
 
 | Response | Action |
 |----------|--------|
-| **Confirm** | Proceed to Parallel (implementation) |
+| **Confirm** | Proceed to Parallel (implementation) with current documents |
+| **Crystallize** | Reconcile all documents with finalized prototype → then proceed to Parallel (S4.2 Crystallize) |
 | **Comment** | Execute Comment handling flow (S5.4) |
 
 ## 5.4 Comment Handling Flow
@@ -811,7 +853,7 @@ When Comment is selected at a JP, the handling approach is dynamically determine
 5. **Execute + verify**:
    - Apply fix selected: modify all files → Scope Gate verification → return to JP on PASS
    - Regenerate selected: re-run pipeline from the relevant Phase → includes Scope Gate → return to JP
-6. **Feedback record**: Log feedback content + chosen approach + result in `planning-artifacts/feedback-log.md`
+6. **Feedback record**: Log full exchange in sprint-log.md **JP Interactions** section + append structured row to `decision-diary.md` Decisions table
 
 Regeneration scope reference table:
 
@@ -882,15 +924,22 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 
 ## 8.1 Current Version
 
-**v0.4.1** (2026-02-20)
+**v0.5.0** (2026-02-20)
 
-Key changes since v0.3.1:
-- **Brownfield Scanner improvement**: topology-aware scanning — the Scanner auto-detects the project's deployment structure (co-located, monorepo, MSA, standalone) and adjusts its scan strategy accordingly
-- **External data access expansion**: MCP servers were previously the only way to access external service data. Now 3 methods exist: (1) `--add-dir` for local clones, (2) tarball snapshot for GitHub repos, (3) MCP for Figma. The change was driven by Claude Code's MCP security restricting filesystem MCP servers to the project root directory.
-- **brief.md Reference Sources section**: product experts can declare GitHub repo URLs, Figma design URLs, policy docs, and scan notes directly in brief.md. Declared GitHub repos are automatically downloaded and analyzed during Sprint.
-- **Sprint start auto-setup**: `/sprint feature-name` auto-creates the project template with brief.md when the folder does not exist yet
-- **Language support**: system messages follow `communication_language`, generated documents follow `document_output_language` (configured in `_bmad/bmm/config.yaml`)
-- **English Pack**: all agents, commands, and format guides rewritten English-first + Language Protocol introduced for multi-language output
+Key changes since v0.4.1:
+- **`/crystallize` command**: After JP2 prototype iteration, reconcile all upstream artifacts to match the finalized prototype. Creates `reconciled/` directory with the definitive artifact set — original artifacts preserved untouched. Product Brief excluded (defines problem space, not derivable from UI code). Sprint-route only.
+- **JP2 [S] Crystallize option**: New menu option at JP2. Separate budget (~85-120 turns) independent from JP2 iteration limit.
+- **decision-diary.md**: Structured JP decision summary table replacing feedback-log.md. Records each decision with JP, Type, Content, Processing method, and Result.
+- **sprint-log.md JP Interactions**: Full text of each JP exchange (Visual Summary, user input, impact analysis, processing choice, result) recorded in real-time.
+- **Source attribution tags**: `(source: PROTO, origin: BRIEF-N)`, `(source: PROTO, origin: DD-N)`, `(source: carry-forward)` — preserves traceability from original Brief through JP2 iteration to reconciled artifacts.
+- **`specs_root` parameter**: Added to `/parallel` and `/validate` so Workers and Judges read from `reconciled/` after Crystallize.
+
+Key changes in v0.4.0:
+- **Brownfield Scanner improvement**: topology-aware scanning
+- **External data access expansion**: `--add-dir` for local clones, tarball snapshot for GitHub repos, MCP for Figma
+- **brief.md Reference Sources section**: declare GitHub repos, Figma URLs, policy docs, scan notes
+- **Language support**: `communication_language` + `document_output_language` via config.yaml
+- **English Pack**: all agents, commands, format guides rewritten English-first
 
 > Full change history: `CHANGELOG.md`
 
@@ -980,10 +1029,10 @@ specs/{feature}/
 │   ├── prd.md                       # PRD
 │   ├── architecture.md              # Architecture + ADR
 │   ├── epics-and-stories.md         # Epics & Stories
-│   ├── brownfield-context.md        # L1~L4 collection source (appended during work)
-│   └── feedback-log.md              # Comment handling log (feedback + choice + result)
+│   └── brownfield-context.md        # L1~L4 collection source (appended during work)
 │
-├── sprint-log.md                    # Sprint execution log (timeline + decisions + issues)
+├── sprint-log.md                    # Sprint execution log (timeline + decisions + issues + JP Interactions)
+├── decision-diary.md                # JP decision summary table (structured quick reference)
 ├── brownfield-context.md            # Frozen snapshot (L1~L4, Worker reference)
 ├── entity-dictionary.md             # Entity Dictionary
 ├── requirements.md                  # PRD → requirements
@@ -999,8 +1048,20 @@ specs/{feature}/
 ├── traceability-matrix.md           # FR → Design → Task → BDD → API mapping
 ├── key-flows.md                     # Key user flow Step-by-Step (for JP2 verification)
 ├── readiness.md                     # JP1/JP2 Readiness data (includes jp1_to_jp2_changes)
-└── preview/                         # React + MSW prototype (npm run dev)
-    └── src/mocks/                   # MSW handlers (browser.ts, handlers.ts, store.ts, seed.ts)
+├── preview/                         # React + MSW prototype (npm run dev)
+│   └── src/mocks/                   # MSW handlers (browser.ts, handlers.ts, store.ts, seed.ts)
+│
+└── reconciled/                      # Crystallize output (prototype-reconciled artifact set)
+    ├── prototype-analysis.md        # Prototype structure analysis
+    ├── planning-artifacts/          # Reconciled planning artifacts (PRD, Architecture, Epics)
+    ├── entity-dictionary.md         # Reconciled entity dictionary
+    ├── requirements.md              # Reconciled requirements
+    ├── design.md                    # Reconciled design
+    ├── tasks.md                     # Reconciled tasks (with Entropy + File Ownership)
+    ├── api-spec.yaml                # Verified/regenerated API contract
+    ├── bdd-scenarios/               # Regenerated acceptance tests
+    ├── traceability-matrix.md       # Rebuilt traceability
+    └── ...                          # (mirrors parent structure, excluding Product Brief, sprint-log, readiness)
 ```
 
 ---
@@ -1032,7 +1093,7 @@ specs/{feature}/
 | **API Data Sufficiency** | Scope Gate deliverables check verifying that subsequent API request fields are obtainable from preceding API responses within a flow |
 | **Apply fix + propagate** | Comment handling approach. Bidirectional modification (upstream + downstream) of affected files + Scope Gate verification. Suitable for small-scale feedback |
 | **Comment handling flow** | Unified mechanism executed when Comment is given at JP. Impact analysis → cost-based [apply fix + propagate] / [regenerate] selection → execute → return to JP |
-| **feedback-log.md** | Comment handling record. Located under planning-artifacts/, logs feedback content + chosen approach + result |
+| **decision-diary.md** | Structured JP decision summary table. Records each decision with JP, Type, Content, Processing method, Result. Replaces feedback-log.md. Consumer: product expert quick reference |
 | **document-project** | BMad workflow. Scans existing codebase to generate structured documents |
 | **MCP** | Model Context Protocol. Protocol for AI to access external data sources via authenticated connections. Currently used for Figma design data. Other external data (code repos) uses `--add-dir` or tarball snapshot |
 | **`--add-dir`** | Claude Code launch option that adds an external directory to the AI's accessible file scope. Used for accessing local clones of external service repos. Example: `claude --add-dir /path/to/backend-repo` |
@@ -1045,6 +1106,11 @@ specs/{feature}/
 | **readiness.md** | JP1/JP2 Readiness data. YAML frontmatter includes jp1_to_jp2_changes field for tracking post-JP1 changes |
 | **/summarize-prd** | PRD summary/analysis + feedback application command. Used for quickly understanding existing PRDs |
 | **Scope Gate** | 3-stage verification performed by @scope-gate agent: Structured Probe + Checklist + Holistic Review. Runs after each BMad step and after Deliverables |
+| **Crystallize** | Prototype-first artifact reconciliation. After JP2 iteration, reconciles all upstream documents to match the finalized prototype. Creates `reconciled/` directory. Triggered via [S] Crystallize at JP2 or standalone `/crystallize` command. Sprint-route only |
+| **reconciled/** | Directory created by Crystallize. Contains the definitive artifact set reconciled with the finalized prototype. Mirrors `specs/{feature}/` structure minus excluded items. Original artifacts are preserved untouched |
+| **carry-forward** | Items in reconciled artifacts that are not derivable from the prototype (NFRs, security, deployment, scaling) and are carried from the original documents. Marked with `[carry-forward]` tag |
+| **DD-N** | Decision Diary entry ID (DD-1, DD-2, ...). Used in Crystallize source attribution to trace prototype features back to specific JP2 decisions |
+| **specs_root** | Parameter added to `/parallel` and `/validate` to specify the base directory for specs files. Default: `specs/{feature}/`. After Crystallize: `specs/{feature}/reconciled/` |
 | **Amelia** (Dev) | BMad agent. Handles Story implementation. Used in Guided route |
 
 ---
