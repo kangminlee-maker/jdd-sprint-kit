@@ -4,6 +4,70 @@ All notable changes to JDD Sprint Kit will be documented in this file.
 
 ---
 
+## [0.6.0] - 2026-02-21
+
+### Added
+- **Delta-Driven Design** — New core document (`docs/delta-driven-design.md`) establishing Sprint Kit's conceptual foundation
+  - Sprint Kit's primary goal: defining the delta between brownfield (current) and prototype-validated target
+  - Two Grammars model: User Grammar (prototype) → Development Grammar (specs) translation
+  - 6 Core Principles (CP1-CP6) + 10 Design Judgments (DJ1-DJ10)
+  - 3-Pass Pattern: Answer Discovery → Translation & Delta Extraction → Delta Execution
+  - Methodology comparison: 18 methodologies surveyed, 7 key traits identified
+- **LLD Conditional Sections** — design.md now generates Low-Level Design sections when project complexity requires
+  - State Transitions (Mermaid stateDiagram + transition table) — triggered by State Transition FRs in PRD
+  - Algorithm Specs (pseudocode + decision table) — triggered by Algorithmic Logic FRs
+  - Concurrency Controls — triggered by Concurrency NFR or brownfield concurrent patterns
+  - Scheduler Specs — triggered by scheduled/periodic FR keywords
+  - Migration Strategy — triggered by brownfield table modifications
+  - Error Handling Strategy — when complexity != simple
+  - Operational Specs (logging, monitoring, env vars) — when complexity != simple
+- **Delta Manifest** (`reconciled/delta-manifest.md`) — Crystallize S5b output classifying every change
+  - 7-field schema: delta_id, type, origin, source_fr, scope, resource, task_id
+  - Delta types: positive (new), modification (changed), zero (unchanged), negative (removed)
+  - Origin types: proto, carry-forward:defined, carry-forward:deferred, carry-forward:new
+  - Carry-forward ratio computation for Option C decision gate
+- **Devil's Advocate Agent** (`.claude/agents/devils-advocate.md`) — Adversarial verification
+  - 7 Adversarial Lenses: API Boundary, Concurrency, State Transition, Data Integrity, Integration Failure, Business Rule Conflict, Flow Abandonment
+  - Conditional execution: skip when simple AND endpoints <= 3
+  - Deduplication against existing BDD scenarios
+  - Output: adversarial-scenarios.md + bdd-scenarios/adversarial-*.feature (CRITICAL/HIGH)
+- **Complex FR Supplementary Structures** in PRD format guide
+  - State Transition FRs: States/Transitions/Invariants/Terminal states
+  - Algorithmic Logic FRs: Input/Rules/Output
+- **NFR categories expanded** — Concurrency (conditional) + Observability (always) added
+- **JP2 Section 1.5: What Changes for Users** — Before/After brownfield comparison (L2+ conditional)
+- **carry-forward registry** in design.md — explicit lifecycle management for non-prototype items
+- **carry-forward classification** — `[carry-forward:defined]`, `[carry-forward:deferred]`, `[carry-forward:new]` tags
+
+### Changed
+- **Crystallize is now mandatory** — Runs automatically after JP2 approval on all routes
+  - Purpose rewritten: mandatory translation + delta extraction (not optional reconciliation)
+  - Pipeline: S0-S6 + new S5b (Delta Manifest). Progress counters updated to /8
+  - Failure recovery: [R] Return to JP2 / [S] Skip Crystallize / [X] Exit
+  - S0 skip expanded: also skips when Decisions table has 0 rows
+- **JP menu restructure** — Consistent across Sprint and Guided/Direct routes
+  - [A] Advanced Elicitation → [E] Elicitation (both JP1 and JP2)
+  - [C] Continue / [S] Crystallize → [A] Approve & Build (Crystallize auto-included)
+  - Iteration limit messages updated to reference new keys
+- **validate.md Judge paths parameterized** — `{specs_root}` replaces hardcoded `specs/{feature}/` in all 3 Judge invocations. Brownfield path has planning-artifacts/ fallback.
+- **worker.md brownfield path** — Dynamic with `{specs_root}` + fallback + greenfield skip
+- **Stage 7 XState input source** — Changed from "Architecture state diagrams" to "design.md State Transitions section" (pipeline wiring fix)
+- **judge-business.md** — Input References use `{feature_dir}/`, §7 Delta Verification, §8 Adversarial Scenario Verification added
+- **Scope Gate enhancements** — FR-NFR contradiction check (prd stage), LLD mapping checks (spec stage: State Transitions, Algorithm Specs, Concurrency Controls, Error Handling, Operational Specs), complexity acquisition path documented
+- **deliverable-generator.md** — Stage 6 adversarial-transitions.feature, MSW state transition validation (when state-machines/ exists), endpoint_count in readiness.md JP2 Data
+- **Step 5-D Devil's Advocate Pass** — Inserted between Scope Gate deliverables and JP2. Results in Section 3 with CRITICAL warning.
+- **complexity value unified** — `'low'|'medium'|'high'` → `'simple'|'medium'|'complex'` in PRD format guide
+
+### Documentation
+- **docs/delta-driven-design.md** — Core theory document (CP1-CP6, DJ1-DJ10, translation rules, methodology survey)
+- **docs/judgment-driven-development.md** — Delta-Driven Design reference section added
+- **docs/terminology-map.md** — 14 delta terms + 6 never-translate additions
+- **docs/blueprint.md** — Crystallize mandatory, Mermaid flowchart, JP2 table, routes, glossary updated
+- **README.md** — Pipeline diagram + Crystallize descriptions updated
+- **docs/reviews/** — LLD gap analysis, progressive refinement methodology survey, option-b remaining work tracker
+
+---
+
 ## [0.5.4] - 2026-02-20
 
 ### Fixed

@@ -2,7 +2,7 @@
 synced_to: "5698416"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
 audience: "non-developer product expert"
 product: "JDD Sprint Kit"
-version: "0.5.3"
+version: "0.6.0"
 ---
 
 # JDD Sprint Kit Blueprint

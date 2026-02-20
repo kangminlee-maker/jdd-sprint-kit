@@ -5,6 +5,7 @@ Enables product experts to turn customer knowledge into software outcomes. Users
 User inputs (meeting notes, references, existing system context) raise AI's first-generation quality, and human time is spent only at customer-lens judgment points (JP1, JP2).
 
 > Design philosophy: [Judgment-Driven Development](docs/judgment-driven-development.md)
+> Conceptual foundation: [Delta-Driven Design](docs/delta-driven-design.md)
 > Full architecture and Sprint walkthrough: [Blueprint](docs/blueprint.md)
 
 ---
