@@ -20,7 +20,7 @@ This reframe changes what Sprint Kit IS:
 | Aspect | Previous Frame | New Frame |
 |---|---|---|
 | **Primary goal** | Generate specs + deliverables | Define the delta between brownfield and target |
-| **What prototype is** | A deliverable for JP2 review | **The target state, expressed in UX grammar** |
+| **What prototype is** | A deliverable for JP2 review | **The target state, expressed in user grammar** |
 | **What specs are** | The primary output | **Translation of the target into development grammar** |
 | **What Crystallize does** | Reconcile specs with prototype | **Extract delta: brownfield ↔ translated prototype** |
 | **What Execute does** | Implement specs | **Realize the delta: transform brownfield into target** |
@@ -76,13 +76,13 @@ Users can only validate correctness in their own grammar. Machines can only exec
 
 ---
 
-## 3. The Translation: UX Grammar → Development Grammar
+## 3. The Translation: User Grammar → Development Grammar
 
 This translation is NOT open-ended abstraction. It is a rule-based mapping between known elements.
 
 ### Translation Rules
 
-| UX Grammar Element (observable in prototype) | Development Grammar Equivalent (in specs) |
+| User Grammar Element (observable in prototype) | Development Grammar Equivalent (in specs) |
 |---|---|
 | Screen / Page | Route definition + Page component + API call list |
 | User action (button click, form submit) | API endpoint (method + path + request body) |
@@ -100,11 +100,11 @@ This translation is NOT open-ended abstraction. It is a rule-based mapping betwe
 | Confirmation dialog | Business rule + state precondition check |
 | Notification/toast | Event trigger + notification channel + message template |
 
-**Each row is one translation rule.** Every UX element in the prototype maps to one or more development grammar elements. If an element doesn't map, the translation table needs a new row — but the structure is always: UX element → development equivalent.
+**Each row is one translation rule.** Every user grammar element in the prototype maps to one or more development grammar elements. If an element doesn't map, the translation table needs a new row — but the structure is always: user grammar element → development equivalent.
 
 ### What Translation Adds (Carry-Forward)
 
-Some development grammar elements have no UX grammar counterpart — they are invisible to users but essential for the system:
+Some development grammar elements have no user grammar counterpart — they are invisible to users but essential for the system:
 
 | Development Grammar Element | Why Invisible in Prototype | Source |
 |---|---|---|
@@ -133,7 +133,7 @@ Delta = Complete Specs - Brownfield
 ```
 
 Where:
-- **translate(Prototype)**: All UX elements converted to development grammar
+- **translate(Prototype)**: All user grammar elements converted to development grammar
 - **carry-forward**: Non-visible requirements (NFR, security, migration, operations)
 - **Brownfield**: Existing system described in development grammar (brownfield-context.md L1-L4)
 
@@ -169,11 +169,11 @@ This is why Sprint Kit's primary goal is delta definition, not code generation.
   Brownfield scan → brownfield-context.md (L1~L4)
   = Current system in development grammar
 
-[Phase 1: Find the Answer in UX Grammar]
+[Phase 1: Find the Answer in User Grammar]
   Brief + Brownfield → PRD → Architecture → Specs → Deliverables → Prototype
-  = Target state in UX grammar
+  = Target state in user grammar
   JP1: "Is the direction right?" (human validates search direction)
-  JP2: "Is this the answer?" (human validates target in UX grammar)
+  JP2: "Is this the answer?" (human validates target in user grammar)
 
 [Phase 2: Translate and Measure]
   translate(Approved Prototype) → Target in development grammar
@@ -194,13 +194,13 @@ This is why Sprint Kit's primary goal is delta definition, not code generation.
 |---|---|---|
 | Phase 0 (Smart Launcher) | Collect inputs | **Establish brownfield baseline in development grammar** |
 | Brownfield Scan | Gather existing system info | **Parse current state into structured development grammar** |
-| PRD Generation | Define requirements | **Explore solution space toward UX grammar answer** |
+| PRD Generation | Define requirements | **Explore solution space toward user grammar answer** |
 | Architecture | Make technical decisions | **Constrain solution space (carry-forward source)** |
 | Specs 4-file | Define implementation contract | **Intermediate scaffold for prototype generation** |
-| Deliverables | Create implementation artifacts | **Generate target state in UX grammar (prototype)** |
+| Deliverables | Create implementation artifacts | **Generate target state in user grammar (prototype)** |
 | JP1 | Judge requirements | **Validate search direction before investing in prototype** |
-| JP2 | Judge experience | **Confirm target state in UX grammar ("this IS the answer")** |
-| Crystallize | Reconcile specs with prototype | **Translate UX grammar → development grammar + extract delta** |
+| JP2 | Judge experience | **Confirm target state in user grammar ("this IS the answer")** |
+| Crystallize | Reconcile specs with prototype | **Translate user grammar → development grammar + extract delta** |
 | Execute | Implement specs | **Realize delta: transform current into target** |
 | Validate | Verify implementation | **Verify: current + delta ≈ target** |
 
@@ -208,8 +208,8 @@ This is why Sprint Kit's primary goal is delta definition, not code generation.
 
 | Pass | Previous Name | Reframed Name | What Happens |
 |---|---|---|---|
-| 1st | Generative | **Answer Discovery** | Find the right answer in UX grammar (human-validated) |
-| 2nd | Reconciliatory | **Translation & Delta Extraction** | Convert UX answer to dev grammar, measure gap from brownfield |
+| 1st | Generative | **Answer Discovery** | Find the right answer in user grammar (human-validated) |
+| 2nd | Reconciliatory | **Translation & Delta Extraction** | Convert user grammar answer to dev grammar, measure gap from brownfield |
 | 3rd | Realization | **Delta Execution** | Implement the precisely defined gap |
 
 ---
@@ -223,11 +223,11 @@ The reframe: **Crystallize is not abstraction. It is translation between two kno
 | Operation | What AI Does | AI Suitability |
 |---|---|---|
 | Abstraction (Emergent Design) | Discover new patterns from code | Low — requires aesthetic judgment, full context |
-| **Translation (Crystallize)** | **Convert known UX elements to known dev elements using mapping rules** | **High — rule-based, structured, verifiable** |
+| **Translation (Crystallize)** | **Convert known user grammar elements to known dev elements using mapping rules** | **High — rule-based, structured, verifiable** |
 
 The translation is mechanical because:
-1. **Both grammars are known** — UX elements and dev elements are enumerated
-2. **Mapping rules exist** — each UX element has a defined dev equivalent
+1. **Both grammars are known** — user grammar elements and dev elements are enumerated
+2. **Mapping rules exist** — each user grammar element has a defined dev equivalent
 3. **Input is bounded** — prototype is a finite set of screens, actions, states
 4. **Output format is fixed** — specs files have defined structure
 5. **Verification is possible** — round-trip: specs → re-generate prototype → compare with original

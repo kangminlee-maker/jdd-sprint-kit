@@ -235,7 +235,15 @@ After JP2 prototype iteration, [S] Crystallize reconciles all upstream artifacts
 | `(source: carry-forward, origin: BRIEF-N)` | Not in prototype, carried from original doc, originally from brief |
 | `(source: carry-forward)` | Not in prototype, carried from original doc (NFR, security, etc.) |
 
-Items carried forward from existing documents are marked with `[carry-forward]` inline tag in the reconciled artifact text.
+Items carried forward from existing documents are classified and marked in the reconciled artifact text:
+
+| Classification | Tag | Meaning |
+|---|---|---|
+| Defined | `[carry-forward:defined]` | Fully specified in original docs, confirmed still applicable |
+| Deferred | `[carry-forward:deferred]` | Mentioned in original docs but explicitly deferred to post-MVP |
+| New | `[carry-forward:new]` | Not in original docs, added during reconciliation to fill identified gaps |
+
+When classification cannot be determined, use the base `[carry-forward]` tag (treated as `defined` by default).
 
 ### Downstream Integration
 

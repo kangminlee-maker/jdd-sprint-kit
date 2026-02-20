@@ -70,8 +70,8 @@ Specify `model: "sonnet"` parameter on Task invocation. When unspecified, parent
 4. If `force_jp1_review` flag → show Grade C Brief warning banner at JP1
 5. Initialize Sprint Log: Create `specs/{feature_name}/sprint-log.md` with Timeline table header + JP Interactions + Decisions Made + Issues Encountered sections
 6. Initialize Decision Diary: Create `specs/{feature_name}/decision-diary.md` with Sprint Context (complexity, topology, goals) + Decisions table header
-6. Record Sprint start time for adaptive time estimation
-7. Display initial progress with complexity-based time estimate from sprint-input.md
+7. Record Sprint start time for adaptive time estimation
+8. Display initial progress with complexity-based time estimate from sprint-input.md
 
 ## Progress Reporting Protocol
 
@@ -269,7 +269,14 @@ Task(subagent_type: "general-purpose")
     | Area | Description |
     ### Side-effects
     | Change | Affected Existing Features | Mitigation |
-    Side-effect analysis covers L1 (contact points) + L2 (impact prediction) only. L3 (measurement) deferred to Validate."
+    Side-effect analysis covers L1 (contact points) + L2 (impact prediction) only. L3 (measurement) deferred to Validate.
+
+    CONDITIONAL — State Diagrams:
+    If the PRD contains FRs with explicit state transitions (States/Transitions/Invariants structure),
+    include a '## State Diagrams' section in the Architecture document with:
+    - One Mermaid stateDiagram-v2 per state-transitioning entity
+    - Transition events and guard conditions
+    If no state transition FRs exist in PRD, omit this section entirely."
   max_turns: {budget}
 ```
 

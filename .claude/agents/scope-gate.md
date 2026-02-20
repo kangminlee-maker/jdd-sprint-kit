@@ -19,7 +19,7 @@ Structured and evidence-based. Every judgment cites specific artifact sections. 
 - `goals`: Array of 3-5 Sprint goals extracted by Auto Sprint
 - `artifact_path`: Path to the artifact file to validate (must be under `specs/`). For `spec` stage, accepts `artifact_paths` array (requirements.md + design.md + tasks.md).
 - `brownfield_path`: Path to brownfield-context.md (if available)
-- `sprint_input_path` (optional): Path to `specs/{feature}/inputs/sprint-input.md` — for causal chain alignment checks
+- `sprint_input_path` (optional): Path to `specs/{feature}/inputs/sprint-input.md` — for causal chain alignment checks and `complexity` value (used by spec stage LLD conditional checks). If sprint_input_path not provided, read `complexity` from PRD YAML frontmatter `classification.complexity`. Default: `medium`
 
 ## Execution Protocol
 
@@ -76,6 +76,9 @@ Apply stage-specific checklist:
 - [ ] Core FRs directly address root_cause from causal chain
 - [ ] Enabling/Supporting FRs trace to a specific core FR they support
 - [ ] No unlinked FR exists (FR without any causal chain connection = scope creep warning)
+- [ ] State Transition FRs (if any) include all required fields: States, Transitions, Invariants, Terminal states
+- [ ] Algorithmic Logic FRs (if any) include all required fields: Input, Rules, Output
+- [ ] No FR-NFR contradictions exist (e.g., FR requires real-time behavior but NFR allows eventual consistency; FR demands unlimited access but NFR caps rate). Check for logical impossibility, not implementation feasibility.
 
 #### architecture
 - [ ] Every major decision has an ADR with rationale
@@ -107,6 +110,11 @@ Apply stage-specific checklist:
 - [ ] Data model matches Architecture
 - [ ] API endpoint inventory matches Architecture API design
 - [ ] Brownfield integration points are specified
+- [ ] State Transitions section present when PRD contains State Transition FRs (if none in PRD, N/A)
+- [ ] Algorithm Specs section present when PRD contains Algorithmic Logic FRs (if none in PRD, N/A)
+- [ ] Concurrency Controls section present when PRD contains Concurrency NFR or brownfield-context.md documents concurrent access patterns (if neither applies, N/A)
+- [ ] Error Handling Strategy section present (when complexity != simple)
+- [ ] Operational Specs section present (when complexity != simple)
 
 **tasks.md checks**:
 - [ ] Every Story from Epics is covered by at least one Task

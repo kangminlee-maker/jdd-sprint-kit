@@ -27,7 +27,7 @@ documentCounts:
 classification:
   projectType: 'cross-platform-app'  # cross-platform-app | web-app | api-service | ...
   domain: 'edtech'                    # project domain
-  complexity: 'low' | 'medium' | 'high'
+  complexity: 'simple' | 'medium' | 'complex'
   projectContext: 'brownfield'        # fixed value (existing service extension)
 partyModeInsights:
   ux:
@@ -349,19 +349,54 @@ mvpConfig:
 - No: "The system stores JWT tokens in Redis" → implementation leakage
 - No: "Fast response" → separate as NFR with specific numbers
 
+**Complex FR Supplementary Structures (conditional):**
+
+When an FR involves state transitions or algorithmic logic, supplement the capability statement with structured detail. These specify business rules, not implementation choices.
+
+**State Transition FRs** (when FR involves entity state changes):
+
+```markdown
+- **FR{N}:** {subject} can {transition capability}
+  - **States**: {state1} | {state2} | {state3} | ...
+  - **Transitions**: {state1} → {state2} (trigger: {event}), ...
+  - **Invariants**: {rules that must never be violated}
+  - **Terminal states**: {states with no outgoing transitions}
+```
+
+**Algorithmic Logic FRs** (when FR involves non-trivial computation with 2+ input variables and deterministic output):
+
+```markdown
+- **FR{N}:** {subject} can {capability involving computation}
+  - **Input**: {what data enters the computation}
+  - **Rules**: {ordered list of business rules applied}
+  - **Output**: {what the computation produces}
+```
+
+These supplementary structures are consumed by design.md (LLD sections) and BDD scenarios. They remain capability-focused — no implementation choices (e.g., "use Redis" or "implement with XState").
+
 ### 4.8 Non-Functional Requirements
 
 **Purpose:** Define system quality attributes quantitatively.
 
 **Required categories:**
 
-| Category | Contents |
-|----------|----------|
-| Performance | API response time, load time (p95 basis) |
-| Reliability | Availability, concurrency handling, data consistency |
-| Integration | Compatibility with existing systems, backward compatibility |
-| Security | Authentication, authorization, data protection (if applicable) |
-| Error Handling | Common error handling policies (if applicable) |
+| Category | Contents | When Required |
+|----------|----------|---------------|
+| Performance | API response time, load time (p95 basis) | Always |
+| Concurrency | Race condition prevention, idempotency requirements, conflict resolution strategy | When 2+ users can modify the same resource simultaneously |
+| Reliability | Availability, data consistency, failover behavior | Always |
+| Integration | Compatibility with existing systems, backward compatibility | When brownfield |
+| Security | Authentication, authorization, data protection | When user data is involved |
+| Observability | SLI/SLO targets, alerting conditions, logging requirements | Always |
+| Error Handling | Common error handling policies, retry strategy | Always |
+
+**Concurrency NFR format** (when applicable):
+
+```markdown
+| NFR | Resource | Conflict Scenario | Expected Behavior | Measurement |
+|-----|----------|-------------------|-------------------|-------------|
+| NFR-C1 | {shared resource} | {2+ actors modifying simultaneously} | {resolution: first-wins / queue / merge} | {test method} |
+```
 
 **Table format:**
 
@@ -536,3 +571,8 @@ Verify the following after PRD completion:
 - [ ] All NFRs have numeric targets + measurement method
 - [ ] QA Considerations has edge case table
 - [ ] Brownfield notation present (`**Existing system:**`, existing/new distinction)
+- [ ] Concurrency NFR present when 2+ users can modify the same resource
+- [ ] Observability NFR present with SLI/SLO targets
+- [ ] State Transition FRs include States/Transitions/Invariants structure (when applicable)
+- [ ] Algorithmic Logic FRs include Input/Rules/Output structure (when applicable)
+- [ ] No FR-NFR contradictions exist (logical impossibility, not feasibility)

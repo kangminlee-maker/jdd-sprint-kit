@@ -55,8 +55,9 @@ This dictionary ensures naming consistency across ALL subsequent outputs. Every 
 
 Sprint Input path resolution:
 1. Check if `{planning_artifacts}/../inputs/sprint-input.md` exists
-2. If exists, read the `tracking_source` field
+2. If exists, read `tracking_source` and `complexity` fields
 3. If not found, assume `tracking_source: success-criteria`
+4. If `complexity` not found in sprint-input.md, read from PRD YAML frontmatter `classification.complexity`. If still not found, default to `medium`
 
 | tracking_source | requirements.md Source column | BRIEF-N mapping | Entropy assignment basis |
 |----------------|--------------------------|-------------|------------------|
@@ -76,6 +77,7 @@ Create `{output_base}/{feature_name}/`:
 2. **requirements.md** — Transform PRD into requirements format:
    - FR → Requirement items with IDs, priority, entropy tolerance
    - **Brief source tagging**: Tag each FR with `(source: BRIEF-N)`, `(source: DISC-N)`, or `(source: AI-inferred)`. Reference sprint-input.md's `brief_sentences` array and Discovered Requirements to attribute each FR's origin
+   - **Complex FR structures**: Preserve State Transition FR structures (States/Transitions/Invariants) and Algorithmic Logic FR structures (Input/Rules/Output) from PRD into requirements items
    - NFR → Quality constraints with numeric targets
    - AC → Acceptance criteria linked to requirements
 3. **design.md** — Transform Architecture into design format:
@@ -83,6 +85,21 @@ Create `{output_base}/{feature_name}/`:
    - Data model → Schema references
    - API design → Endpoint inventory (summary level; the SSOT for detailed API schemas is api-spec.yaml)
    - Integration points → Brownfield touchpoints
+
+   **LLD Conditional Sections** (include when PRD/Architecture contain corresponding patterns):
+
+   Scan PRD FRs and Architecture for the following patterns. If detected, generate the corresponding section in design.md. If not detected, omit entirely (no empty sections).
+
+   | Detection Trigger | design.md Section | Content |
+   |---|---|---|
+   | PRD has State Transition FR (States/Transitions/Invariants) | `### State Transitions` | Mermaid stateDiagram-v2 + transition table (from → event → to → guard → side-effect) + invariant rules |
+   | PRD has Algorithmic Logic FR (Input/Rules/Output) | `### Algorithm Specs` | Pseudocode or decision table + edge case handling |
+   | PRD has Concurrency NFR OR brownfield-context.md has concurrent access patterns | `### Concurrency Controls` | Lock strategy per resource + conflict resolution + idempotency mechanism |
+   | PRD FR has scheduled/periodic/cron/trigger/batch keywords | `### Scheduler Specs` | Trigger inventory table (schedule, type, failure handling, FR linkage) |
+   | Brownfield project AND existing tables are modified | `### Migration Strategy` | Migration step table (order, type, rollback, risk) |
+   | complexity != simple | `### Error Handling Strategy` | Error classification (business/system/infra) + retry policy + fallback strategy |
+   | complexity != simple | `### Operational Specs` | Logging strategy + monitoring/alerting (from NFR Observability) + environment variables |
+
 4. **tasks.md** — Transform Epics into parallel tasks:
    - Story → Task with entropy tag, file ownership, dependencies
    - Assign worker IDs
@@ -212,13 +229,15 @@ Generate `{output_base}/{feature_name}/bdd-scenarios/`:
 
 ### Stage 7: XState State Machines (conditional)
 
-Generate `{output_base}/{feature_name}/state-machines/` only if Architecture identifies complex state management:
+Generate `{output_base}/{feature_name}/state-machines/` when design.md contains a `### State Transitions` section:
 
-- Source: Architecture state diagrams
+- Source: design.md State Transitions section (state diagram + transition table + invariants)
 - One XState machine per identified state flow
 - TypeScript format for direct code use
+- Include guard conditions from transition table
+- Include invariant assertions
 
-**Skip this stage** if no complex state management is identified.
+**Skip this stage** if design.md has no State Transitions section. Log "Stage 7 skipped: no State Transitions in design.md" in Output Summary.
 
 ### Stage 8: Decision Log
 
@@ -425,6 +444,6 @@ npm run dev
 4. **Brownfield respect** — existing tables/APIs marked, new ones clearly distinguished
 5. **Prototype completeness** — every PRD AC scenario must be demonstrable in the prototype
 6. **OpenAPI as single source of truth** — API types, mock server, and documentation all derive from one spec
-7. **Skip XState** if no complex state management identified (don't force it)
+7. **Skip XState** if design.md has no State Transitions section (don't force it — detection is based on PRD State Transition FRs)
 8. **Priority on budget pressure**: specs → API → prototype (in that order)
 9. **Consumer awareness** — each Stage's output is aware of its consumers. Do not produce output that violates consumer constraints (e.g., MSW handler BASE constant must match client.ts BASE_URL + VERSION)

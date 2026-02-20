@@ -150,7 +150,11 @@ Reconcile PRD, Architecture, and Epics using the prototype analysis as primary i
 
 - **From prototype**: screens, features, API endpoints, data model, user flows → FR, component structure, API design
 - **Carry-forward from existing docs**: market context, competitive analysis, NFRs, security architecture, deployment strategy, scaling, monitoring, ADRs
-- **Tagging**: `[carry-forward]` on items not derivable from prototype
+- **Tagging**: Items not derivable from prototype use classified carry-forward tags:
+  - `[carry-forward:defined]` — Fully specified in original docs, confirmed still applicable
+  - `[carry-forward:deferred]` — Mentioned but explicitly deferred to post-MVP
+  - `[carry-forward:new]` — Added during reconciliation to fill identified gaps
+  - `[carry-forward]` — When classification is unclear (treated as `defined` by default)
 
 #### Source Attribution Tags
 
@@ -189,7 +193,7 @@ Task(subagent_type: "general-purpose", model: "opus")
     - Map each FR to brief_sentences where possible: (source: PROTO, origin: BRIEF-N)
     - Features from JP2 iteration: (source: PROTO, origin: DD-N) referencing decision-diary/decision-context entry
     - NFRs, success criteria, constraints → carry forward: (source: carry-forward)
-    - Mark carry-forward items with [carry-forward] tag
+    - Classify carry-forward items: [carry-forward:defined] for confirmed applicable items, [carry-forward:deferred] for explicitly post-MVP items, [carry-forward:new] for gap-filling additions
     - User journeys: reconstruct from prototype User Flows section
     - Detail level: MAXIMUM — this is the definitive PRD
     - Follow PRD format guide strictly (YAML frontmatter, section structure, FR quality criteria)"
@@ -223,7 +227,7 @@ Task(subagent_type: "general-purpose", model: "opus")
     - Component architecture: derive from actual prototype component structure
     - API design: derive from actual MSW handlers in prototype analysis
     - Data model: derive from actual store/types in prototype analysis
-    - Security, deployment, scaling, monitoring, infrastructure → [carry-forward] from original
+    - Security, deployment, scaling, monitoring, infrastructure → classify as [carry-forward:defined], [carry-forward:deferred], or [carry-forward:new]
     - ADRs: preserve still-applicable originals, mark superseded ones, add new decisions from prototype
     - Detail level: MAXIMUM"
 ```
@@ -253,6 +257,7 @@ Task(subagent_type: "general-purpose", model: "opus")
     - AC should reference actual prototype component behavior
     - Maintain Epic → Story → AC hierarchy
     - Tag stories as new/existing-extension per brownfield context
+    - Stories not visible in prototype (e.g., Growth Phase, security, monitoring): classify as [carry-forward:defined], [carry-forward:deferred], or [carry-forward:new]
     - Detail level: MAXIMUM"
 ```
 
