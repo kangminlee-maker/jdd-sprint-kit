@@ -1,10 +1,12 @@
-# Option B Remaining Work: Incremental Delta Integration
+# Delta-Driven Design: Remaining Work
 
 > **Date**: 2026-02-21
-> **Status**: Phase 0 + Phase 1 complete. Phase 2-3 + Backlog remaining.
+> **Status**: Phase 0 + Phase 1 + Phase 2 complete. Phase 3 + Adversarial Layer + Backlog remaining.
 > **Completed commits**:
 > - `da1118a` Phase 0: Documentation (delta-driven-design.md, terminology, JDD, blueprint)
 > - `3d419ae` Phase 1: LLD Foundation (PRD format, Scope Gate, deliverable-generator, auto-sprint, crystallize, protocol)
+> - `ce43767` Option B remaining work tracking
+> - `64d7899` Phase 2: Crystallize mandatory + Delta Manifest + JP2 menu restructure
 > **Related**: [`delta-driven-design.md`](../delta-driven-design.md), [`lld-gap-analysis-and-implementation-plan.md`](lld-gap-analysis-and-implementation-plan.md)
 
 ---
@@ -36,38 +38,48 @@
 | State Transition/Algorithmic FR structural checks in prd stage | `scope-gate.md` | Done |
 | complexity value fix + explicit acquisition path | `prd-format-guide.md` + `deliverable-generator.md` + `scope-gate.md` | Done |
 
+### Phase 2: Delta Integration + Crystallize Mandatory ✅
+
+| Task | File | Status |
+|---|---|---|
+| Crystallize mandatory (Purpose + When to Use rewrite) | `crystallize.md` | Done |
+| S0 skip condition expansion (0 Comments → skip) | `crystallize.md` | Done |
+| S5b Delta Manifest (7-field schema, 4-valued origin) | `crystallize.md` | Done |
+| Crystallize FAIL recovery ([R]/[S]/[X]) | `crystallize.md` | Done |
+| S6 Delta Summary table | `crystallize.md` | Done |
+| Budget + Progress counters updated (/7→/8) | `crystallize.md` | Done |
+| JP2 menu: [A]→[E] Elicitation + [A] Approve & Build | `auto-sprint.md` | Done |
+| JP2 Section 1.5: What Changes for Users | `auto-sprint.md` | Done |
+| Crystallize auto-execute on [A] Approve & Build | `auto-sprint.md` | Done |
+| carry-forward registry in design.md | `deliverable-generator.md` | Done |
+| Worker brownfield dynamic path + greenfield skip | `worker.md` | Done |
+| validate.md Judge {specs_root} parameterization | `validate.md` | Done |
+| JP2 response + Crystallize Flow mandatory | `jdd-sprint-protocol.md` | Done |
+| 3 routes: Crystallize (auto) | `jdd-sprint-guide.md` | Done |
+| preview.md: [A] Approve & Build + Crystallize auto | `preview.md` | Done |
+| Blueprint: Mermaid + Crystallize section + JP2 table + routes + glossary | `blueprint.md` | Done |
+| README: Mermaid + pipeline + descriptions | `README.md` | Done |
+| delta-driven-design.md §11 update | `delta-driven-design.md` | Done |
+
 ---
 
 ## Remaining
 
-### Phase 2: Delta Integration
-
-Core delta additions that make the delta concept operational in the pipeline.
-
-| # | Task | File | Content | Prerequisite | Risk |
-|---|---|---|---|---|---|
-| 2-1 | Delta Manifest output | `crystallize.md` | Add delta classification step in Crystallize producing `delta-manifest.md` with positive/zero/negative/modification items | Phase 1 done | MEDIUM |
-| 2-2 | JP2 Before/After delta section | `auto-sprint.md` | Add "Customer-visible Changes" section to JP2 Visual Summary showing what changes from current system | Phase 1 done | LOW |
-| 2-3 | JP2 Translation Preview | `auto-sprint.md` | Show user "here's what we'll extract from this prototype" before JP2 confirmation | 2-2 done | LOW |
-| 2-4 | carry-forward registry in design.md | `deliverable-generator.md` | Explicit carry-forward item listing at design.md generation (birth + registration step of lifecycle) | Phase 1 done | LOW |
-
-**Dependencies**: 2-1 enables Phase 3 (delta-typed testing requires manifest). 2-2 and 2-3 are independent of 2-1.
-
-**Estimated effort**: ~80 lines across 3 files, 2-3 hours including verification.
-
 ### Phase 3: Validation
 
-Data-driven validation that informs whether full Crystallize redesign (Option C) is needed.
+Delta-typed verification that makes the delta manifest actionable during execution.
 
 | # | Task | File | Content | Prerequisite | Risk |
 |---|---|---|---|---|---|
-| 3-1 | Delta completeness check | `scope-gate.md` | Verify all delta manifest items have corresponding tasks in tasks.md | 2-1 done | LOW |
-| 3-2 | Zero delta regression scope | `validate.md` / `judge-business.md` | Delta-typed verification: positive=implement, modification=change, zero=regression, negative=removal | 2-1 done | MEDIUM |
-| 3-3 | Measure carry-forward ratio | (analysis, not code) | On real Sprint, measure `translate(Prototype)` vs `carry-forward` proportion. If carry-forward > 50%, "prototype as source of truth" framing needs adjustment | Phase 2 done + real Sprint run | N/A |
+| 3-1 | Delta completeness check | `scope-gate.md` | Verify all positive/modification delta manifest items have corresponding tasks in tasks.md | Phase 2 done | LOW |
+| 3-2 | Zero delta regression scope | `validate.md` / `judge-business.md` | Delta-typed verification criteria: positive=implement, modification=change, zero=regression, negative=removal | Phase 2 done | MEDIUM |
+| 3-3 | Measure carry-forward ratio | (analysis, not code) | On real Sprint, measure `translate(Prototype)` vs `carry-forward` proportion from delta-manifest.md origin field | Phase 2 done + real Sprint run | N/A |
 
-**Key decision gate**: Phase 3-3 result determines whether Option C is justified.
+**Estimated effort**: ~30 lines across 2 files (3-1, 3-2) + 1 analysis session (3-3).
 
-### Adversarial Layer (from LLD Gap Analysis Phase 3)
+### Adversarial Layer
+
+Dedicated adversarial verification step that hunts for edge/fail cases missed by happy-path-focused generation.
 
 | # | Task | File | Content | Risk |
 |---|---|---|---|---|
@@ -76,14 +88,14 @@ Data-driven validation that informs whether full Crystallize redesign (Option C)
 | A-3 | MSW state transition validation | `deliverable-generator.md` | MSW handlers validate transition legality when state-machines/ exists, return 422 on invalid | LOW |
 | A-4 | Pipeline integration (Step 5-D) | `auto-sprint.md` | Devil's Advocate Pass after Scope Gate deliverables, before JP2 | MEDIUM |
 
-**Estimated effort**: ~400 lines (300 new agent + 100 across existing files), 3-4 hours.
+**Estimated effort**: ~400 lines (300 new agent + 100 across existing files).
 
 ### Backlog (deferred, trigger-based)
 
 | Item | Trigger Condition | Scope |
 |---|---|---|
 | FR-NFR contradiction Redirect improvement | Repeated Scope Gate FAIL on contradictions | auto-sprint.md Redirect logic |
-| S3/S4 carry-forward tag preservation | carry-forward tags lost during Crystallize reconciliation | crystallize.md S3, S4 prompts |
+| S3/S4 carry-forward tag preservation | carry-forward tags lost during Crystallize | crystallize.md S3, S4 prompts |
 | Worker integration test protocol | Worker merge conflicts in parallel execution | parallel.md Step 6 |
 | Interface Contract protocol | Type mismatches between Workers | parallel.md Step 1 |
 | GDPR/privacy checklist | PII-handling features encountered | scope-gate.md conditional check |
@@ -93,26 +105,29 @@ Data-driven validation that informs whether full Crystallize redesign (Option C)
 | Translation table expansion (15 → 25 rules) | Real Sprint encounters unmapped UX patterns | delta-driven-design.md Section 3 |
 | Prototype Annotations | Prototype-inexpressible items (performance feel, real-time) cause problems | New file format |
 | Handoff document for external teams | External team requests after seeing reconciled/ | crystallize.md or new /handoff command |
+| regression_bdd field in Delta Manifest | BDD tagging system (@zero-delta) designed in Phase 3 | crystallize.md S5b schema extension |
 
 ---
 
-## Decision Gate: Option B → Option C
+## Decision Gate: Option C
 
 After Phase 3-3 (carry-forward ratio measurement on real Sprint):
 
 | Result | Action |
 |---|---|
-| carry-forward < 30% | Prototype is truly source of truth. Option C justified — proceed to full Crystallize T1-T6 redesign |
-| carry-forward 30-50% | Mixed. Option B sufficient with incremental improvements |
-| carry-forward > 50% | Prototype is one input among many, not source of truth. Reframe language but keep current pipeline |
+| carry-forward < 30% | Prototype is truly source of truth. Option C justified — full Crystallize T1-T6 redesign on `feature/option-c-crystallize-redesign` branch |
+| carry-forward 30-50% | Mixed. Current pipeline sufficient with incremental improvements |
+| carry-forward > 50% | Prototype is one input among many, not sole source of truth. Adjust framing |
+
+**Option C branch**: `feature/option-c-crystallize-redesign` (created from main at ce43767, before Phase 2)
 
 ---
 
-## Suggested Execution Order
+## Suggested Next Steps
 
 ```
-Next:     Phase 2 (2-2 JP2 Before/After → 2-3 Translation Preview → 2-1 Delta Manifest → 2-4 carry-forward registry)
-Then:     Phase 3-1, 3-2 (delta-typed verification)
-Parallel: Adversarial Layer (A-1 through A-4) — independent of Phase 2-3
-Gate:     Phase 3-3 (real Sprint measurement) → decide on Option C
+Next:     Phase 3-1 + 3-2 (delta-typed verification in scope-gate + validate)
+Parallel: Adversarial Layer A-1 (agent definition) — independent
+Then:     A-2 + A-3 + A-4 (BDD + MSW + pipeline integration)
+Gate:     Phase 3-3 (real Sprint run) → measure carry-forward ratio → decide Option C
 ```
