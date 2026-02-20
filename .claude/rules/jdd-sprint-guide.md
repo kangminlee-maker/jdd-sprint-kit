@@ -61,8 +61,8 @@ Place materials in specs/{feature}/inputs/ → /sprint {feature-name}
   → JP1: "Is this the right product for the customer?" (requirements judgment)
   Phase 2: Deliverables (OpenAPI + DBML + BDD + Prototype)
   → JP2: "Is this the experience the customer wants?" (prototype judgment)
-  → [S] Crystallize (optional): reconcile all artifacts with finalized prototype → reconciled/
-  → On approval: /parallel → /validate
+  → Crystallize (auto): translate prototype → compute delta → reconciled/
+  → /parallel → /validate
 ```
 
 ### Guided — When exploration is needed: discover and define with AI
@@ -74,7 +74,7 @@ Build planning artifacts step-by-step through conversation with BMad agents.
 BMad 12-step (human-AI dialogue):
   /create-product-brief → /create-prd → /create-architecture → /create-epics
 → /specs → JP1 → /preview → JP2
-→ [S] Crystallize (optional): reconcile all artifacts with finalized prototype → reconciled/
+→ Crystallize (auto): translate prototype → compute delta → reconciled/
 → /parallel → /validate
 ```
 
@@ -84,7 +84,7 @@ Use when finished PRD + Architecture + Epics already exist.
 
 ```
 /specs → JP1 → /preview → JP2
-→ [S] Crystallize (optional): reconcile all artifacts with finalized prototype → reconciled/
+→ Crystallize (auto): translate prototype → compute delta → reconciled/
 → /parallel → /validate
 ```
 

@@ -406,7 +406,7 @@ Where Sprint Kit accepts non-determinism (e.g., UI layout variation), this is a 
 | **Contract-First (Specmatic)** | Contracts control non-determinism during execution (CP3 strategy) |
 | **BDD Scenarios** | Part of the translated target in development grammar |
 | **Brief → Prototype pipeline** | Each step serves Answer Discovery. No restructuring needed (Party Mode confirmed) |
-| **Pipeline execution flow** | Current Crystallize S0-S6 already performs translation + carry-forward + verification. Reframe is conceptual, not operational |
+| **Pipeline execution flow** | Crystallize is mandatory after JP2. /parallel always receives reconciled/. Delta Manifest (S5b) always generated |
 
 ---
 

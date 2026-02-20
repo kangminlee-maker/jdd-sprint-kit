@@ -519,7 +519,7 @@ Warning: **Review needed**: {N} changes with significant impact on existing user
 
 **IMPORTANT — Only display Sections 1~3.** Never display Advanced items by default.
 
-**Advanced (Layer 3)**: Shown only when [A] Advanced Elicitation is selected:
+**Advanced (Layer 3)**: Shown only when [E] Elicitation is selected:
 - Tracking source ↔ FR detailed mapping table
 - Epic → Story → Task hierarchy (Mermaid graph TD)
 - Task DAG dependencies (Mermaid graph LR)
@@ -536,9 +536,9 @@ Present 5 options via AskUserQuestion (in {communication_language}):
 
 | Option | Label | Description |
 |--------|-------|-------------|
-| **A** | Advanced Elicitation | Deep exploration of specific artifacts (question-based) |
+| **E** | Elicitation | Deep exploration of specific artifacts (question-based) |
 | **P** | Party Mode | Multi-perspective review by full BMad agent panel |
-| **C** | Continue | Approve JP1 → proceed to Phase 2 (Deliverables) |
+| **A** | Approve & Continue | Approve JP1 → proceed to Phase 2 (Deliverables) |
 | **F** | Comment | Enter feedback → impact analysis → apply-fix/regenerate choice |
 | **X** | Exit | Abort Sprint |
 
@@ -546,13 +546,13 @@ Present 5 options via AskUserQuestion (in {communication_language}):
 
 | Selection | Action |
 |-----------|--------|
-| **A** | Ask user for exploration target (tasks/requirements/design/epics) → read full file → present 3~5 questions from Advanced Elicitation Protocol JP1 set → on feedback: execute **Comment handling flow** → regenerate Visual Summary → return to menu |
+| **E** | Ask user for exploration target (tasks/requirements/design/epics) → read full file → present 3~5 questions from Advanced Elicitation Protocol JP1 set → on feedback: execute **Comment handling flow** → regenerate Visual Summary → return to menu |
 | **P** | Invoke Party Mode workflow (`Skill("bmad:core:workflows:party-mode")`, pass JP1 artifact paths) → discussion summary → ask user to accept/reject → on accept: execute **Comment handling flow** → regenerate Visual Summary → return to menu |
-| **C** | Proceed to Phase 2 (Step 5) |
+| **A** | Proceed to Phase 2 (Step 5) |
 | **F** | Execute **Comment handling flow** (see below) → regenerate Visual Summary → return to menu |
 | **X** | Abort Sprint, inform that artifacts are preserved (`specs/{feature_name}/` is retained) |
 
-**Iteration limit**: A/P/F selections combined max 5 times. On exceed, warn (in {communication_language}): "5 review/edit rounds complete. Select [C] Continue or [X] Exit."
+**Iteration limit**: E/P/F selections combined max 5 times. On exceed, warn (in {communication_language}): "5 review/edit rounds complete. Select [A] Approve & Continue or [X] Exit."
 
 #### Comment Handling Flow (shared by A/P/F)
 
@@ -677,6 +677,25 @@ Warning: Items exceeding auto-reinforcement scope:
 
 → Try it yourself: cd specs/{feature_name}/preview && npm run dev
 
+### Section 1.5: What Changes for Users
+
+{when brownfield_path exists AND brownfield-context.md has L2+ data}
+
+| Current Feature | Before | After (Prototype) | Change Type |
+|----------------|--------|-------------------|-------------|
+| {from brownfield L1/L2} | {current behavior} | {prototype behavior} | New / Modified / Unchanged |
+
+**New capabilities** (not in current system):
+- {list from prototype not found in brownfield}
+
+**Unchanged features** (confirmed unaffected):
+- {existing features verified as unaffected}
+
+> This comparison is based on brownfield L2 prediction. The exact change list will be identified when finalizing documents before implementation.
+
+{when brownfield_path absent OR L1-only data only}
+(Not applicable — greenfield project or insufficient brownfield data for Before/After comparison)
+
 ### Section 2: Existing System Interaction Verification
 
 | Interaction | Verification Method | Confidence | Result |
@@ -699,7 +718,7 @@ Warning: Items exceeding auto-reinforcement scope:
 | Traceability Gap | {N} gaps |
 
 {when all items pass}
-**READY** — Select [C] Continue to start parallel implementation.
+**READY** — Select [A] Approve & Build to finalize documents and start implementation.
 
 {when some items fail}
 **REVIEW NEEDED** — Please check the following:
@@ -713,16 +732,15 @@ npm install && npm run dev
 
 > To provide feedback, select [F] Comment. Apply-fix/regenerate options will be presented with cost.
 
-#### Step 6b: A/P/S/C Menu
+#### Step 6b: E/P/A/F Menu
 
-Present 6 options via AskUserQuestion (in {communication_language}):
+Present 5 options via AskUserQuestion (in {communication_language}):
 
 | Option | Label | Description |
 |--------|-------|-------------|
-| **A** | Advanced Elicitation | Deep exploration of Deliverables (API Spec, BDD, Prototype focus) |
+| **E** | Elicitation | Deep exploration of Deliverables (API Spec, BDD, Prototype focus) |
 | **P** | Party Mode | Multi-perspective review by full BMad agent panel |
-| **S** | Crystallize | Finalize all documents to match prototype, then proceed to execution |
-| **C** | Continue | Approve JP2 → proceed to Execute with current documents |
+| **A** | Approve & Build | Confirm prototype → Crystallize (translate + compute delta, ~15-20 min) → /parallel |
 | **F** | Comment | Enter feedback → impact analysis → apply-fix/regenerate choice |
 | **X** | Exit | Abort Sprint |
 
@@ -730,26 +748,28 @@ Present 6 options via AskUserQuestion (in {communication_language}):
 
 | Selection | Action |
 |-----------|--------|
-| **A** | Ask user for exploration target (api-spec/bdd/prototype/schema) → read full file → present 3~5 questions from Advanced Elicitation Protocol JP2 set → on feedback: execute **Comment handling flow** → regenerate Visual Summary → return to menu |
+| **E** | Ask user for exploration target (api-spec/bdd/prototype/schema) → read full file → present 3~5 questions from Advanced Elicitation Protocol JP2 set → on feedback: execute **Comment handling flow** → regenerate Visual Summary → return to menu |
 | **P** | Invoke Party Mode workflow (`Skill("bmad:core:workflows:party-mode")`, pass JP2 artifact paths) → discussion summary → ask user to accept/reject → on accept: execute **Comment handling flow** → regenerate Visual Summary → return to menu |
-| **S** | Execute **Crystallize pipeline** (see below) → on completion proceed to Execute with `specs_root=reconciled/` |
-| **C** | Proceed to Execute (parallel implementation) with `specs_root=specs/{feature_name}/` |
+| **A** | Approve & Build: (1) Record selection in decision-diary.md (2) Report: "Prototype approved. Starting Crystallize (~15-20 min)..." (3) Execute Crystallize pipeline as defined in crystallize.md (4) On Crystallize S6: user selects [C] proceed to /parallel with `specs_root=reconciled/`, or [R] review, or [X] exit (Crystallize only, no /parallel) (5) On Crystallize failure: present recovery options [R] Return to JP2 / [S] Skip / [X] Exit |
 | **F** | Execute **Comment handling flow** (see Step 4c) → regenerate Visual Summary → return to menu |
 | **X** | Abort Sprint, inform that artifacts are preserved (`specs/{feature_name}/` is retained) |
 
-**Iteration limit**: A/P/F selections combined max 5 times. On exceed, warn (in {communication_language}): "5 review/edit rounds complete. Select [S] Crystallize, [C] Continue, or [X] Exit."
+**Iteration limit**: E/P/F selections combined max 5 times. On exceed, warn (in {communication_language}): "5 review/edit rounds complete. Select [A] Approve & Build or [X] Exit."
 
-#### [S] Crystallize Pipeline
+#### Crystallize Pipeline (auto-triggered by [A] Approve & Build)
 
-When [S] is selected, execute the Crystallize pipeline as defined in `.claude/commands/crystallize.md`.
+Crystallize is mandatory — it translates the approved prototype into development grammar and computes the delta. Executed automatically when [A] is selected.
 
-1. Record `[S] Crystallize` selection in decision-diary.md
-2. Append to sprint-log.md JP Interactions: `**[User] Selection: [S] Crystallize**`
+1. Record `[A] Approve & Build` selection in decision-diary.md
+2. Append to sprint-log.md JP Interactions: `**[User] Selection: [A] Approve & Build**`
 3. Execute the full Crystallize pipeline (S0-S6) as defined in crystallize.md, passing `feature_name`
-4. On Crystallize S6 [C] Continue: proceed to Execute with `specs_root=specs/{feature_name}/reconciled/`
-5. On Crystallize S6 [X] Exit: return to JP2 menu (reconciled/ is preserved)
+4. On Crystallize completion: proceed to Execute with `specs_root=specs/{feature_name}/reconciled/`
+5. On Crystallize failure (S2-G/S3-G/S5 unresolvable): present recovery options:
+   - [R] Return to JP2 menu (partial reconciled/ cleaned up)
+   - [S] Skip Crystallize → proceed to /parallel with `specs_root=specs/{feature_name}/` (warning: delta manifest not available)
+   - [X] Exit Sprint
 
-**Budget**: Crystallize has its own budget (~85-125 turns) separate from JP2 iteration budget (5 rounds). [S] does not count against the 5-round iteration limit.
+**Budget**: Crystallize budget (~85-133 turns) is included in [A] Approve & Build. Does not count against the 5-round iteration limit.
 
 ## Conductor Roles
 
@@ -855,7 +875,7 @@ This is because auto-sprint cannot re-execute Phase 0 internally.
 
 ## Advanced Elicitation Protocol
 
-Question sets used when [A] Advanced Elicitation is selected at JP1/JP2.
+Question sets used when [E] Elicitation is selected at JP1/JP2.
 When user selects an exploration target, read the relevant file and present 3~5 of the following questions (in {communication_language}).
 
 ### JP1 Questions (Specs Phase)

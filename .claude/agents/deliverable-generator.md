@@ -100,6 +100,22 @@ Create `{output_base}/{feature_name}/`:
    | complexity != simple | `### Error Handling Strategy` | Error classification (business/system/infra) + retry policy + fallback strategy |
    | complexity != simple | `### Operational Specs` | Logging strategy + monitoring/alerting (from NFR Observability) + environment variables |
 
+   **Carry-Forward Registry** (generate when 1+ carry-forward items detected):
+
+   Scan PRD NFR, Architecture security/deployment/monitoring sections, and brownfield-context.md migration needs. If items found that have no prototype counterpart, generate at end of design.md:
+
+   ```markdown
+   ## Carry-Forward Registry
+
+   | ID | Source | Item | Classification |
+   |----|--------|------|----------------|
+   | CF-1 | PRD NFR-1 | API response p95 < 500ms | defined |
+   | CF-2 | Architecture §Security | JWT RS256 + refresh token | defined |
+   ```
+
+   Classification: `defined` (fully specified), `deferred` (explicitly post-MVP), `new` (gap-filling).
+   If no carry-forward items detected, omit this section.
+
 4. **tasks.md** — Transform Epics into parallel tasks:
    - Story → Task with entropy tag, file ownership, dependencies
    - Assign worker IDs

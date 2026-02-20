@@ -34,11 +34,10 @@ flowchart TD
     JP1 -->|Comment| JP1_FB["Revise or Regenerate\n(Impact Analysis)"]
     JP1_FB --> JP1
     F --> JP2{{"JP2\nIs this the experience\ncustomers want?"}}
-    JP2 -->|Confirm| G["7. Build\n(Parallel Implementation)"]
-    JP2 -->|Crystallize| CR["6b. Reconcile All Documents\n(Crystallize)"]
+    JP2 -->|Approve & Build| CR["6b. Translate & Compute Delta\n(Crystallize)"]
     JP2 -->|Comment| JP2_FB["Revise or Regenerate\n(Impact Analysis)"]
     JP2_FB --> JP2
-    CR --> G
+    CR --> G["7. Build\n(Parallel Implementation)"]
     G --> H["8. Quality Check\n(Validate)"]
     H -->|Pass| I["Done"]
     H -->|Repeated Failure| CB["Course Correction\n(Circuit Breaker)"]
@@ -567,13 +566,13 @@ JP2 presentation format and Comment handling flow details in S5.3.
 
 ---
 
-### Crystallize (Optional)
+### Crystallize (Mandatory Translation Step)
 
-**Rationale**: Regeneration Over Modification + Artifacts as Medium — after multiple JP2 iterations, the prototype has become the most accurate product definition, but upstream documents (PRD, Architecture, Epics) still reflect the initial generation. Crystallize translates the JP2-approved prototype into development grammar and extracts the delta from the brownfield baseline, producing a reconciled artifact set where all documents match the finalized prototype.
+**Rationale**: In the delta-driven model, Crystallize translates the JP2-approved prototype into development grammar and computes the delta between target state and brownfield baseline. Without this translation, Workers would implement pre-JP2 specs instead of the approved prototype's delta.
 
-**User perspective**: At JP2, select **[S] Crystallize** instead of [C] Continue. The system analyzes the prototype code, then reconciles (rewrites to match) all upstream documents so they accurately reflect what the prototype actually does. Original documents are preserved untouched — reconciled versions are written to a separate `reconciled/` directory.
+**User perspective**: When you select **[A] Approve & Build** at JP2, the system automatically runs Crystallize (~15-20 min). It analyzes the prototype code, translates it into development specifications, and computes exactly what needs to change from the current system. Original documents are preserved untouched — translated versions are written to a separate `reconciled/` directory with a delta manifest.
 
-**When to use**: After iterating on the prototype through multiple Comment rounds at JP2 until it matches the desired product. Crystallize is optional — when only minor adjustments were made at JP2 or the prototype closely matches the initial generation, [C] Continue proceeds directly to implementation without reconciliation.
+**Mandatory**: Crystallize runs automatically on all routes after JP2 approval. If Crystallize encounters an unresolvable issue, you can return to JP2, skip Crystallize (proceed with original specs), or exit.
 
 **System internals**:
 
@@ -601,7 +600,7 @@ This preserves traceability from the original Brief through JP2 iteration to the
 
 **Artifact**: `specs/{feature}/reconciled/` — mirrors the existing `specs/{feature}/` structure, minus excluded items (Product Brief, sprint-log, readiness, inputs/, preview/).
 
-**Availability**: All routes. In Sprint route, triggered via auto-sprint [S] at JP2. In Guided/Direct routes, triggered via `/preview` [S] at Step 3. Decision records (decision-diary.md, sprint-log.md JP Interactions) are optional — they enrich the reconciliation when present.
+**Availability**: All routes. Triggered automatically by [A] Approve & Build at JP2 (Sprint route) or at `/preview` Step 3 (Guided/Direct routes). Also available standalone via `/crystallize feature-name`. Decision records (decision-diary.md, sprint-log.md JP Interactions) are optional — they enrich the translation when present.
 
 ---
 
@@ -677,7 +676,7 @@ Place materials in specs/{feature}/inputs/ → /sprint {feature-name}
   → @auto-sprint (automatic)
   Pass 1 → BMad Auto-Pipeline → Pass 2 → Specs
   → JP1 → Deliverables → JP2
-  → [S] Crystallize (optional): reconcile all documents → reconciled/
+  → Crystallize (auto): translate prototype → compute delta → reconciled/
   → /parallel → /validate
 ```
 
@@ -694,7 +693,7 @@ For new products, new markets, or idea-stage exploration requiring systematic di
 ```
 /create-product-brief → /create-prd → /create-architecture → /create-epics
 → /specs → JP1 → /preview → JP2
-→ [S] Crystallize (optional): reconcile all documents → reconciled/
+→ Crystallize (auto): translate prototype → compute delta → reconciled/
 → /parallel → /validate
 ```
 
@@ -708,7 +707,7 @@ Characteristics: Human participates at every step during BMad conversation, `/sp
 
 ```
 /specs → JP1 → /preview → JP2
-→ [S] Crystallize (optional): reconcile all documents → reconciled/
+→ Crystallize (auto): translate prototype → compute delta → reconciled/
 → /parallel → /validate
 ```
 
@@ -836,8 +835,7 @@ Any changes made after JP1 approval (e.g., from the Deliverables generation proc
 
 | Response | Action |
 |----------|--------|
-| **Confirm** | Proceed to Parallel (implementation) with current documents |
-| **Crystallize** | Reconcile all documents with finalized prototype → then proceed to Parallel (S4.2 Crystallize) |
+| **Approve & Build** | Crystallize (translate prototype → compute delta) → Parallel (implementation) with reconciled/ documents |
 | **Comment** | Execute Comment handling flow (S5.4) |
 
 ## 5.4 Comment Handling Flow
@@ -932,7 +930,7 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 
 Key changes since v0.4.1:
 - **`/crystallize` command**: After JP2 prototype iteration, reconcile all upstream artifacts to match the finalized prototype. Creates `reconciled/` directory with the definitive artifact set — original artifacts preserved untouched. Product Brief excluded (defines problem space, not derivable from UI code). Available on all routes.
-- **JP2 [S] Crystallize option**: New menu option at JP2 (Sprint route) and `/preview` Step 3 (Guided/Direct routes). Separate budget (~85-125 turns) independent from JP2 iteration limit.
+- **Crystallize mandatory**: Crystallize now runs automatically on [A] Approve & Build at JP2 (all routes). Translates prototype into development grammar and computes delta. Budget (~90-133 turns) included in Approve & Build.
 - **decision-diary.md**: Structured JP decision summary table replacing feedback-log.md. Records each decision with JP, Type, Content, Processing method, and Result.
 - **sprint-log.md JP Interactions**: Full text of each JP exchange (Visual Summary, user input, impact analysis, processing choice, result) recorded in real-time.
 - **Source attribution tags**: `(source: PROTO, origin: BRIEF-N)`, `(source: PROTO, origin: DD-N)`, `(source: carry-forward)` — preserves traceability from original Brief through JP2 iteration to reconciled artifacts.
@@ -1115,7 +1113,7 @@ specs/{feature}/
 | **readiness.md** | JP1/JP2 Readiness data. YAML frontmatter includes jp1_to_jp2_changes field for tracking post-JP1 changes |
 | **/summarize-prd** | PRD summary/analysis + feedback application command. Used for quickly understanding existing PRDs |
 | **Scope Gate** | 3-stage verification performed by @scope-gate agent: Structured Probe + Checklist + Holistic Review. Runs after each BMad step and after Deliverables |
-| **Crystallize** | Prototype-first artifact reconciliation. After JP2 iteration, reconciles all upstream documents to match the finalized prototype. Creates `reconciled/` directory. Triggered via [S] Crystallize at JP2 (Sprint), `/preview` Step 3 (Guided/Direct), or standalone `/crystallize` command |
+| **Crystallize** | Mandatory translation step. After JP2 approval, translates prototype into development grammar and computes delta against brownfield baseline. Creates `reconciled/` directory with delta manifest. Triggered automatically by [A] Approve & Build (all routes), or standalone via `/crystallize` command |
 | **reconciled/** | Directory created by Crystallize. Contains the definitive artifact set reconciled with the finalized prototype. Mirrors `specs/{feature}/` structure minus excluded items. Original artifacts are preserved untouched |
 | **carry-forward** | Items in reconciled artifacts that are not derivable from the prototype (NFRs, security, deployment, scaling) and are carried from the original documents. Marked with `[carry-forward]` tag |
 | **DD-N** | Decision Diary entry ID (DD-1, DD-2, ...). Used in Crystallize source attribution to trace prototype features back to specific JP2 decisions |

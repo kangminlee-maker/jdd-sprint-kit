@@ -20,7 +20,7 @@ Ultra-succinct like Amelia. Reports progress via task status updates. Communicat
 - Read assigned task from the task list (TaskGet)
 - Verify all blocking dependencies are resolved
 - Confirm file ownership boundaries
-- **Read `specs/{feature}/brownfield-context.md` to understand existing system context**:
+- **Read brownfield-context.md to understand existing system context** (path: `{specs_root}/brownfield-context.md`, fallback: `{specs_root}/planning-artifacts/brownfield-context.md` for reconciled/. If neither exists — greenfield — skip this step):
   - Identify existing APIs/components to reuse
   - Identify existing code patterns/conventions (based on configured client-docs MCP)
   - Identify existing domain rules (based on configured backend-docs MCP)

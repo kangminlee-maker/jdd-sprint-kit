@@ -17,17 +17,19 @@ description: "Reconcile all artifacts from finalized prototype"
 
 ## Purpose
 
-After JP2 prototype iteration, reconcile all upstream artifacts to match the finalized prototype. Creates a `reconciled/` directory with the definitive artifact set for execution and long-term reference.
+Translate the JP2-approved prototype into development grammar and compute the delta between target state and brownfield baseline. Creates a `reconciled/` directory with the definitive artifact set + delta manifest for execution.
 
-The prototype becomes the source of truth for product behavior. Existing artifacts are preserved untouched — reconciled versions are written to a separate directory.
+This is a **mandatory step** before /parallel — without translation, Workers would implement pre-JP2 specs instead of the approved prototype's delta. The prototype is the source of truth for product behavior. Existing artifacts are preserved untouched.
 
 ## When to Use
 
-- After iterating on a prototype at JP2 until it matches the desired product
-- When documents need to accurately reflect the final product for execution (/parallel) and long-term reference (maintenance, handoff)
-- Available on all routes: Sprint (`[S]` at JP2), Guided (`[S]` at `/preview` Step 3), Direct (`[S]` at `/preview` Step 3), or standalone (`/crystallize feature-name`)
+- **Automatic**: Runs after JP2 approval on all routes — Sprint ([A] Approve & Build), Guided/Direct ([A] Approve & Build at `/preview` Step 3)
+- **Standalone**: `/crystallize feature-name` — for re-running translation independently
 
-**Note**: Within `/sprint` auto-sprint flow, Crystallize is triggered via [S] Crystallize menu option at JP2. Within `/preview`, it is triggered via [S] at Step 3. The standalone command is for cases where JP2 was completed with [C] but reconciliation is needed later.
+**On Crystallize failure**: If any gate (S2-G, S3-G, S5) fails and cannot be auto-fixed, the user is offered recovery options:
+- **[R] Return to JP2**: Abort Crystallize, clean up partial reconciled/, return to JP2 menu for further iteration
+- **[S] Skip Crystallize**: Proceed to /parallel with original specs (specs_root=specs/{feature}/). Delta manifest will not be available. Warning displayed.
+- **[X] Exit**: Abort Sprint entirely. All artifacts preserved.
 
 ## Inputs
 
@@ -43,6 +45,7 @@ Before starting the pipeline, verify:
 3. Decision records available (optional — enriches S0 context when present):
    - `specs/{feature}/decision-diary.md` OR `specs/{feature}/jp2-review-log.md` OR `specs/{feature}/sprint-log.md`
    - If none exist, S0 is skipped and S1 runs without decision context
+   - If records exist but Decisions table has 0 rows (JP2 approved with no Comments), S0 is also skipped
 4. If `specs/{feature}/reconciled/` already exists: prompt user — overwrite or abort
 
 On validation failure: report missing items (in {communication_language}) and abort.
@@ -55,7 +58,7 @@ Load config per Language Protocol in jdd-sprint-guide.md.
 
 Analyze JP2 decision records to understand the intent and context behind prototype modifications BEFORE analyzing the code. This enables S1 and S2 to distinguish deliberate business decisions from implementation details.
 
-**Progress**: `"[S0/7] Analyzing JP2 decision context..."`
+**Progress**: `"[S0/8] Analyzing JP2 decision context..."`
 
 1. Create `specs/{feature}/reconciled/` directory and `reconciled/planning-artifacts/`
 2. Copy immutable files:
@@ -95,7 +98,7 @@ If no decision records exist, skip this step and proceed to S1 without decision 
 
 Analyze the finalized prototype code and produce a structured analysis document.
 
-**Progress**: `"[S1/7] Analyzing prototype structure..."`
+**Progress**: `"[S1/8] Analyzing prototype structure..."`
 
 Invoke prototype analyzer:
 
@@ -144,7 +147,7 @@ Reconcile PRD, Architecture, and Epics using the prototype analysis as primary i
 
 **Product Brief is excluded** — it defines the problem space, which the prototype cannot supply.
 
-**Progress**: `"[S2/7] Reconciling PRD..."` → `"...Architecture..."` → `"...Epics..."` → `"...Cross-artifact validation..."`
+**Progress**: `"[S2/8] Reconciling PRD..."` → `"...Architecture..."` → `"...Epics..."` → `"...Cross-artifact validation..."`
 
 #### Reconciliation Principles
 
@@ -289,7 +292,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 Generate Specs 4-file from reconciled planning artifacts.
 
-**Progress**: `"[S3/7] Generating execution specs (requirements + design + tasks)..."`
+**Progress**: `"[S3/8] Generating execution specs (requirements + design + tasks)..."`
 
 ```
 Task(subagent_type: "general-purpose", model: "sonnet")
@@ -324,7 +327,7 @@ After specs generation:
 
 Verify existing deliverables against prototype. Regenerate where needed.
 
-**Progress**: `"[S4/7] Verifying API spec..."` → `"...Regenerating BDD scenarios..."` → ...
+**Progress**: `"[S4/8] Verifying API spec..."` → `"...Regenerating BDD scenarios..."` → ...
 
 Invoke deliverable reconciler:
 
@@ -371,7 +374,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 Verify mutual consistency across the entire reconciled/ artifact set.
 
-**Progress**: `"[S5/7] Cross-artifact consistency check..."`
+**Progress**: `"[S5/8] Cross-artifact consistency check..."`
 
 ```
 Task(subagent_type: "general-purpose", model: "sonnet")
@@ -397,11 +400,65 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 - Gap <= 3: auto-fix (Edit affected files) → re-verify
 - Gap > 3: present gap list to user → user selects: fix / skip / abort
 
+### Step S5b: Delta Manifest Generation
+
+Compare reconciled/ artifacts against brownfield baseline to classify every change.
+
+**Progress**: `"[S5b/8] Generating delta manifest..."`
+
+**Precondition**: S5 completed (PASS or user-skip). If S5 was user-skipped, include `consistency_verified: false` in manifest header.
+
+```
+Task(subagent_type: "general-purpose", model: "sonnet")
+  prompt: "Generate Delta Manifest comparing reconciled/ against brownfield baseline.
+
+    IMPORTANT: Write ALL output in {document_output_language}.
+
+    Input:
+    - specs/{feature}/reconciled/requirements.md
+    - specs/{feature}/reconciled/design.md
+    - specs/{feature}/reconciled/api-spec.yaml
+    - specs/{feature}/reconciled/schema.dbml
+    - specs/{feature}/reconciled/tasks.md
+    - specs/{feature}/planning-artifacts/brownfield-context.md (baseline)
+
+    For each element (API endpoint, DB table/column, FR, state transition, scheduler):
+    Compare target (reconciled/) vs baseline (brownfield). Classify:
+
+    | delta_id | type | origin | source_fr | scope | resource | task_id |
+    |----------|------|--------|-----------|-------|----------|---------|
+    | DM-001 | positive | proto | FR-3 | api_endpoint | POST /api/v2/blocks | T-2 |
+    | DM-002 | modification | proto | FR-1 | api_endpoint | GET /api/tutors (+block_count) | T-1 |
+    | DM-003 | zero | — | — | api_endpoint | GET /api/lessons | — |
+    | DM-004 | negative | proto | — | api_endpoint | DELETE /api/v1/block | T-8 |
+    | DM-005 | positive | carry-forward:defined | NFR-1 | config | p95 < 500ms monitoring | — |
+
+    Fields:
+    - type: positive (new) | modification (changed) | zero (unchanged) | negative (removed)
+    - origin: proto | carry-forward:defined | carry-forward:deferred | carry-forward:new
+    - task_id: tasks.md reference (NULL for zero/carry-forward items)
+
+    Greenfield (no brownfield data): classify all items as positive.
+
+    Also scan brownfield-context.md for items NOT in reconciled/ → classify as zero delta.
+
+    Summary:
+    | Type | Count |
+    |------|-------|
+    | Positive | {N} |
+    | Modification | {N} |
+    | Negative | {N} |
+    | Zero | {N} |
+    | Carry-Forward ratio | {carry-forward count}/{total} ({%}) |
+
+    Output: Write to specs/{feature}/reconciled/delta-manifest.md"
+```
+
 ### Step S6: Summary + Confirmation
 
 Present reconciliation results to user (in {communication_language}).
 
-**Progress**: `"[S6/7] Generating summary..."`
+**Progress**: `"[S6/8] Generating summary..."`
 
 **Output format**:
 
@@ -423,6 +480,15 @@ Present reconciliation results to user (in {communication_language}).
 - Features from JP2 iteration: {N} (source: PROTO, origin: DD-N)
 - Carried forward from original: {N} (source: carry-forward)
 
+### Delta Summary (from delta-manifest.md)
+| Type | Count |
+|------|-------|
+| Positive (new) | {N} |
+| Modification (changed) | {N} |
+| Negative (removed) | {N} |
+| Zero (unchanged) | {N} |
+| Carry-Forward ratio | {carry-forward}/{total} ({%}) |
+
 ### Verification
 - Cross-artifact consistency: PASS (gap 0)
 - Traceability coverage: {N}/{M} FRs fully traced
@@ -438,7 +504,7 @@ Select: [C] Continue to /parallel | [R] Review reconciled/ | [X] Exit
 
 ## Budget
 
-~85-125 turns across 9 Task invocations. Separate from JP2 iteration budget. S0 runs inline (no Task invocation).
+~90-133 turns across 10 Task invocations. S0 runs inline (no Task invocation).
 
 | Step | Model | Est. Turns |
 |------|-------|------------|
@@ -451,6 +517,7 @@ Select: [C] Continue to /parallel | [R] Review reconciled/ | [X] Exit
 | S3 Specs + S3-G | Sonnet | 18-25 |
 | S4 Deliverables | Sonnet | 10-15 |
 | S5 Consistency | Sonnet | 5-8 |
+| S5b Delta Manifest | Sonnet | 5-8 |
 
 ## Outputs
 

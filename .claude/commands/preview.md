@@ -68,17 +68,16 @@ Present generated Sprint Output Package to user for review (in {communication_la
 
 | Option | Label | Description |
 |--------|-------|-------------|
-| **A** | Approve | Proceed to `/parallel` (parallel implementation) |
-| **S** | Crystallize | Reconcile all documents to match prototype, then proceed to execution |
+| **A** | Approve & Build | Confirm prototype → Crystallize (translate + compute delta, ~15-20 min) → `/parallel` |
 | **F1** | Feedback (Deliverables) | Re-run Step 2 (Specs preserved) |
 | **F2** | Feedback (design) | Re-run `/specs` (modify Planning Artifacts) |
 | **X** | Abort | Exit (artifacts preserved) |
 
 **On feedback (F1/F2)**: Record feedback to `specs/{feature}/decision-diary.md` Decisions table (Type, Content, Processing, Result) before re-running.
 
-**On [S] Crystallize**: Record selection in decision-diary.md → invoke `/crystallize {feature}`.
+**On [A] Approve & Build**: Record selection in decision-diary.md → invoke `/crystallize {feature}` → on completion proceed to `/parallel` with `specs_root=reconciled/`.
 
-**Iteration limit**: F1/F2 selections combined max 5 times. On exceed, warn (in {communication_language}): "5 review/edit rounds complete. Select [A] Approve, [S] Crystallize, or [X] Abort."
+**Iteration limit**: F1/F2 selections combined max 5 times. On exceed, warn (in {communication_language}): "5 review/edit rounds complete. Select [A] Approve & Build or [X] Abort."
 
 ## Outputs
 - `specs/{feature-name}/api-spec.yaml`

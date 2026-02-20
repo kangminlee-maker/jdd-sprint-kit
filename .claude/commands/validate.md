@@ -73,25 +73,29 @@ Run Judge agents in parallel. Pass each Judge:
 
 **Adversarial exit condition**: PASS when 0 new CRITICAL/HIGH findings. SUGGESTION-only means pass.
 
-Judge invocation — **must invoke all 3 Tasks simultaneously in a single response**:
+Judge invocation — **must invoke all 3 Tasks simultaneously in a single response**.
+Note: `{specs_root}` defaults to `specs/{feature}/`. After Crystallize: `specs/{feature}/reconciled/`.
+For brownfield_path: use `{specs_root}/brownfield-context.md` if exists, otherwise `{specs_root}/planning-artifacts/brownfield-context.md`.
+sprint_input_path always uses original `specs/{feature}/inputs/sprint-input.md` (not affected by Crystallize).
+
 ```
 Task(subagent_type: "judge-quality", model: "sonnet")
   prompt: "Read .claude/agents/judge-quality.md and follow it.
     changed_files: {changed_files}
-    feature_dir: specs/{feature}/
-    brownfield_path: specs/{feature}/brownfield-context.md"
+    feature_dir: {specs_root}
+    brownfield_path: {specs_root}/brownfield-context.md (fallback: {specs_root}/planning-artifacts/brownfield-context.md)"
 
 Task(subagent_type: "judge-security", model: "sonnet")
   prompt: "Read .claude/agents/judge-security.md and follow it.
     changed_files: {changed_files}
-    feature_dir: specs/{feature}/
-    brownfield_path: specs/{feature}/brownfield-context.md"
+    feature_dir: {specs_root}
+    brownfield_path: {specs_root}/brownfield-context.md (fallback: {specs_root}/planning-artifacts/brownfield-context.md)"
 
 Task(subagent_type: "judge-business", model: "sonnet")
   prompt: "Read .claude/agents/judge-business.md and follow it.
     changed_files: {changed_files}
-    feature_dir: specs/{feature}/
-    brownfield_path: specs/{feature}/brownfield-context.md
+    feature_dir: {specs_root}
+    brownfield_path: {specs_root}/brownfield-context.md (fallback: {specs_root}/planning-artifacts/brownfield-context.md)
     sprint_input_path: specs/{feature}/inputs/sprint-input.md"
 ```
 → Collect all 3 results

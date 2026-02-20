@@ -164,7 +164,7 @@ See `docs/judgment-driven-development.md` Customer-Lens Judgment Points.
 
 - **Judgment target**: prototype, screen flows, interactions
 - **Presentation format**: working prototype + key scenario walkthrough guide
-- **Response**: Confirm / Crystallize / Comment
+- **Response**: Confirm / Comment
 
 ### Comment Handling Flow
 
@@ -199,16 +199,18 @@ Guide for determining regeneration start point based on feedback magnitude:
 This table is a reference for the system when calculating regeneration scope during impact analysis.
 Users see the calculated cost alongside the options.
 
-## Crystallize Flow
+## Crystallize Flow (Mandatory Translation Step)
 
-After JP2 prototype iteration, [S] Crystallize reconciles all upstream artifacts with the finalized prototype. Creates `reconciled/` directory with the definitive artifact set.
+After JP2 approval, Crystallize automatically translates the finalized prototype into development grammar and computes the delta against brownfield baseline. Creates `reconciled/` directory with the definitive artifact set + delta manifest.
 
-**Availability**: All routes (Sprint, Guided, Direct). Decision records (decision-diary.md, jp2-review-log.md, sprint-log.md JP Interactions) are optional — they enrich S0 Decision Context when present. Without them, S0 is skipped and S1 runs from code analysis alone.
+**This is a mandatory step** — without translation, /parallel would implement pre-JP2 specs instead of the approved prototype's delta. All routes (Sprint, Guided, Direct) run Crystallize before /parallel.
+
+Decision records (decision-diary.md, jp2-review-log.md, sprint-log.md JP Interactions) are optional — they enrich S0 Decision Context when present. Without them (or with 0 Comment rows), S0 is skipped and S1 runs from code analysis alone.
 
 ### Crystallize Pipeline
 
 ```
-[S] Crystallize at JP2
+JP2 [A] Approve & Build (Sprint) / [A] Approve & Build (Guided/Direct)
   S0: Decision Context Analysis  → reconciled/decision-context.md (JP2 modification intent)
   S1: Prototype Analysis         → reconciled/prototype-analysis.md (informed by S0)
   S2: Reconcile Planning         → reconciled/planning-artifacts/ (PRD, Architecture, Epics)
@@ -217,8 +219,11 @@ After JP2 prototype iteration, [S] Crystallize reconciles all upstream artifacts
   S3-G: Scope Gate (spec)        → PASS/FAIL
   S4: Reconcile Deliverables     → reconciled/ (api-spec, bdd, key-flows, traceability, etc.)
   S5: Cross-Artifact Consistency  → PASS/FAIL (gap=0 required; ≤3 auto-fix, >3 user choice)
-  S6: Summary → [C] /parallel with specs_root=reconciled/
+  S5b: Delta Manifest            → reconciled/delta-manifest.md
+  S6: Summary → /parallel with specs_root=reconciled/
 ```
+
+On gate failure (S2-G, S3-G, or S5 unresolvable): [R] Return to JP2 / [S] Skip Crystallize (original specs) / [X] Exit.
 
 ### Reconciliation Principles
 
@@ -247,7 +252,7 @@ When classification cannot be determined, use the base `[carry-forward]` tag (tr
 
 ### Downstream Integration
 
-After Crystallize, `/parallel` and `/validate` use `specs_root` parameter to read from `reconciled/` instead of the base `specs/{feature}/` directory. Original artifacts remain untouched.
+After Crystallize, `/parallel` and `/validate` always use `specs_root=specs/{feature}/reconciled/`. Original artifacts remain untouched in `specs/{feature}/`.
 
 ## Sprint Log Extension: JP Interactions
 
