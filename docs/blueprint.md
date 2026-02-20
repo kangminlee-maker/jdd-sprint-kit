@@ -1,8 +1,8 @@
 ---
-synced_to: "0de4dae"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
+synced_to: "5698416"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
 audience: "non-developer product expert"
 product: "JDD Sprint Kit"
-version: "0.5.2"
+version: "0.5.3"
 ---
 
 # JDD Sprint Kit Blueprint
@@ -596,7 +596,7 @@ JP2 presentation format and Comment handling flow details in S5.3.
 
 This preserves traceability from the original Brief through JP2 iteration to the final reconciled artifacts.
 
-**Budget**: ~85-120 turns (separate from JP2 iteration budget). Does not count against the 5-round JP2 iteration limit.
+**Budget**: ~85-125 turns (separate from JP2 iteration budget). Does not count against the 5-round JP2 iteration limit.
 
 **Artifact**: `specs/{feature}/reconciled/` — mirrors the existing `specs/{feature}/` structure, minus excluded items (Product Brief, sprint-log, readiness, inputs/, preview/).
 
@@ -927,11 +927,11 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 
 ## 8.1 Current Version
 
-**v0.5.0** (2026-02-20)
+**v0.5.3** (2026-02-20)
 
 Key changes since v0.4.1:
-- **`/crystallize` command**: After JP2 prototype iteration, reconcile all upstream artifacts to match the finalized prototype. Creates `reconciled/` directory with the definitive artifact set — original artifacts preserved untouched. Product Brief excluded (defines problem space, not derivable from UI code). Sprint-route only.
-- **JP2 [S] Crystallize option**: New menu option at JP2 and `/preview` Step 3. Separate budget (~85-125 turns) independent from JP2 iteration limit.
+- **`/crystallize` command**: After JP2 prototype iteration, reconcile all upstream artifacts to match the finalized prototype. Creates `reconciled/` directory with the definitive artifact set — original artifacts preserved untouched. Product Brief excluded (defines problem space, not derivable from UI code). Available on all routes.
+- **JP2 [S] Crystallize option**: New menu option at JP2 (Sprint route) and `/preview` Step 3 (Guided/Direct routes). Separate budget (~85-125 turns) independent from JP2 iteration limit.
 - **decision-diary.md**: Structured JP decision summary table replacing feedback-log.md. Records each decision with JP, Type, Content, Processing method, and Result.
 - **sprint-log.md JP Interactions**: Full text of each JP exchange (Visual Summary, user input, impact analysis, processing choice, result) recorded in real-time.
 - **Source attribution tags**: `(source: PROTO, origin: BRIEF-N)`, `(source: PROTO, origin: DD-N)`, `(source: carry-forward)` — preserves traceability from original Brief through JP2 iteration to reconciled artifacts.
@@ -1114,7 +1114,7 @@ specs/{feature}/
 | **readiness.md** | JP1/JP2 Readiness data. YAML frontmatter includes jp1_to_jp2_changes field for tracking post-JP1 changes |
 | **/summarize-prd** | PRD summary/analysis + feedback application command. Used for quickly understanding existing PRDs |
 | **Scope Gate** | 3-stage verification performed by @scope-gate agent: Structured Probe + Checklist + Holistic Review. Runs after each BMad step and after Deliverables |
-| **Crystallize** | Prototype-first artifact reconciliation. After JP2 iteration, reconciles all upstream documents to match the finalized prototype. Creates `reconciled/` directory. Triggered via [S] Crystallize at JP2 or standalone `/crystallize` command. Sprint-route only |
+| **Crystallize** | Prototype-first artifact reconciliation. After JP2 iteration, reconciles all upstream documents to match the finalized prototype. Creates `reconciled/` directory. Triggered via [S] Crystallize at JP2 (Sprint), `/preview` Step 3 (Guided/Direct), or standalone `/crystallize` command |
 | **reconciled/** | Directory created by Crystallize. Contains the definitive artifact set reconciled with the finalized prototype. Mirrors `specs/{feature}/` structure minus excluded items. Original artifacts are preserved untouched |
 | **carry-forward** | Items in reconciled artifacts that are not derivable from the prototype (NFRs, security, deployment, scaling) and are carried from the original documents. Marked with `[carry-forward]` tag |
 | **DD-N** | Decision Diary entry ID (DD-1, DD-2, ...). Used in Crystallize source attribution to trace prototype features back to specific JP2 decisions |

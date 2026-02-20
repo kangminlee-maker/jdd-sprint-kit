@@ -164,7 +164,7 @@ See `docs/judgment-driven-development.md` Customer-Lens Judgment Points.
 
 - **Judgment target**: prototype, screen flows, interactions
 - **Presentation format**: working prototype + key scenario walkthrough guide
-- **Response**: Confirm / Crystallize (Sprint-route only) / Comment
+- **Response**: Confirm / Crystallize / Comment
 
 ### Comment Handling Flow
 
@@ -199,7 +199,7 @@ Guide for determining regeneration start point based on feedback magnitude:
 This table is a reference for the system when calculating regeneration scope during impact analysis.
 Users see the calculated cost alongside the options.
 
-## Crystallize Flow (Sprint-route only)
+## Crystallize Flow
 
 After JP2 prototype iteration, [S] Crystallize reconciles all upstream artifacts with the finalized prototype. Creates `reconciled/` directory with the definitive artifact set.
 

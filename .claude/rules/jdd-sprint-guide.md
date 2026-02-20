@@ -143,7 +143,7 @@ Routes are not fixed. Adapt as needed:
 - `/sprint` — **Sprint route**: Brief/materials → auto Specs + Deliverables + Prototype (2 JPs)
 - `/specs` — **Specs generation**: Planning Artifacts → Specs 4-file
 - `/preview` — **Deliverables generation**: Specs → OpenAPI + DBML + BDD + Prototype
-- `/crystallize` — **Prototype reconciliation**: Finalized prototype → reconciled/ artifact set (Sprint-route only)
+- `/crystallize` — **Prototype reconciliation**: Finalized prototype → reconciled/ artifact set (all routes)
 - `/parallel` — Multi-agent parallel execution
 - `/validate` — 3-Phase verification pipeline
 - `/circuit-breaker` — Course correction
