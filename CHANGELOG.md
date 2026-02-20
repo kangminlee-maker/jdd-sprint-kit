@@ -4,6 +4,43 @@ All notable changes to JDD Sprint Kit will be documented in this file.
 
 ---
 
+## [0.5.0] - 2026-02-20
+
+### Added
+- **`/crystallize` command** — Prototype-first artifact reconciliation after JP2 iteration
+  - When prototype is finalized through JP2 feedback cycles, reconciles all upstream artifacts to match
+  - Creates `reconciled/` directory with definitive artifact set — original artifacts preserved untouched
+  - 6-step pipeline: Prototype Analysis → Reconcile Planning (PRD/Architecture/Epics) → Generate Specs → Reconcile Deliverables → Cross-Artifact Consistency Check → Summary
+  - Source attribution tags: `(source: PROTO, origin: BRIEF-N)`, `(source: PROTO, origin: DD-N)`, `(source: carry-forward)` — preserves traceability from original brief through prototype iteration
+  - `[carry-forward]` tag for items not derivable from prototype (NFRs, security, deployment, scaling)
+  - Product Brief excluded from scope (defines problem space, not derivable from UI code)
+  - Sprint-route only (depends on decision-diary.md and sprint-log.md JP Interactions)
+- **JP2 `[S] Crystallize` menu option** — Triggers Crystallize pipeline from within auto-sprint JP2 flow
+  - Separate budget (~85-120 turns) independent from JP2 iteration limit (5 rounds)
+  - On completion, proceeds to `/parallel` with `specs_root=reconciled/`
+- **decision-diary.md** — Structured JP decision summary table (replaces feedback-log.md)
+  - Records JP, Type, Content, Processing method, Result per decision
+  - Role: product expert quick reference (vs sprint-log.md for full interaction audit)
+- **sprint-log.md JP Interactions section** — Full text of each JP exchange recorded in real-time
+  - Visual Summary presented, user input, impact analysis, processing choice, result
+  - Serves as AI context for Crystallize and audit trail
+
+### Changed
+- **`specs_root` parameter** — Added to `/parallel` and `/validate` commands
+  - Default: `specs/{feature}/` (backward compatible)
+  - After Crystallize: `specs/{feature}/reconciled/`
+  - Judges (@judge-business, @judge-quality, @judge-security) verify against reconciled artifacts
+- **deliverable-generator** — Added optional `prototype_analysis_path` parameter for specs-only mode cross-reference during Crystallize
+- **Specs File Pattern** — `reconciled/` subdirectory added to protocol, mirroring existing structure minus excluded items (product-brief, sprint-log, readiness, inputs/, preview/)
+
+### Design Decisions
+- Party Mode 2-round review (8 BMad agents) validated the design
+  - Round 1: 2 CRITICAL + 6 HIGH findings → all resolved in v2
+  - Round 2: 0 CRITICAL, 1 HIGH (N1: /validate integration) → resolved
+  - Key decisions: "reconcile" not "reverse-generate", separate reconciled/ directory (rollback-safe), compound source tags for traceability
+
+---
+
 ## [0.4.1] - 2026-02-20
 
 ### Fixed
