@@ -62,12 +62,23 @@ This mode reads existing Specs 4-file and executes Stages 3-10:
 
 ### Step 3: Output Review
 
+Initialize `specs/{feature}/decision-diary.md` if it does not exist (with route metadata: `route: guided` or `route: direct`).
+
 Present generated Sprint Output Package to user for review (in {communication_language}):
 
-- **Approve** → run `/parallel` (parallel implementation)
-- **Feedback (Deliverables)** → re-run Step 2 (Specs preserved)
-- **Feedback (design)** → re-run `/specs` (modify Planning Artifacts)
-- **Abort** → exit
+| Option | Label | Description |
+|--------|-------|-------------|
+| **A** | Approve | Proceed to `/parallel` (parallel implementation) |
+| **S** | Crystallize | Reconcile all documents to match prototype, then proceed to execution |
+| **F1** | Feedback (Deliverables) | Re-run Step 2 (Specs preserved) |
+| **F2** | Feedback (design) | Re-run `/specs` (modify Planning Artifacts) |
+| **X** | Abort | Exit (artifacts preserved) |
+
+**On feedback (F1/F2)**: Record feedback to `specs/{feature}/decision-diary.md` Decisions table (Type, Content, Processing, Result) before re-running.
+
+**On [S] Crystallize**: Record selection in decision-diary.md → invoke `/crystallize {feature}`.
+
+**Iteration limit**: F1/F2 selections combined max 5 times. On exceed, warn (in {communication_language}): "5 review/edit rounds complete. Select [A] Approve, [S] Crystallize, or [X] Abort."
 
 ## Outputs
 - `specs/{feature-name}/api-spec.yaml`

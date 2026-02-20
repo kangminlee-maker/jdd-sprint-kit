@@ -74,6 +74,7 @@ Build planning artifacts step-by-step through conversation with BMad agents.
 BMad 12-step (human-AI dialogue):
   /create-product-brief → /create-prd → /create-architecture → /create-epics
 → /specs → JP1 → /preview → JP2
+→ [S] Crystallize (optional): reconcile all artifacts with finalized prototype → reconciled/
 → /parallel → /validate
 ```
 
@@ -83,6 +84,7 @@ Use when finished PRD + Architecture + Epics already exist.
 
 ```
 /specs → JP1 → /preview → JP2
+→ [S] Crystallize (optional): reconcile all artifacts with finalized prototype → reconciled/
 → /parallel → /validate
 ```
 
@@ -170,9 +172,11 @@ Routes are not fixed. Adapt as needed:
 │       ├── inputs/                     # User originals + sprint-input.md
 │       ├── planning-artifacts/         # BMad artifacts (Sprint/Direct route)
 │       ├── brownfield-context.md       # Frozen snapshot
+│       ├── decision-diary.md          # JP decision summary
 │       ├── requirements.md
 │       ├── design.md
 │       ├── tasks.md
-│       └── preview/                    # React + MSW prototype
+│       ├── preview/                    # React + MSW prototype
+│       └── reconciled/                 # Crystallize output (prototype-reconciled artifacts)
 └── src/                                # Source code
 ```

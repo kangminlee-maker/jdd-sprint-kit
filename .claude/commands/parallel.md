@@ -62,7 +62,7 @@ Create Worker agents via Claude Code Native Teams:
 1. Create team via TeamCreate
 2. Create each Worker via Task tool (`subagent_type: "worker"`, `model: "sonnet"`)
 3. Create tasks via TaskCreate, assign via TaskUpdate
-4. Instruct each Worker to reference `specs/{feature}/brownfield-context.md`:
+4. Instruct each Worker to reference `{specs_root}/brownfield-context.md` (or `{specs_root}/planning-artifacts/brownfield-context.md` for reconciled/):
    - Follow existing code patterns/conventions (based on configured client-docs MCP)
    - Maintain compatibility when extending existing APIs (based on configured backend-docs MCP)
    - Verify alignment with existing customer journey flows (based on configured svc-map MCP)

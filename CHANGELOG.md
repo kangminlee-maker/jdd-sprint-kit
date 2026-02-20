@@ -4,14 +4,35 @@ All notable changes to JDD Sprint Kit will be documented in this file.
 
 ---
 
+## [0.5.3] - 2026-02-20
+
+### Improved
+- **Tarball snapshot persistent cache** — Extraction path moved from `/tmp/` to `~/docs-cache/{feature}/{name}/`, surviving OS temp cleanup between Phase 0 and Scanner execution
+- **Snapshot version tracking** — Records commit SHA, branch, and timestamp via `gh api commits/{ref}` after each tarball download. Propagates to brownfield-context.md `data_sources` for traceability
+- **Large repo size warning** — Pre-checks repo size via `gh api repos/{owner_repo}` before download. Repos >= 1GB show a warning with size and `--add-dir` alternative, then proceed without blocking
+- **Branch extraction from GitHub URL** — URLs with `/tree/{branch}` path now extract the branch for targeted tarball download (default: HEAD)
+
+---
+
 ## [0.5.2] - 2026-02-20
 
 ### Added
-- **S0 Decision Context Analysis** — New step before prototype analysis (S1). Reads decision-diary.md or jp2-review-log.md to understand JP2 modification intent and context. S1 prototype analyzer uses this to distinguish deliberate business decisions from implementation details.
+- **S0 Decision Context Analysis** — New step before prototype analysis (S1). Reads decision-diary.md or jp2-review-log.md to understand JP2 modification intent and context. S1 and S2 agents use this to distinguish deliberate business decisions from implementation details.
+- **`/preview` [S] Crystallize option** — Guided/Direct routes can now trigger Crystallize from `/preview` Step 3, with decision-diary.md feedback recording
+- **decision-diary.md in `/preview`** — `/preview` Step 3 initializes and records JP feedback to decision-diary.md (route metadata included)
+
+### Changed
+- **Crystallize available on all routes** — Removed "Sprint-route only" restriction. Sprint (auto-sprint [S]), Guided (/preview [S]), Direct (/preview [S]), standalone (/crystallize) all supported. Decision records are optional — they enrich S0 when present.
+- **sprint-log.md precondition relaxed** — No longer required for Crystallize. Decision records (decision-diary.md, jp2-review-log.md, sprint-log.md) are all optional context sources.
+- **`{document_output_language}` directive propagated** — Added to ALL Task prompts (S2a/S2b/S2c/S2-G/S3/S4/S5), not just S1.
+- **S4 Task dispatch specified** — S4 now has explicit Task invocation block (previously underspecified).
+- **S3 output_base path** — Fixed to avoid double-nesting with deliverable-generator (feature_name='reconciled', output_base='specs/{feature}/')
+- **Budget aligned** — ~85-125 turns consistently across all files (was ~85-120 in some)
+- **parallel.md brownfield path** — Uses `{specs_root}` instead of hardcoded `specs/{feature}/`
 
 ### Fixed
-- **prototype-analysis.md written in wrong language** — S1 Task prompt lacked `{document_output_language}` directive, causing output to default to English. Now explicitly includes language instruction.
-- **Crystallize pipeline step count** — Updated from 6 steps (S1-S6) to 7 steps (S0-S6) across crystallize.md, auto-sprint.md, and bmad-sprint-protocol.md.
+- **prototype-analysis.md written in wrong language** — S1 Task prompt lacked `{document_output_language}` directive, causing output to default to English.
+- **Crystallize pipeline step count** — Updated from 6 steps (S1-S6) to 7 steps (S0-S6) across all files.
 
 ---
 

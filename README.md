@@ -131,6 +131,8 @@ Direct:                        |←── Auto ───────────
 | **Guided** | BMad 12-step → `/specs` → `/preview` | Exploration needed — discover and define with AI |
 | **Direct** | `/specs` → `/preview` | Planning is complete — execute immediately |
 
+After prototype iteration, `/crystallize feature-name` reconciles all documents to match the finalized prototype (available on all routes).
+
 > For small tasks, use BMad Quick Flow: `/quick-spec` → `/dev-story` → `/code-review`
 
 Routes are not fixed. If you have materials but need deep exploration, use Guided with materials as reference input. After completing BMad 12-step, `/specs` auto-detects the artifacts — same as Direct.

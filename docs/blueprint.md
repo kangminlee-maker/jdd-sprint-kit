@@ -1,8 +1,8 @@
 ---
-synced_to: "ef0f6cd"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
+synced_to: "0de4dae"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
 audience: "non-developer product expert"
 product: "JDD Sprint Kit"
-version: "0.5.0"
+version: "0.5.2"
 ---
 
 # JDD Sprint Kit Blueprint
@@ -578,6 +578,7 @@ JP2 presentation format and Comment handling flow details in S5.3.
 
 | Step | Action | Output |
 |------|--------|--------|
+| S0 | Analyze JP2 decision records (intent and context) | `reconciled/decision-context.md` |
 | S1 | Analyze prototype code (pages, components, API handlers, data model) | `reconciled/prototype-analysis.md` |
 | S2 | Reconcile PRD + Architecture + Epics with prototype | `reconciled/planning-artifacts/` |
 | S3 | Generate Specs from reconciled planning artifacts | `reconciled/requirements.md`, `design.md`, `tasks.md` |
@@ -599,7 +600,7 @@ This preserves traceability from the original Brief through JP2 iteration to the
 
 **Artifact**: `specs/{feature}/reconciled/` — mirrors the existing `specs/{feature}/` structure, minus excluded items (Product Brief, sprint-log, readiness, inputs/, preview/).
 
-**Availability**: Sprint-route only. Requires Sprint artifacts (decision-diary.md, sprint-log.md JP Interactions). Guided/Direct route support is a future enhancement.
+**Availability**: All routes. In Sprint route, triggered via auto-sprint [S] at JP2. In Guided/Direct routes, triggered via `/preview` [S] at Step 3. Decision records (decision-diary.md, sprint-log.md JP Interactions) are optional — they enrich the reconciliation when present.
 
 ---
 
@@ -692,6 +693,7 @@ For new products, new markets, or idea-stage exploration requiring systematic di
 ```
 /create-product-brief → /create-prd → /create-architecture → /create-epics
 → /specs → JP1 → /preview → JP2
+→ [S] Crystallize (optional): reconcile all documents → reconciled/
 → /parallel → /validate
 ```
 
@@ -705,6 +707,7 @@ Characteristics: Human participates at every step during BMad conversation, `/sp
 
 ```
 /specs → JP1 → /preview → JP2
+→ [S] Crystallize (optional): reconcile all documents → reconciled/
 → /parallel → /validate
 ```
 
@@ -928,7 +931,7 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 
 Key changes since v0.4.1:
 - **`/crystallize` command**: After JP2 prototype iteration, reconcile all upstream artifacts to match the finalized prototype. Creates `reconciled/` directory with the definitive artifact set — original artifacts preserved untouched. Product Brief excluded (defines problem space, not derivable from UI code). Sprint-route only.
-- **JP2 [S] Crystallize option**: New menu option at JP2. Separate budget (~85-120 turns) independent from JP2 iteration limit.
+- **JP2 [S] Crystallize option**: New menu option at JP2 and `/preview` Step 3. Separate budget (~85-125 turns) independent from JP2 iteration limit.
 - **decision-diary.md**: Structured JP decision summary table replacing feedback-log.md. Records each decision with JP, Type, Content, Processing method, and Result.
 - **sprint-log.md JP Interactions**: Full text of each JP exchange (Visual Summary, user input, impact analysis, processing choice, result) recorded in real-time.
 - **Source attribution tags**: `(source: PROTO, origin: BRIEF-N)`, `(source: PROTO, origin: DD-N)`, `(source: carry-forward)` — preserves traceability from original Brief through JP2 iteration to reconciled artifacts.

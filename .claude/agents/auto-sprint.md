@@ -742,7 +742,7 @@ When [S] is selected, execute the Crystallize pipeline as defined in `.claude/co
 4. On Crystallize S6 [C] Continue: proceed to Execute with `specs_root=specs/{feature_name}/reconciled/`
 5. On Crystallize S6 [X] Exit: return to JP2 menu (reconciled/ is preserved)
 
-**Budget**: Crystallize has its own budget (~85-120 turns) separate from JP2 iteration budget (5 rounds). [S] does not count against the 5-round iteration limit.
+**Budget**: Crystallize has its own budget (~85-125 turns) separate from JP2 iteration budget (5 rounds). [S] does not count against the 5-round iteration limit.
 
 ## Conductor Roles
 

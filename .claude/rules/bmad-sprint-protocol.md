@@ -203,7 +203,7 @@ Users see the calculated cost alongside the options.
 
 After JP2 prototype iteration, [S] Crystallize reconciles all upstream artifacts with the finalized prototype. Creates `reconciled/` directory with the definitive artifact set.
 
-**Availability**: Sprint-route only. Depends on Sprint artifacts (decision-diary.md, sprint-log.md JP Interactions). Not available for Guided/Direct routes.
+**Availability**: All routes (Sprint, Guided, Direct). Decision records (decision-diary.md, jp2-review-log.md, sprint-log.md JP Interactions) are optional — they enrich S0 Decision Context when present. Without them, S0 is skipped and S1 runs from code analysis alone.
 
 ### Crystallize Pipeline
 
@@ -216,7 +216,7 @@ After JP2 prototype iteration, [S] Crystallize reconciles all upstream artifacts
   S3: Generate Execution Specs   → reconciled/ (entity-dict, requirements, design, tasks)
   S3-G: Scope Gate (spec)        → PASS/FAIL
   S4: Reconcile Deliverables     → reconciled/ (api-spec, bdd, key-flows, traceability, etc.)
-  S5: Cross-Artifact Consistency  → PASS/FAIL (gap=0 required)
+  S5: Cross-Artifact Consistency  → PASS/FAIL (gap=0 required; ≤3 auto-fix, >3 user choice)
   S6: Summary → [C] /parallel with specs_root=reconciled/
 ```
 
