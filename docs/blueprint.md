@@ -140,7 +140,7 @@ Advantage: consistent results each time
 Prerequisite: human judgment (feedback) accumulates and feeds into the next generation
 ```
 
-**Sprint Kit implementation — Comment handling flow + Circuit Breaker**: When Comment is given at a JP, the system presents **apply-fix+propagate** (small-scale) or **regenerate** (large-scale) with cost estimates. The user chooses based on cost. Apply-fix is also validated by Scope Gate for consistency. Circuit Breaker is a normal mechanism that expands regeneration scope to the entire Sprint on repeated failures. (Full flow detail: S5.4. Trade-off cost: S6.2.)
+**Sprint Kit implementation — Comment handling flow + Circuit Breaker**: When Comment is given at a JP, the system presents **apply-fix+propagate** (small-scale) or **regenerate** (large-scale) with cost estimates. The user chooses based on cost. Apply-fix is also validated by Scope Gate (a 3-stage verification that checks whether changes are internally consistent across all artifacts — details in S4.2) for consistency. Circuit Breaker is a normal mechanism that expands regeneration scope to the entire Sprint on repeated failures. (Full flow detail: S5.4. Trade-off cost: S6.2.)
 
 ### Customer-Lens Judgment Points
 
@@ -252,7 +252,7 @@ Real user examples:
 | **GitHub CLI (`gh`)** | Issue/PR management, task tracking |
 | **Specmatic** | OpenAPI contract-based automated testing (Worker self-verification) |
 | **MSW (Mock Service Worker)** | Prototype stateful API (network interception via browser Service Worker) |
-| **@redocly/cli** | OpenAPI spec lint (syntax/structure + example ↔ schema conformance) |
+| **@redocly/cli** | OpenAPI spec validation — checks for syntax errors, structural issues, and mismatches between example data and schema definitions |
 | **npx jdd-sprint-kit** | Sprint Kit install/update CLI |
 
 #### Tool Selection Rationale
@@ -261,17 +261,17 @@ Most tools above are platform givens (BMad, Claude Code) or have no practical al
 
 **MSW (Mock Service Worker)** — Selected for prototype fidelity. Requirement: JP2 judgment requires a prototype that behaves like a real service (stateful CRUD across flows). MSW intercepts at the network level via browser Service Worker, so the React app calls APIs with the same code as production — unaware it's mocked. Previously used Prism (OpenAPI proxy mock), but Prism could not maintain cross-request state (e.g., "POST creates a record → GET returns it"), making realistic user journeys impossible.
 
-**Specmatic** — Selected for contract-based verification. Requirement: Workers implementing in parallel must verify API conformance without a running backend. Specmatic generates contract tests directly from `api-spec.yaml`, enabling each Worker to self-verify in isolation. Alternative considered: Pact (consumer-driven contracts), but Sprint Kit's flow generates the API spec first (provider-first), making Specmatic's provider-first model a natural fit.
+**Specmatic** — Selected for contract-based verification. Requirement: Workers implementing in parallel must verify API conformance without a running backend. Specmatic generates contract tests directly from `api-spec.yaml`, enabling each Worker to self-verify in isolation. Alternative considered: Pact, which tests contracts from the consumer side (frontend declares expectations, backend is tested against them). But Sprint Kit defines the API spec before any consumer code exists, so Specmatic's approach — testing directly against the API spec — is a natural fit.
 
 **@redocly/cli** — Selected for OpenAPI lint depth. Requirement: catch structural errors and example ↔ schema mismatches before MSW handler generation. Redocly detects example/schema conformance issues that Spectral (the main alternative) does not cover by default.
 
-**Git Worktree** — Selected over feature branches for parallel Workers. Worktrees share the same `.git` directory, avoiding merge overhead and enabling true concurrent file system access.
+**Git Worktree** — Selected over feature branches for parallel Workers. Worktrees create separate working directories from the same repository, so multiple Workers can edit files simultaneously without blocking each other. With regular feature branches, only one branch can be checked out at a time per directory, requiring switching back and forth.
 
 ### Agent 3-Tier Architecture
 
 Sprint Kit uses agents in three tiers.
 
-**BMad Agents** — Planning artifact generation (provided by BMad Method, AI role-play):
+**BMad Agents** — Planning artifact generation (provided by BMad Method — each agent is a specialized AI prompt with defined expertise, inputs, and outputs):
 
 | Agent | Role | Input → Output | Sprint Invocation |
 |-------|------|----------------|-------------------|
@@ -289,7 +289,7 @@ Sprint Kit uses agents in three tiers.
 
 | Agent | Role | Input → Output | When |
 |-------|------|----------------|------|
-| **@auto-sprint** | Sprint orchestration + Conductor 4 roles (Goal Tracking, Scope Gate, Budget, Redirect) | sprint-input.md → all planning-artifacts/ | Entire Sprint |
+| **@auto-sprint** | Sprint orchestration + Conductor 4 roles (Goal Tracking, Scope Gate, Budget, Redirect — details in S4.2 BMad Auto-Pipeline) | sprint-input.md → all planning-artifacts/ | Entire Sprint |
 | **@scope-gate** | 3-stage validation: Structured Probe + Checklist + Holistic Review | Previous artifact + goals → Pass/Fail + gap report | After each BMad step + after deliverables |
 | **@brownfield-scanner** | Brownfield data collection from external sources + local codebase (L1~L4) | external sources + local code → brownfield-context.md | Pass 1 (broad) + Pass 2 (targeted) |
 | **@deliverable-generator** | Full-stack deliverable generation | planning-artifacts/ → Specs + Deliverables + MSW Mocks + readiness.md + Prototype | Specs/Deliverables stage |
@@ -300,7 +300,7 @@ Sprint Kit uses agents in three tiers.
 |-------|------|----------------|------|
 | **@worker** | Task implementation in isolated worktree + Specmatic self-verification | Task + Specs + brownfield → implementation code | Parallel |
 | **@judge-quality** | Code structure, patterns, duplication, conventions + Specmatic contract compliance | Implementation code + Specs → Pass/Fail + issue list | Validate Phase 1 |
-| **@judge-security** | OWASP Top 10, injection, auth bypass verification | Implementation code → Pass/Fail + vulnerability list | Validate Phase 2 |
+| **@judge-security** | OWASP Top 10 (standard list of critical web security vulnerabilities), injection, auth bypass verification | Implementation code → Pass/Fail + vulnerability list | Validate Phase 2 |
 | **@judge-business** | Implementation verification against PRD acceptance criteria | Implementation code + PRD → Pass/Fail + unmet FR list | Validate Phase 3 |
 
 ### Brownfield Data Sources
@@ -403,7 +403,7 @@ Subsequent system processing:
 - Reference Sources section parsing: extract GitHub repo URLs, Figma URLs, policy doc names, scan notes from brief.md
 - GitHub repo URL auto-detection: scan all inputs/ files for GitHub URLs not declared in Reference Sources → ask user whether to download
 - Brief Sentences extraction: sentence-level decomposition + BRIEF-N ID assignment → used for source tagging on each PRD FR (Functional Requirement — a specific function the system must provide)
-- Causal Chain extraction (optional, opt-in): Phenomenon → Root Cause → Solution Rationale → Feature Request
+- Causal Chain extraction (optional, opt-in): traces back from the observed problem to its root cause: Phenomenon → Root Cause → Solution Rationale → Feature Request. When enabled, each PRD FR is classified as core (directly resolving the root cause), enabling, or supporting — helping the product expert verify at JP1 that the proposed features actually address the underlying problem rather than just symptoms. When not enabled, FRs are generated without this classification and the Sprint proceeds normally.
 - Brownfield status detection: check existing brownfield-context.md → search for document-project → detect external data sources (`--add-dir` directories, GitHub repos from Reference Sources, Figma MCP) → local codebase build tool detection → topology determination
 
 Brief grade assessment:
@@ -412,7 +412,7 @@ Brief grade assessment:
 |-------|-----------|----------|
 | **A** (sufficient) | 3+ features, 1+ scenarios, or references compensate | Normal proceed |
 | **B** (moderate) | 1-2 features, no scenarios | Show warning at confirmation |
-| **C** (insufficient) | 0 features, keywords only | Sprint not recommended + `force_jp1_review: true` |
+| **C** (insufficient) | 0 features, keywords only | Sprint not recommended + `force_jp1_review: true` (forces mandatory manual review at JP1 because Brief quality is low) |
 
 **User perspective — Confirmation screen**: Presents scan result summary (inputs/ file list, brownfield status, planning-artifacts status) + Sprint start confirmation (extracted goals, complexity, estimated time, contradiction warnings).
 
@@ -453,7 +453,7 @@ Conductor (@auto-sprint) 4 roles:
 3. **Budget** — soft gate, prevent excessive regeneration
 4. **Redirect** — scope reduction/redirection on drift detection
 
-Context Passing principle: **Only file paths are passed** between agents. Artifact contents are never sent via messages.
+Context Passing: Agents reference files by path rather than copying content between them. This prevents stale or conflicting versions of the same information from circulating.
 
 | Step | Agent | Input | Output | Validation |
 |------|-------|-------|--------|------------|
@@ -462,7 +462,7 @@ Context Passing principle: **Only file paths are passed** between agents. Artifa
 | 3 | Winston → Architecture (AUTO) | prd + brownfield-context | architecture.md | @scope-gate |
 | 4 | John → Epics & Stories (AUTO) | prd + architecture | epics-and-stories.md | @scope-gate final |
 
-Each PRD FR is tagged with `(source: BRIEF-N / DISC-N / AI-inferred)`. Follows `_bmad/docs/prd-format-guide.md` format.
+Each PRD FR is tagged with its origin: `BRIEF-N` (traced to a specific Brief sentence), `DISC-N` (discovered in reference materials but not in the Brief), or `AI-inferred` (added by AI based on domain knowledge). This tagging enables the JP1 mapping table (S5.2) to show exactly where each requirement came from.
 
 **Artifacts**:
 ```
@@ -501,12 +501,12 @@ specs/{feature}/planning-artifacts/
 - **Stage 2: Specs 4-file generation**:
   - `requirements.md` — PRD → structured requirements (each item with source tagging)
   - `design.md` — Architecture → structured design (components, interfaces)
-  - `tasks.md` — Epics → parallelizable task list (Entropy Tolerance — each task's uncertainty level [Low/Medium/High] indicating the probability of unexpected issues — + file ownership assignment)
+  - `tasks.md` — Epics → parallelizable task list (each task is tagged with Entropy — its uncertainty level [Low/Medium/High] indicating the probability of unexpected issues — and file ownership assignment)
   - `brownfield-context.md` (frozen) — frozen snapshot copied from planning-artifacts/ (referenced by Workers)
 
-SSOT reference priority: `api-spec.yaml` > `design.md` API section / `schema.dbml` > `design.md` data model section.
+SSOT reference priority (higher priority overrides lower): `api-spec.yaml` overrides `design.md` API section; `schema.dbml` overrides `design.md` data model section. When the same information appears in multiple files, the higher-priority file wins.
 
-@scope-gate deliverables: API Data Sufficiency verification — checks whether subsequent API request fields are obtainable from preceding API responses in key-flows.md call sequences.
+@scope-gate deliverables: API Data Sufficiency verification — checks whether each API call in a user flow has all the data it needs from preceding API responses. For example, if "get tutor details" requires a tutor ID, there must be a preceding API call that returns that ID. Without this check, the prototype or implementation would encounter missing-data errors mid-flow.
 
 **Artifacts**:
 ```
@@ -573,7 +573,7 @@ JP2 presentation format and Comment handling flow details in S5.3.
 2. **GitHub Issues creation** — each task is registered as a GitHub Issue via `gh issue create`, recording dependencies, file ownership, and Entropy. This provides a trackable record of what each Worker is doing.
 3. **Git Worktree setup** — Git Worktree creates independent working directories that share the same repository history. Each Worker gets its own worktree, so multiple Workers can modify files simultaneously without filesystem conflicts.
 4. **Native Teams @worker creation** — Claude Code Native Teams (the built-in agent coordination system) spawns multiple @worker agents in parallel, one per task.
-5. **Parallel execution** — each Worker implements its task independently, self-verifies API conformance via Specmatic (generates contract tests from `api-spec.yaml`), and on completion closes its GitHub Issue and notifies dependent Workers.
+5. **Parallel execution** — each Worker implements its task independently, self-verifies API conformance via Specmatic (automatically checks that the implemented API endpoints match the specification defined in `api-spec.yaml` — correct URLs, request/response formats, and data types), and on completion closes its GitHub Issue and notifies dependent Workers.
 6. **Merge & Integration** — merge worktrees in dependency order + integration test
 
 File ownership: `tasks.md` specifies owned files per task. Workers modify only assigned files. When shared file modification is needed, request through team leader.
@@ -587,8 +587,8 @@ File ownership: `tasks.md` specifies owned files per task. Workers modify only a
 **User perspective**: Automatic. 3-Phase verification results are reported.
 
 **System internals**:
-- **Phase 1: @judge-quality** — code structure, patterns, duplication, conventions + Specmatic contract compliance
-- **Phase 2: @judge-security** — OWASP Top 10 (a standard list of the 10 most critical web application security vulnerabilities, maintained by the Open Web Application Security Project), injection, auth bypass
+- **Phase 1: @judge-quality** — code structure, patterns, duplication, conventions + Specmatic verification (API implementation matches the spec)
+- **Phase 2: @judge-security** — OWASP Top 10 (standard list of critical web security vulnerabilities), injection, auth bypass
 - **Phase 3: @judge-business** — implementation verification against PRD acceptance criteria; (when causal_chain provided) confirms core FRs actually resolve root_cause
 
 **On failure**: 3 consecutive failures in same category or 5 cumulative failures → Circuit Breaker auto-triggers.
@@ -638,7 +638,7 @@ Place materials in specs/{feature}/inputs/ → /sprint {feature-name}
   → /parallel → /validate
 ```
 
-Characteristics: Fully automatic (human intervention only at JP1/JP2), `tracking_source: brief` (BRIEF-N based tracking).
+Characteristics: Fully automatic (human intervention only at JP1/JP2), `tracking_source: brief` (each requirement is traced back to a specific Brief sentence via BRIEF-N IDs).
 
 ### Guided Route — When Exploration is Needed
 
@@ -654,7 +654,7 @@ For new products, new markets, or idea-stage exploration requiring systematic di
 → /parallel → /validate
 ```
 
-Characteristics: Human participates at every step during BMad conversation, `/specs` auto-detects `_bmad-output/planning-artifacts/`, `tracking_source: success-criteria`.
+Characteristics: Human participates at every step during BMad conversation, `/specs` auto-detects `_bmad-output/planning-artifacts/`, `tracking_source: success-criteria` (requirements are traced back to PRD Success Criteria instead of Brief sentences).
 
 ### Direct Route — When Planning is Complete
 
@@ -743,8 +743,8 @@ Requirements, user scenarios, feature scope, priorities.
 - Key scenarios described in non-technical language
 
 **Section 2: Original Intent ↔ FR (Functional Requirement) Mapping Table**
-- If tracking_source is `brief`: Brief sentences (BRIEF-N) ↔ FR mapping
-- If tracking_source is `success-criteria`: PRD Success Criteria ↔ FR mapping
+- If tracking_source is `brief` (Sprint route — Brief was the input): Brief sentences (BRIEF-N) ↔ FR mapping
+- If tracking_source is `success-criteria` (Guided/Direct route — PRD already existed): PRD Success Criteria ↔ FR mapping
 - Unmapped items shown as warnings
 - Items beyond Brief separated as "found in references" vs "AI-inferred"
 
@@ -781,11 +781,11 @@ Prototype, screen flows, interactions.
 
 1. Run prototype: `cd specs/{feature}/preview && npm run dev`
 2. Follow key scenario guide (based on key-flows.md) and click through
-3. Debug/reset state with DevPanel (MSW in-memory store based)
+3. Debug/reset state with DevPanel — a built-in control panel in the prototype that lets you view and reset MSW's in-memory data store (useful for restarting a scenario from scratch)
 
 How the prototype works without a real backend: MSW (Mock Service Worker) installs a Service Worker in the browser that intercepts all API requests before they reach the network. When the React application (a single-page web application) calls an API endpoint, MSW catches the request and returns a mock response generated from `api-spec.yaml`. These responses are stateful — creating a record via POST means a subsequent GET returns that record. The application code is identical to what would run against a real backend; it does not know MSW exists. This is why the prototype can demonstrate realistic user flows (e.g., "create a tutor block → verify it appears in the block list") without any server running.
 
-Changes/supplements after JP1 are recorded in readiness.md's `jp1_to_jp2_changes` field and auto-displayed in JP2 Section 0.
+Any changes made after JP1 approval (e.g., from the Deliverables generation process) are recorded in readiness.md's `jp1_to_jp2_changes` field (a list of all modifications that occurred between JP1 and JP2) and automatically shown at the beginning of the JP2 presentation, so the product expert can see what evolved between the two judgment points.
 
 ### Response
 
@@ -859,7 +859,7 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 
 ## 6.3 Left Open
 
-- **Persistent Memory**: Environment facts already covered by brownfield-context.md. Judgment correction (applying previous Sprint results to next) has self-reinforcing error risk → deferred.
+- **Persistent Memory**: Environment facts already covered by brownfield-context.md. Judgment correction (carrying forward decisions from previous Sprints to influence the next) is deferred — if an incorrect judgment is carried forward, it would bias all subsequent generations, compounding the error instead of allowing a fresh start.
 - **Teams Debate**: Quality improvement through inter-agent debate beyond 3-Judge verification → evaluate after current `/validate` 3-Judge validation.
 - **Sprint Kit → BMad Phase 4 auto-transition**: planning-artifacts are compatible, but tasks.md-specific info (DAG — Directed Acyclic Graph, the task dependency ordering that determines which tasks must complete before others can start — Entropy, File Ownership) requires manual transfer.
 
@@ -1019,6 +1019,8 @@ specs/{feature}/
 | **Frozen snapshot** | A point-in-time copy of brownfield-context.md. Fixed version referenced by Workers |
 | **Conductor** | @auto-sprint's orchestration role. 4 roles: Goal Tracking, Scope Gate, Budget, Redirect |
 | **Circuit Breaker** | Course correction mechanism on repeated failures or expanded regeneration scope. Minor (fix Specs) / Major (regenerate) |
+| **Causal Chain** | An optional analysis that traces a feature request back through its reasoning: Phenomenon (observed problem) → Root Cause → Solution Rationale → Feature Request. When enabled, PRD FRs are classified as core/enabling/supporting based on their relationship to the root cause |
+| **OpenAPI** | A standard, machine-readable specification format for describing REST API endpoints — URLs, request/response formats, data types. Sprint Kit uses OpenAPI 3.1 (`api-spec.yaml`) as the single source for mock generation, contract testing, and implementation verification |
 | **planning-artifacts** | Planning artifacts generated by BMad agents (Product Brief, PRD, Architecture, Epics) |
 | **Sprint route** | When materials (meeting notes, references) are available. Enter via `/sprint` command |
 | **Guided route** | When exploration is needed. Enter via BMad 12-step conversation |
