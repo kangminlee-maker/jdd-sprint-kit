@@ -7,59 +7,59 @@ All notable changes to JDD Sprint Kit will be documented in this file.
 ## [0.4.1] - 2026-02-20
 
 ### Fixed
-- **brief.md 템플릿 언어** — 섹션 제목/placeholder는 `document_output_language`, HTML 코멘트(사용자 안내)는 `communication_language` 사용. Reference Sources 섹션 제목은 항상 영문(machine-parseable)
+- **brief.md template language** — Section headings and placeholder text follow `document_output_language`, HTML comments (user guidance) follow `communication_language`. Reference Sources section headings are always in English (machine-parseable).
 
 ---
 
 ## [0.4.0] - 2026-02-20
 
 ### Added
-- **English Pack** — 전체 에이전트(8), 커맨드(7), 룰(3), 포맷 가이드(3), Blueprint, JDD 문서를 영문 기반으로 재작성 (Phase 0~5, 6단계)
-- **Language Protocol** — `config.yaml` 기반 다국어 출력 지원
-  - `communication_language`: 시스템 메시지 언어 (진행 상황, 에러, JP 요약)
-  - `document_output_language`: 생성 문서 언어 (sprint-input.md, 산출물)
-  - YAML 키/enum/파일경로는 항상 영문 (machine-parseable)
-- **Brownfield Scanner Improvement** — topology-aware scan 도입
-  - 프로젝트 배포 구조(co-located/monorepo/msa/standalone) 자동 감지 후 스캔 전략 선택
-  - MCP Fallback 4분류 재설계 (topology 기반 심각도)
-  - Figma MCP 통합 (`get_metadata`/`get_design_context`)
-  - scan_metadata, 동적 data_sources, Entity Index, Ontology Coverage, Self-Validation 핵심 3항목
-  - monorepo 패키지 스코핑, MSA/monorepo 혼동방지 엣지가드
-- **`--add-dir` 외부 데이터 접근** — filesystem MCP 서버를 `--add-dir` 방식으로 대체
-  - Claude Code의 MCP 보안이 프로젝트 루트 외부 경로를 차단하므로, 외부 repo 접근에 `--add-dir` 사용
-  - `--add-dir`로 추가된 디렉토리는 Glob/Grep/Read로 직접 접근 (MCP 불필요)
-  - Figma는 라이브 데이터여서 파일 다운로드 불가 → MCP 유지
-- **Tarball Snapshot** — brief.md에 GitHub repo URL 선언 시 `gh api tarball/HEAD`로 읽기전용 스냅샷 자동 다운로드
-  - clone이 아닌 현재 파일만 다운로드 (git history 없음)
-  - 참고 소스 섹션의 repo는 AskUserQuestion 없이 바로 다운로드 (사용자 명시 의도)
-  - auto-detect repos (참고 소스 미선언)는 AskUserQuestion으로 확인
-- **brief.md Reference Sources 섹션** — `## Reference Sources`에 4개 하위 섹션 구조화
-  - GitHub: 기존 서비스 repo URL + 탐색 힌트
-  - Figma: 디자인 파일 URL
-  - Policy Docs: Scanner 우선 탐색 대상 문서명
-  - Scan Notes: Brownfield 탐색 방향 자유 형식 메모
-- **/sprint 자동 폴더 생성** — `/sprint feature-name` 실행 시 폴더 미존재 → `specs/{feature}/inputs/` + brief.md 템플릿 자동 생성 후 안내 + 종료
-- **Phase 0 write-once** — sprint-input.md를 Step 0g에서 1회 Write (중간 Edit 없음, hook 충돌 해소)
-- **terminology-map.md** — 한영 용어 대조표 (`docs/terminology-map.md`)
-- **CONTRIBUTING.md** + GitHub issue/PR 템플릿
+- **English Pack** — All agents (8), commands (7), rules (3), format guides (3), Blueprint, and JDD docs rewritten English-first (Phase 0–5, 6 stages)
+- **Language Protocol** — Multi-language output via `config.yaml`
+  - `communication_language`: system message language (progress, errors, JP summaries)
+  - `document_output_language`: generated document language (sprint-input.md, artifacts)
+  - YAML keys/enums/file paths always in English (machine-parseable)
+- **Brownfield Scanner Improvement** — Topology-aware scan
+  - Auto-detect project deployment structure (co-located/monorepo/msa/standalone) and select scan strategy
+  - MCP Fallback redesign with 4-category classification (topology-based severity)
+  - Figma MCP integration (`get_metadata`/`get_design_context`)
+  - scan_metadata, dynamic data_sources, Entity Index, Ontology Coverage, Self-Validation core checks
+  - Monorepo package scoping, MSA/monorepo disambiguation edge guards
+- **`--add-dir` external data access** — Replace filesystem MCP servers with `--add-dir`
+  - Claude Code's MCP security blocks paths outside the project root, so external repos use `--add-dir` instead
+  - Directories added via `--add-dir` are accessed with Glob/Grep/Read (no MCP needed)
+  - Figma remains MCP because its data is live and cannot be downloaded as files
+- **Tarball Snapshot** — Auto-download read-only snapshot when GitHub repo URLs are declared in brief.md
+  - Downloads current files only via `gh api tarball/HEAD` (not a git clone, no history)
+  - Repos declared in Reference Sources section are downloaded without confirmation (explicit user intent)
+  - Auto-detected repos (not in Reference Sources) require user confirmation via AskUserQuestion
+- **brief.md Reference Sources section** — Structured `## Reference Sources` with 4 sub-sections
+  - GitHub: existing service repo URLs + exploration hints
+  - Figma: design file URLs
+  - Policy Docs: document names for Scanner to prioritize
+  - Scan Notes: free-text guidance for Brownfield scan direction
+- **/sprint auto-create folder** — When `/sprint feature-name` is run and the folder does not exist, auto-creates `specs/{feature}/inputs/` + brief.md template, then exits with guidance
+- **Phase 0 write-once** — sprint-input.md is written once at Step 0g (no intermediate edits, resolves hook conflicts)
+- **terminology-map.md** — Korean-English term reference (`docs/terminology-map.md`)
+- **CONTRIBUTING.md** + GitHub issue/PR templates
 
 ### Changed
-- **BMAD Sprint Kit → JDD Sprint Kit** — BMad TRADEMARK.md 준수를 위한 제품명 변경 (14파일, 47곳)
-- **dead parameter 정리** — `brownfield_sources` 파라미터를 sprint-input.md 기반 self-serve 패턴으로 교체
-  - 이전: 호출자(auto-sprint, specs)가 brownfield_sources를 전달해야 했으나 실제로 전달하지 않음 (dead parameter)
-  - 이후: Scanner가 sprint-input.md의 `external_resources`를 직접 읽어 외부 소스 발견
-- **용어 정리** — `mcp_servers` → `external_sources`, `brownfield_sources` → `external_resources`, source type `mcp` → `external` (7곳 일괄)
-- **Blueprint 구조 개선** — Tool Selection Rationale(도구 선택 근거), 섹션간 cross-reference, Appendix D: Blueprint Sync Criteria 추가
-- **npm 의존성 업데이트** — commander ^14.0.3, @clack/prompts ^1.0.1, fs-extra ^11.3.3
+- **BMAD Sprint Kit → JDD Sprint Kit** — Renamed to comply with BMad TRADEMARK.md (14 files, 47 substitutions)
+- **Dead parameter cleanup** — Replace `brownfield_sources` parameter with sprint-input.md self-serve pattern
+  - Before: callers (auto-sprint, specs) were supposed to pass brownfield_sources but never did (dead parameter)
+  - After: Scanner reads `external_resources` directly from sprint-input.md to discover external sources
+- **Terminology cleanup** — `mcp_servers` → `external_sources`, `brownfield_sources` → `external_resources`, source type `mcp` → `external` (7 sites)
+- **Blueprint structure improvements** — Tool Selection Rationale, cross-section references, Appendix D: Blueprint Sync Criteria
+- **npm dependency updates** — commander ^14.0.3, @clack/prompts ^1.0.1, fs-extra ^11.3.3
 
 ### Migration from 0.3.1
 
-`npx jdd-sprint-kit update`로 파일을 업데이트한다. 수동 마이그레이션이 필요한 항목:
+Update files via `npx jdd-sprint-kit update`. Manual migration required for:
 
-1. **제품명**: BMAD Sprint Kit → JDD Sprint Kit. CLAUDE.md에 이전 이름 참조가 있으면 수동 변경
-2. **MCP 설정**: `.mcp.json`에 filesystem MCP 서버가 있으면 `--add-dir`로 전환 권장. Figma MCP는 그대로 유지
-3. **config.yaml**: `communication_language`와 `document_output_language`를 설정하면 해당 언어로 출력. 미설정 시 영문 기본값
-4. **기존 Sprint 산출물**: brownfield-context.md의 `scan_metadata.mcp_servers` → `scan_metadata.external_sources`로 변경됨. 기존 파일은 하위 호환
+1. **Product name**: BMAD Sprint Kit → JDD Sprint Kit. If CLAUDE.md references the old name, update manually.
+2. **MCP config**: If `.mcp.json` has filesystem MCP servers, switch to `--add-dir`. Figma MCP stays as-is.
+3. **config.yaml**: Set `communication_language` and `document_output_language` for localized output. Defaults to English if unset.
+4. **Existing Sprint artifacts**: brownfield-context.md `scan_metadata.mcp_servers` → `scan_metadata.external_sources`. Existing files are backward-compatible.
 
 ---
 
