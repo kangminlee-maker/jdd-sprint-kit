@@ -263,7 +263,7 @@ Most tools above are platform givens (BMad, Claude Code) or have no practical al
 
 **Specmatic** — Selected for contract-based verification. Requirement: Workers implementing in parallel must verify API conformance without a running backend. Specmatic generates contract tests directly from `api-spec.yaml`, enabling each Worker to self-verify in isolation. Alternative considered: Pact, which tests contracts from the consumer side (frontend declares expectations, backend is tested against them). But Sprint Kit defines the API spec before any consumer code exists, so Specmatic's approach — testing directly against the API spec — is a natural fit.
 
-**@redocly/cli** — Selected for OpenAPI lint depth. Requirement: catch structural errors and example ↔ schema mismatches before MSW handler generation. Redocly detects example/schema conformance issues that Spectral (the main alternative) does not cover by default.
+**@redocly/cli** — Selected for OpenAPI validation depth. Requirement: catch structural errors and example ↔ schema mismatches before MSW handler generation. Redocly detects example/schema conformance issues that Spectral (the main alternative) does not cover by default.
 
 **Git Worktree** — Selected over feature branches for parallel Workers. Worktrees create separate working directories from the same repository, so multiple Workers can edit files simultaneously without blocking each other. With regular feature branches, only one branch can be checked out at a time per directory, requiring switching back and forth.
 
@@ -299,7 +299,7 @@ Sprint Kit uses agents in three tiers.
 | Agent | Role | Input → Output | When |
 |-------|------|----------------|------|
 | **@worker** | Task implementation in isolated worktree + Specmatic self-verification | Task + Specs + brownfield → implementation code | Parallel |
-| **@judge-quality** | Code structure, patterns, duplication, conventions + Specmatic contract compliance | Implementation code + Specs → Pass/Fail + issue list | Validate Phase 1 |
+| **@judge-quality** | Code structure, patterns, duplication, conventions + Specmatic verification (API implementation matches the spec) | Implementation code + Specs → Pass/Fail + issue list | Validate Phase 1 |
 | **@judge-security** | OWASP Top 10 (standard list of critical web security vulnerabilities), injection, auth bypass verification | Implementation code → Pass/Fail + vulnerability list | Validate Phase 2 |
 | **@judge-business** | Implementation verification against PRD acceptance criteria | Implementation code + PRD → Pass/Fail + unmet FR list | Validate Phase 3 |
 
