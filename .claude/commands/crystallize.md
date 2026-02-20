@@ -49,7 +49,7 @@ On validation failure: report missing items (in {communication_language}) and ab
 
 ## Procedure
 
-Load config per Language Protocol in bmad-sprint-guide.md.
+Load config per Language Protocol in jdd-sprint-guide.md.
 
 ### Step S0: Decision Context Analysis
 

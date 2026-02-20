@@ -33,7 +33,7 @@ Prerequisites:
 
 ## Procedure
 
-Load config per Language Protocol in bmad-sprint-guide.md.
+Load config per Language Protocol in jdd-sprint-guide.md.
 
 ### Phase 0: Smart Launcher (runs in main session)
 

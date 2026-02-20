@@ -83,7 +83,7 @@ A custom MCP server (`docs-mcp-server`) that:
 
 Current Sprint Kit architecture principle: **all external file access uses Glob/Grep/Read**.
 
-This principle was established when filesystem MCP was replaced with `--add-dir` (Phase A, 2026-02-20). The entire scanner, all 4 stages, and all rules in bmad-mcp-search.md are built around this assumption.
+This principle was established when filesystem MCP was replaced with `--add-dir` (Phase A, 2026-02-20). The entire scanner, all 4 stages, and all rules in jdd-mcp-search.md are built around this assumption.
 
 Introducing the Lazy Clone MCP server would **reverse this architectural decision**:
 
@@ -120,7 +120,7 @@ Instead of MCP tools for file access, use shallow clone **only for the download/
 - Single access path (Glob/Grep/Read for everything)
 - No MCP server lifecycle management
 - Scanner code unchanged
-- bmad-mcp-search.md rules unchanged
+- jdd-mcp-search.md rules unchanged
 
 ### What This Gains
 
@@ -290,7 +290,7 @@ Party Mode identified 5 deferred questions. All resolved here:
 |------|--------|
 | `.claude/commands/sprint.md` | Sub-step 0f-2C: (1) change `mkdir` target from `/tmp/` to `~/docs-cache/{feature}/{name}`. (2) Add `gh api repos/{owner_repo} --jq '.size'` pre-check + 1GB warning. (3) Add `gh api repos/{owner_repo}/commits/{ref}` post-download for version tracking. (4) Add branch extraction from GitHub URL. |
 | `_bmad/docs/sprint-input-format.md` | Add `snapshot_commit`, `snapshot_branch`, `snapshot_at` fields to `external_repos[]`. Document `~/docs-cache/` as extraction path. |
-| `.claude/rules/bmad-mcp-search.md` | Method 3: update path description (tarball → persistent cache) |
+| `.claude/rules/jdd-mcp-search.md` | Method 3: update path description (tarball → persistent cache) |
 | `_bmad/docs/brownfield-context-format.md` | `data_sources` section: document snapshot provenance fields |
 | `CHANGELOG.md` | Record the change |
 

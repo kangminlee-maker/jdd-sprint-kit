@@ -174,7 +174,7 @@ MSA에서 Local 스캔의 목적을 "자기 서비스 경계 확인"으로 제�
 | `.claude/agents/auto-sprint.md` | Scanner 호출 시 `brownfield_topology` 전달 |
 | `.claude/commands/sprint.md` | Step 0f 결과를 Scanner 파라미터로 연결하는 부분 보강 |
 | `.claude/commands/specs.md` | 동일 (specs에서도 brownfield scan 실행) |
-| `.claude/rules/bmad-sprint-protocol.md` | Brownfield Data Flow 테이블에 토폴로지별 분기 명시 |
+| `.claude/rules/jdd-sprint-protocol.md` | Brownfield Data Flow 테이블에 토폴로지별 분기 명시 |
 
 ### 하위 호환성
 

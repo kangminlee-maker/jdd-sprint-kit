@@ -26,7 +26,7 @@ Required files (in `specs/{feature}/` directory):
 
 ## Procedure
 
-Load config per Language Protocol in bmad-sprint-guide.md.
+Load config per Language Protocol in jdd-sprint-guide.md.
 
 ### Step 1: Specs Verification
 

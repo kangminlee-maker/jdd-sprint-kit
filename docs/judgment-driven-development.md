@@ -399,4 +399,4 @@ the risk of consistency breakdown is structurally blocked.
 
 **Regeneration is the default.** Apply-fix is
 an option the system presents alongside cost. The user decides after seeing the cost.
-Implemented in the protocol (bmad-sprint-protocol.md).
+Implemented in the protocol (jdd-sprint-protocol.md).

@@ -557,7 +557,7 @@ When feedback arises from any path (A, P, or F), process with the same mechanism
    - F: Free-text entered directly by user
 2. **Impact analysis**: Calculate feedback scope
    - For apply-fix: list of affected files (upstream planning-artifacts/ + downstream specs/ + deliverables) + estimated time
-   - For regenerate: restart Phase based on Regeneration Scope Reference Table (`bmad-sprint-protocol.md`) + estimated time
+   - For regenerate: restart Phase based on Regeneration Scope Reference Table (`jdd-sprint-protocol.md`) + estimated time
 3. **Present options**: Offer cost-based choices via AskUserQuestion (in {communication_language})
    ```
    Modifications:

@@ -24,7 +24,7 @@ export const SPRINT_KIT_FILES = {
     'validate.md', 'circuit-breaker.md', 'summarize-prd.md',
   ],
   rules: [
-    'bmad-sprint-guide.md', 'bmad-sprint-protocol.md', 'bmad-mcp-search.md',
+    'jdd-sprint-guide.md', 'jdd-sprint-protocol.md', 'jdd-mcp-search.md',
   ],
   hooks: [
     'sprint-pre-compact.sh', 'sprint-session-recovery.sh',

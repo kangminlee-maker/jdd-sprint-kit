@@ -22,7 +22,7 @@ After BMad Phase 3 artifacts are ready and pass Implementation Readiness.
 
 ## Procedure
 
-Load config per Language Protocol in bmad-sprint-guide.md.
+Load config per Language Protocol in jdd-sprint-guide.md.
 
 ### Step 0: Feature Directory + Artifact Discovery
 

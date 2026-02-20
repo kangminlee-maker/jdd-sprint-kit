@@ -51,8 +51,8 @@ Sprint Kit(kangminlee-maker/bmad-sprint-kit)은 BMad Method 위에서 동작하�
 **목표**: Sprint Kit의 규칙 문서(rules/)에 JDD 설계 철학을 반영한다.
 
 **대상 파일**:
-- `.claude/rules/bmad-sprint-guide.md` — 사용 패턴, 워크플로우 설명, 확장팩 포지셔닝
-- `.claude/rules/bmad-sprint-protocol.md` — JP 기반 프로토콜, Brief 추적 면제 조건
+- `.claude/rules/jdd-sprint-guide.md` — 사용 패턴, 워크플로우 설명, 확장팩 포지셔닝
+- `.claude/rules/jdd-sprint-protocol.md` — JP 기반 프로토콜, Brief 추적 면제 조건
 
 **변경 방향**:
 - 기존 "CP1/CP2" 용어를 "JP1/JP2"로 전환
@@ -67,7 +67,7 @@ Sprint Kit(kangminlee-maker/bmad-sprint-kit)은 BMad Method 위에서 동작하�
 - Brownfield 데이터 플로우 (기존 유지)
 - 파일 소유권 규칙 (기존 유지)
 - specs 파일 패턴 (기존 유지)
-- bmad-mcp-search.md (변경 없음)
+- jdd-mcp-search.md (변경 없음)
 
 ---
 
@@ -212,8 +212,8 @@ Phase D (Sprint Kit 리포)
 - `docs/judgment-driven-development.md` — JDD 6원칙, 배경, 예시
 
 ### 수정 대상 (BMad 프로젝트, 설치된 Sprint Kit 파일)
-- `.claude/rules/bmad-sprint-guide.md` — Phase A
-- `.claude/rules/bmad-sprint-protocol.md` — Phase A
+- `.claude/rules/jdd-sprint-guide.md` — Phase A
+- `.claude/rules/jdd-sprint-protocol.md` — Phase A
 - `.claude/agents/auto-sprint.md` — Phase B
 - `.claude/agents/scope-gate.md` — Phase B
 - `.claude/agents/deliverable-generator.md` — Phase B
@@ -224,7 +224,7 @@ Phase D (Sprint Kit 리포)
 - `kangminlee-maker/bmad-sprint-kit` — init.js, README.md, blueprint.md
 
 ### 참조 전용 (수정하지 않음)
-- `.claude/rules/bmad-mcp-search.md` — MCP 검색 규칙 (변경 없음)
+- `.claude/rules/jdd-mcp-search.md` — MCP 검색 규칙 (변경 없음)
 - `.claude/agents/brownfield-scanner.md` — Brownfield 스캐너 (변경 없음)
 - `.claude/agents/worker.md` — Worker 에이전트 (변경 없음)
 - `.claude/agents/judge-*.md` — Judge 에이전트 3개 (변경 없음)
@@ -241,7 +241,7 @@ Phase D (Sprint Kit 리포)
 - **상태**: 완료
 - **시작일**: 2026-02-16
 - **완료일**: 2026-02-16
-- **변경 파일**: bmad-sprint-guide.md, bmad-sprint-protocol.md
+- **변경 파일**: jdd-sprint-guide.md, jdd-sprint-protocol.md
 - **구현 명세**: `docs/design/jdd-implementation/phase-a-spec.md`
 - **핵심 결정**:
   - 경로 네이밍: Sprint / Guided / Direct (Bottom-up/Top-down은 철학 문서에서만)

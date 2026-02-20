@@ -24,7 +24,7 @@ Systematically correct course when VALIDATE failures repeat or critical issues a
 
 ## Procedure
 
-Load config per Language Protocol in bmad-sprint-guide.md.
+Load config per Language Protocol in jdd-sprint-guide.md.
 
 ### Step 1: Failure Context Summary (Context Compaction)
 Summarize current work state and append to `specs/{feature}/planning-artifacts/circuit-breaker-log.md`:

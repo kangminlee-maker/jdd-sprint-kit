@@ -30,7 +30,7 @@ Prerequisites:
 
 ## Procedure
 
-Load config per Language Protocol in bmad-sprint-guide.md.
+Load config per Language Protocol in jdd-sprint-guide.md.
 
 ### Phase 1: Automated Verification (all tasks)
 Applied to all Entropy levels:

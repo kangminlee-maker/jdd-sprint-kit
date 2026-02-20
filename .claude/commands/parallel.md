@@ -31,7 +31,7 @@ Prerequisites:
 
 ## Procedure
 
-Load config per Language Protocol in bmad-sprint-guide.md.
+Load config per Language Protocol in jdd-sprint-guide.md.
 
 ### Step 1: Interface Contract Creation
 Create shared types/interfaces first (referenced by all Workers):

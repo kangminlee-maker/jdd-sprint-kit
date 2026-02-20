@@ -30,7 +30,7 @@ If argument is `help` → **Help Mode**. If last argument is `analyze` → **Ana
 
 ## Procedure
 
-Load config per Language Protocol in bmad-sprint-guide.md.
+Load config per Language Protocol in jdd-sprint-guide.md.
 
 ### Help Mode
 

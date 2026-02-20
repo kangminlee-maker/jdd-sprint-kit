@@ -278,7 +278,7 @@ BMad `check-implementation-readiness`를 Sprint Kit 산출물에 대해 실행�
 
 ### 3.3 크로스오버 문서화
 
-**bmad-sprint-guide.md 크로스오버 섹션** (line 59-65) 보강:
+**jdd-sprint-guide.md 크로스오버 섹션** (line 59-65) 보강:
 
 ```markdown
 ### 크로스오버
@@ -313,7 +313,7 @@ Readiness보다 촘촘한 검증이다. Scope Gate 전원 PASS이면 BMad Implem
 
 | 파일 | 변경 유형 | 핵심 변경 |
 |------|----------|----------|
-| `bmad-sprint-guide.md` | Minor | 크로스오버 섹션 보강 (포맷 호환 + 전환 지원 + 제약 사항 + 고유 개념 설명) |
+| `jdd-sprint-guide.md` | Minor | 크로스오버 섹션 보강 (포맷 호환 + 전환 지원 + 제약 사항 + 고유 개념 설명) |
 
 ---
 
@@ -355,7 +355,7 @@ Track C 미구현 상태에서 Sprint Kit → BMad Phase 4가 필요한 경우:
 |---|------|-------|----------|----------|
 | 1 | `deliverable-generator.md` | A | Minor | Stage 4b 보강 범위 제한 + 변경 로그 + readiness.md 쓰기 규칙 + Self-Validation 10번 |
 | 2 | `auto-sprint.md` | A | Minor | JP2 Section 0 + 데이터 소스 갱신 + Comment Scope Gate stage 명시 |
-| 3 | `bmad-sprint-guide.md` | B | Minor | 크로스오버 섹션 보강 |
+| 3 | `jdd-sprint-guide.md` | B | Minor | 크로스오버 섹션 보강 |
 | 4 | `phase-restructuring-design.md` | — | **Delete** | 폐기 (이 설계서로 대체) |
 
 **변경하지 않는 것**:
@@ -369,7 +369,7 @@ Track C 미구현 상태에서 Sprint Kit → BMad Phase 4가 필요한 경우:
 | `preview.md` (command) | Deliverables 범위 변경 없음 |
 | `brownfield-scanner.md` | 스캔 범위/시점 변경 없음 |
 | `judgment-driven-development.md` | 원칙 변경 없음 |
-| `bmad-sprint-protocol.md` | Track C 연기로 stories/ 패턴 추가 불필요 |
+| `jdd-sprint-protocol.md` | Track C 연기로 stories/ 패턴 추가 불필요 |
 | readiness.md (BMad 확장) | Scope Gate + JP1 배너가 이미 대체. 중복 불필요 |
 
 ---
@@ -380,7 +380,7 @@ Track C 미구현 상태에서 Sprint Kit → BMad Phase 4가 필요한 경우:
 
 1. `deliverable-generator.md` — Stage 4b 보강 범위 제한 + 변경 로그 + readiness.md 쓰기 규칙 + Self-Validation
 2. `auto-sprint.md` — JP2 Section 0 + Comment Scope Gate stage 명시
-3. `bmad-sprint-guide.md` — 크로스오버 섹션 보강
+3. `jdd-sprint-guide.md` — 크로스오버 섹션 보강
 
 > 3개 파일을 하나의 커밋으로. Track A와 B가 readiness.md를 공유하므로 분리하면 중간 상태가 불완전.
 
@@ -406,7 +406,7 @@ Track C 미구현 상태에서 Sprint Kit → BMad Phase 4가 필요한 경우:
 
 ### Track B 검증
 
-- [ ] bmad-sprint-guide.md 크로스오버 섹션이 정확한 정보를 담고 있는지 확인
+- [ ] jdd-sprint-guide.md 크로스오버 섹션이 정확한 정보를 담고 있는지 확인
 - [ ] Guided → Sprint Kit 크로스오버가 실제로 동작하는지 (다음 Sprint에서 검증)
 
 ---

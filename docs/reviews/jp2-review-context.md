@@ -152,7 +152,7 @@ JDD 원칙 3: "재생성이 기본, 산출물은 소모품"
 
 **Bob**: 구조적 위치 제안:
 - JDD 원칙 3은 수정 불필요 (이상 기체 법칙은 그대로)
-- **Sprint 프로토콜(bmad-sprint-protocol.md)에 보정 규칙 추가** (철학과 구현 분리)
+- **Sprint 프로토콜(jdd-sprint-protocol.md)에 보정 규칙 추가** (철학과 구현 분리)
 
 **Murat**: C-1은 별도 축:
 - key-flows 생성 시 API 데이터 흐름 추적 검증 추가
@@ -240,7 +240,7 @@ JP → Confirm → 다음 Phase
 1. ~~**축 1 구체 설계**~~ → **확정 완료** (섹션 4 "2차 논의" 참조)
 2. ~~**축 2 구체 설계**~~ → **확정 완료** (섹션 5 참조)
 3. ~~**축 1 + 축 2 구현**~~ → **구현 완료**
-   - bmad-sprint-protocol.md: JP 응답 Confirm/Comment 단순화 + Comment 처리 플로우 + 재생성 범위 참조 테이블
+   - jdd-sprint-protocol.md: JP 응답 Confirm/Comment 단순화 + Comment 처리 플로우 + 재생성 범위 참조 테이블
    - auto-sprint.md: JP1/JP2 메뉴 R→F 변경 + Comment 처리 플로우(A/P/F 공통) + Feedback Re-execution 통합
    - deliverable-generator.md: Stage 4b API Data Flow Verification 추가 + Self-Validation item 9 추가
    - scope-gate.md: deliverables 스테이지 추가 (API Data Sufficiency Check + 체크리스트)

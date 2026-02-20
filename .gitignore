@@ -1,6 +1,8 @@
 .DS_Store
 .claude/settings.local.json
+.claude/sprint-recovery.json
 node_modules/
 templates/
 .omc
 .env
+specs/duplicate-ticket-purchase/

@@ -1,7 +1,7 @@
 # Phase A 구현 명세 — 프로토콜 + 가이드 반영
 
 > **상태**: 완료 (2026-02-16)
-> **대상 파일**: `.claude/rules/bmad-sprint-guide.md`, `.claude/rules/bmad-sprint-protocol.md`
+> **대상 파일**: `.claude/rules/jdd-sprint-guide.md`, `.claude/rules/jdd-sprint-protocol.md`
 > **상위 문서**: `docs/design/jdd-implementation/scope.md`, `docs/judgment-driven-development.md`
 
 ---
@@ -28,7 +28,7 @@
 
 ---
 
-## 파일 1: `.claude/rules/bmad-sprint-guide.md`
+## 파일 1: `.claude/rules/jdd-sprint-guide.md`
 
 ### 전체 교체 (112줄 → ~130줄)
 
@@ -170,7 +170,7 @@ BMad 12단계 (사람-AI 대화):
 
 ---
 
-## 파일 2: `.claude/rules/bmad-sprint-protocol.md`
+## 파일 2: `.claude/rules/jdd-sprint-protocol.md`
 
 ### 부분 수정 (107줄 → ~140줄)
 
@@ -251,13 +251,13 @@ JP2에서 "요구사항 자체가 잘못됐다"고 판단되면 JP1으로 돌아
 | Causal Chain 전파 | protocol L21~32 | JP 용어만 교체, 구조 유지 |
 | specs 파일 패턴 | protocol L43~76 | 디렉토리 구조 변경 없음 |
 | 파일 소유권 규칙 | protocol L100~107 | 변경 없음 |
-| bmad-mcp-search.md | 별도 파일 | Phase A 대상 아님 |
+| jdd-mcp-search.md | 별도 파일 | Phase A 대상 아님 |
 
 ---
 
 ## 구현 순서
 
-1. `bmad-sprint-guide.md` 전체 교체
-2. `bmad-sprint-protocol.md` 4개 수정 적용
+1. `jdd-sprint-guide.md` 전체 교체
+2. `jdd-sprint-protocol.md` 4개 수정 적용
 3. 두 파일 간 용어 일관성 확인 (JP1/JP2, Sprint/Guided/Direct)
 4. 기존 파이프라인 호환성 확인 (변경하지 않는 부분이 깨지지 않는지)
