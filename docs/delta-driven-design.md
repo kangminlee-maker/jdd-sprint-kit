@@ -1,121 +1,121 @@
 # Delta-Driven Design
 
-> **Document type**: Design theory — Sprint Kit's conceptual foundation and methodology positioning
-> **Version**: 1.0
-> **Date**: 2026-02-21
-> **Related**: [`judgment-driven-development.md`](judgment-driven-development.md) (design philosophy), [`reviews/lld-gap-analysis-and-implementation-plan.md`](reviews/lld-gap-analysis-and-implementation-plan.md) (implementation plan)
+> **문서 유형**: 설계 이론 — Sprint Kit의 개념적 기반과 방법론 포지셔닝
+> **버전**: 1.0
+> **날짜**: 2026-02-21
+> **관련 문서**: [`judgment-driven-development.md`](judgment-driven-development.md) (설계 철학), [`reviews/lld-gap-analysis-and-implementation-plan.md`](reviews/lld-gap-analysis-and-implementation-plan.md) (구현 계획)
 
 ---
 
-## 1. The Insight
+## 1. 핵심 통찰
 
-Sprint Kit's pipeline generates many artifacts: PRD, Architecture, Epics, Specs, Deliverables, Prototype. But what is the actual deliverable?
+Sprint Kit의 파이프라인은 PRD, Architecture, Epics, Specs, Deliverables, Prototype 등 많은 산출물을 생성한다. 그런데 실제 결과물은 무엇인가?
 
-**Previous answer**: "A reconciled set of specifications that an implementation team can execute."
+**기존 답변**: "구현 팀이 실행할 수 있는, 정합된 명세 세트."
 
-**New answer**: **"A precisely defined delta between the current system (brownfield) and the target system (approved prototype), expressed in a format that machines can execute."**
+**새로운 답변**: **"현재 시스템(Brownfield)과 목표 시스템(승인된 프로토타입) 사이의 델타를 정밀하게 정의한 것으로, 기계가 실행할 수 있는 형식으로 표현된 것."**
 
-This reframe changes what Sprint Kit IS:
+이 관점 전환은 Sprint Kit이 무엇인지를 바꾼다:
 
-| Aspect | Previous Frame | New Frame |
+| 관점 | 기존 프레임 | 새 프레임 |
 |---|---|---|
-| **Primary goal** | Generate specs + deliverables | Define the delta between brownfield and target |
-| **What prototype is** | A deliverable for JP2 review | **The target state, expressed in user grammar** |
-| **What specs are** | The primary output | **Translation of the target into development grammar** |
-| **What Crystallize does** | Reconcile specs with prototype | **Extract delta: brownfield ↔ translated prototype** |
-| **What Execute does** | Implement specs | **Realize the delta: transform brownfield into target** |
+| **주요 목표** | 명세 + 산출물 생성 | Brownfield와 목표 사이의 델타 정의 |
+| **프로토타입의 역할** | JP2 검토를 위한 산출물 | **사용자 문법으로 표현된 목표 상태** |
+| **명세의 역할** | 주요 산출물 | **목표를 개발 문법으로 번역한 것** |
+| **Crystallize의 역할** | 명세를 프로토타입과 정합 | **델타 추출: Brownfield ↔ 번역된 프로토타입** |
+| **Execute의 역할** | 명세 구현 | **델타 실현: Brownfield를 목표로 변환** |
 
 ---
 
-## 2. Two Grammars
+## 2. 두 가지 문법
 
-Software exists at the intersection of two worlds: the user's world (where value is defined) and the machine world (where value is implemented). Each world has its own grammar.
+소프트웨어는 두 세계의 교차점에 존재한다: 사용자의 세계(가치가 정의되는 곳)와 기계의 세계(가치가 구현되는 곳). 각 세계에는 고유한 문법이 있다.
 
-### User Grammar (The User's World)
+### User Grammar (사용자의 세계)
 
-The language that the system's **actual users** speak. This is NOT limited to visual UI — it adapts to who the user is:
+시스템의 **실제 사용자**가 쓰는 언어다. 이것은 시각적 UI에 국한되지 않는다 — 사용자가 누구인지에 따라 적응한다:
 
-| System's User | User Grammar | Prototype Form | Validation Method |
+| 시스템의 사용자 | 사용자 문법 | 프로토타입 형태 | 검증 방법 |
 |---|---|---|---|
-| **End users (humans)** | Screens, actions, visual states, navigation flows | React + MSW visual prototype | Human looks and interacts |
-| **Other services (servers)** | API contracts, request/response schemas, error codes | API mock (OpenAPI + mock server) | Contract testing (Specmatic) |
-| **AI agents** | Structured documents, YAML/JSON schemas, prompt templates | YAML/JSON specification documents | Schema validation + AI execution test |
-| **Data pipelines** | Data schemas, transformation rules, quality constraints | Sample data + transformation scripts | Data quality checks |
+| **최종 사용자 (사람)** | 화면, 동작, 시각적 상태, 내비게이션 흐름 | React + MSW 시각 프로토타입 | 사람이 보고 상호작용 |
+| **다른 서비스 (서버)** | API 계약, 요청/응답 스키마, 에러 코드 | API 목(OpenAPI + 목 서버) | 계약 테스트 (Specmatic) |
+| **AI 에이전트** | 구조화된 문서, YAML/JSON 스키마, 프롬프트 템플릿 | YAML/JSON 명세 문서 | 스키마 검증 + AI 실행 테스트 |
+| **데이터 파이프라인** | 데이터 스키마, 변환 규칙, 품질 제약조건 | 샘플 데이터 + 변환 스크립트 | 데이터 품질 검사 |
 
-**The key principle**: Prototype is defined by the system's actual user, not by visual UI convention. If the system's user is another server, the prototype is an API mock. If the user is an AI agent, the prototype is a structured document.
+**핵심 원칙**: 프로토타입은 시각적 UI 관례가 아니라 시스템의 실제 사용자에 의해 정의된다. 시스템의 사용자가 다른 서버라면 프로토타입은 API 목이다. 사용자가 AI 에이전트라면 프로토타입은 구조화된 문서다.
 
-**Who speaks this grammar**: The system's actual users — whoever will consume the system's output. They evaluate correctness by using the prototype in their native mode of interaction.
+**이 문법을 구사하는 주체**: 시스템의 실제 사용자 — 시스템의 출력을 소비할 대상. 이들은 자신의 고유한 상호작용 방식으로 프로토타입을 사용하여 정확성을 평가한다.
 
-**Sprint Kit artifact in this grammar**: **Prototype** — form adapts to user type (visual for humans, API mock for services, structured doc for AI)
+**이 문법의 Sprint Kit 산출물**: **프로토타입** — 사용자 유형에 따라 형태가 적응됨 (사람에게는 시각적, 서비스에게는 API 목, AI에게는 구조화된 문서)
 
-### Development Grammar (Machine World)
+### Development Grammar (기계의 세계)
 
-The language of implementation. Expressed through:
-- API endpoints (method, path, request/response schema)
-- Database schemas (tables, columns, constraints, indexes)
-- State machines (states, transitions, guards, actions)
-- Algorithms (input, rules, output, edge cases)
-- Scheduled jobs (trigger, schedule, retry policy)
-- Security rules (auth, authorization, data protection)
-- Infrastructure (deployment, monitoring, scaling)
+구현의 언어. 다음을 통해 표현된다:
+- API 엔드포인트 (메서드, 경로, 요청/응답 스키마)
+- 데이터베이스 스키마 (테이블, 컬럼, 제약조건, 인덱스)
+- 상태 머신 (상태, 전이, 가드, 액션)
+- 알고리즘 (입력, 규칙, 출력, 엣지 케이스)
+- 스케줄 작업 (트리거, 스케줄, 재시도 정책)
+- 보안 규칙 (인증, 인가, 데이터 보호)
+- 인프라 (배포, 모니터링, 스케일링)
 
-**Who speaks this grammar**: Developers, AI coding agents. They evaluate correctness by testing and verifying.
+**이 문법을 구사하는 주체**: 개발자, AI 코딩 에이전트. 이들은 테스트와 검증을 통해 정확성을 평가한다.
 
-**Sprint Kit artifacts in this grammar**: **Specs** (requirements.md, design.md, tasks.md), **Deliverables** (api-spec.yaml, schema.dbml, bdd-scenarios/)
+**이 문법의 Sprint Kit 산출물**: **Specs** (requirements.md, design.md, tasks.md), **Deliverables** (api-spec.yaml, schema.dbml, bdd-scenarios/)
 
-### The Translation Problem
+### 번역 문제
 
-Users can only validate correctness in their own grammar. Machines can only execute instructions in development grammar. Therefore:
+사용자는 자신의 문법으로만 정확성을 검증할 수 있다. 기계는 개발 문법의 지시만 실행할 수 있다. 따라서:
 
-1. **Find the answer in user grammar** → Prototype (form matches user type), validated by actual users at JP2
-2. **Translate the answer to development grammar** → Specs, translated by AI
-3. **Measure the gap** → Delta = translated target - brownfield
-4. **Execute the gap** → AI implements the delta
+1. **사용자 문법에서 답을 찾는다** → 프로토타입 (사용자 유형에 맞는 형태), JP2에서 실제 사용자가 검증
+2. **답을 개발 문법으로 번역한다** → Specs, AI가 번역
+3. **차이를 측정한다** → 델타 = 번역된 목표 - Brownfield
+4. **차이를 실행한다** → AI가 델타를 구현
 
-**This sequence is the only correct order.** Reversing it (defining specs first, then building prototype to match) forces users to validate in a grammar they don't speak.
+**이 순서만이 올바른 순서다.** 이를 역전시키면 (먼저 명세를 정의하고, 이에 맞추어 프로토타입을 만들면) 사용자에게 자신이 구사하지 않는 문법으로 검증하도록 강제하게 된다.
 
 ---
 
-## 3. The Translation: User Grammar → Development Grammar
+## 3. 번역: User Grammar → Development Grammar
 
-This translation is NOT open-ended abstraction. It is a rule-based mapping between known elements.
+이 번역은 열린 추상화가 아니다. 알려진 요소 간의 규칙 기반 매핑이다.
 
 ### Translation Rules
 
-| User Grammar Element (observable in prototype) | Development Grammar Equivalent (in specs) |
+| User Grammar 요소 (프로토타입에서 관찰 가능) | Development Grammar 등가물 (명세 내) |
 |---|---|
-| Screen / Page | Route definition + Page component + API call list |
-| User action (button click, form submit) | API endpoint (method + path + request body) |
-| Data displayed on screen | API response schema + DB query pattern |
-| Screen-to-screen navigation | Route transition + conditional redirect rules |
-| Status badge / label (Active, Expired, etc.) | Entity status enum + state transition rules |
-| Error message ("Already activated") | API error code + HTTP status + error condition |
-| Empty state ("No items yet") | API empty response handling + conditional UI |
-| Loading state (spinner) | Async API call + loading state management |
-| Auto-behavior text ("auto-activates") | Scheduler/Trigger definition + cron/event rules |
-| Calculated value ("2 lessons available") | Algorithm spec (input → rules → output) |
-| List ordering | API query parameter + sorting algorithm |
-| Permission-gated UI (admin-only button) | Authorization rule + API middleware |
-| Form validation message | Input validation rules (field-level + cross-field) |
-| Confirmation dialog | Business rule + state precondition check |
-| Notification/toast | Event trigger + notification channel + message template |
+| 화면 / 페이지 | 라우트 정의 + 페이지 컴포넌트 + API 호출 목록 |
+| 사용자 동작 (버튼 클릭, 폼 제출) | API 엔드포인트 (메서드 + 경로 + 요청 본문) |
+| 화면에 표시되는 데이터 | API 응답 스키마 + DB 쿼리 패턴 |
+| 화면 간 네비게이션 | 라우트 전이 + 조건부 리다이렉트 규칙 |
+| 상태 배지 / 레이블 (활성, 만료 등) | 엔티티 상태 enum + 상태 전이 규칙 |
+| 에러 메시지 ("이미 활성화됨") | API 에러 코드 + HTTP 상태 + 에러 조건 |
+| 빈 상태 ("아직 항목이 없습니다") | API 빈 응답 처리 + 조건부 UI |
+| 로딩 상태 (스피너) | 비동기 API 호출 + 로딩 상태 관리 |
+| 자동 동작 텍스트 ("자동 활성화됨") | 스케줄러/트리거 정의 + cron/이벤트 규칙 |
+| 계산된 값 ("2개 수업 수강 가능") | 알고리즘 명세 (입력 → 규칙 → 출력) |
+| 목록 정렬 | API 쿼리 파라미터 + 정렬 알고리즘 |
+| 권한 제어 UI (관리자 전용 버튼) | 인가 규칙 + API 미들웨어 |
+| 폼 유효성 검사 메시지 | 입력 유효성 규칙 (필드 단위 + 교차 필드) |
+| 확인 다이얼로그 | 비즈니스 규칙 + 상태 전제 조건 검사 |
+| 알림/토스트 | 이벤트 트리거 + 알림 채널 + 메시지 템플릿 |
 
-**Each row is one translation rule.** Every user grammar element in the prototype maps to one or more development grammar elements. If an element doesn't map, the translation table needs a new row — but the structure is always: user grammar element → development equivalent.
+**각 행이 하나의 번역 규칙이다.** 프로토타입의 모든 사용자 문법 요소는 하나 이상의 개발 문법 요소에 매핑된다. 매핑되지 않는 요소가 있으면 번역 테이블에 새로운 행이 필요하다 — 그러나 구조는 항상 동일하다: 사용자 문법 요소 → 개발 등가물.
 
-### What Translation Adds (Carry-Forward)
+### 번역이 추가하는 것 (Carry-Forward)
 
-Some development grammar elements have no user grammar counterpart — they are invisible to users but essential for the system:
+일부 개발 문법 요소에는 사용자 문법 대응물이 없다 — 사용자에게는 보이지 않지만 시스템에 필수적인 것들이다:
 
-| Development Grammar Element | Why Invisible in Prototype | Source |
+| 개발 문법 요소 | 프로토타입에서 보이지 않는 이유 | 출처 |
 |---|---|---|
-| Performance targets (p95 < 500ms) | Cannot observe latency in MSW mock | PRD NFR |
-| Security rules (JWT, CORS, input sanitization) | Mock doesn't enforce security | Architecture |
-| Migration strategy (ALTER TABLE, data backfill) | Mock uses fresh data | Brownfield analysis |
-| Concurrency handling (locks, idempotency) | Single-user prototype | PRD NFR |
-| Monitoring/alerting (SLI/SLO, dashboards) | No production environment | Operational requirements |
-| Error retry/fallback (circuit breaker, backoff) | Mock always responds | Architecture |
+| 성능 목표 (p95 < 500ms) | MSW 목에서는 지연 시간을 관찰할 수 없음 | PRD NFR |
+| 보안 규칙 (JWT, CORS, 입력 살균) | 목이 보안을 강제하지 않음 | Architecture |
+| 마이그레이션 전략 (ALTER TABLE, 데이터 백필) | 목이 신규 데이터를 사용함 | Brownfield 분석 |
+| 동시성 처리 (잠금, 멱등성) | 단일 사용자 프로토타입 | PRD NFR |
+| 모니터링/알림 (SLI/SLO, 대시보드) | 프로덕션 환경 없음 | 운영 요구사항 |
+| 에러 재시도/폴백 (Circuit Breaker, 백오프) | 목은 항상 응답함 | Architecture |
 
-These items are carried forward from PRD, Architecture, and Brownfield context into the final specs. They are ADDED to the translation output:
+이 항목들은 PRD, Architecture, Brownfield 컨텍스트에서 최종 명세로 캐리포워드된다. 번역 출력에 추가되는 것이다:
 
 ```
 Complete Specs = translate(Prototype) + carry-forward(PRD, Architecture, Brownfield)
@@ -123,349 +123,349 @@ Complete Specs = translate(Prototype) + carry-forward(PRD, Architecture, Brownfi
 
 ---
 
-## 4. The Delta
+## 4. 델타
 
-### Definition
+### 정의
 
 ```
 Delta = Complete Specs - Brownfield
       = [translate(Prototype) + carry-forward] - Brownfield
 ```
 
-Where:
-- **translate(Prototype)**: All user grammar elements converted to development grammar
-- **carry-forward**: Non-visible requirements (NFR, security, migration, operations)
-- **Brownfield**: Existing system described in development grammar (brownfield-context.md L1-L4)
+여기서:
+- **translate(Prototype)**: 모든 사용자 문법 요소를 개발 문법으로 변환한 것
+- **carry-forward**: 비가시 요구사항 (NFR, 보안, 마이그레이션, 운영)
+- **Brownfield**: 개발 문법으로 기술된 기존 시스템 (brownfield-context.md L1-L4)
 
-### Delta Components
+### 델타 구성 요소
 
-| Delta Type | Meaning | Example |
+| 델타 유형 | 의미 | 예시 |
 |---|---|---|
-| **Positive delta** | Must create or change | New API endpoint, new DB column, new state transition |
-| **Zero delta** | Already exists, no change needed | Existing API that prototype uses as-is |
-| **Negative delta** | Must remove or deprecate | Old API replaced by new version, dead code cleanup |
-| **Modification delta** | Existing element needs change | API response gains new fields, DB column type changes |
+| **양성 델타** | 생성하거나 변경해야 함 | 새 API 엔드포인트, 새 DB 컬럼, 새 상태 전이 |
+| **영 델타** | 이미 존재하며, 변경 불필요 | 프로토타입이 그대로 사용하는 기존 API |
+| **음성 델타** | 제거하거나 폐기해야 함 | 새 버전으로 대체된 기존 API, 데드 코드 정리 |
+| **수정 델타** | 기존 요소에 변경이 필요 | API 응답에 새 필드 추가, DB 컬럼 타입 변경 |
 
-### Why Delta is the Right Unit
+### 델타가 올바른 단위인 이유
 
-If delta is precisely defined, execution becomes mechanical:
-- Each positive delta item → a task for a Worker
-- Each modification delta item → a brownfield-aware task with File Ownership
-- Each negative delta item → a cleanup task
-- Zero delta items → no work needed (verified by regression tests)
+델타가 정밀하게 정의되면 실행은 기계적이 된다:
+- 각 양성 델타 항목 → Worker를 위한 태스크
+- 각 수정 델타 항목 → File Ownership이 있는 Brownfield 인식 태스크
+- 각 음성 델타 항목 → 정리 태스크
+- 영 델타 항목 → 작업 불필요 (회귀 테스트로 검증)
 
-**The quality of development is bounded by the quality of delta definition.** If delta is complete and precise, the implementation will be correct. If delta is incomplete or ambiguous, no amount of skilled implementation can compensate.
+**개발의 품질은 델타 정의의 품질에 의해 제한된다.** 델타가 완전하고 정밀하면 구현도 정확할 것이다. 델타가 불완전하거나 모호하면 아무리 숙련된 구현도 이를 보상할 수 없다.
 
-This is why Sprint Kit's primary goal is delta definition, not code generation.
+이것이 Sprint Kit의 주요 목표가 코드 생성이 아니라 델타 정의인 이유다.
 
 ---
 
-## 5. Sprint Kit Pipeline Reframed
+## 5. Sprint Kit 파이프라인 재구성
 
-### The Complete Flow
+### 전체 흐름
 
 ```
-[Phase 0: Establish Baseline]
-  Brownfield scan → brownfield-context.md (L1~L4)
-  = Current system in development grammar
+[Phase 0: 베이스라인 수립]
+  Brownfield 스캔 → brownfield-context.md (L1~L4)
+  = 개발 문법으로 표현된 현재 시스템
 
-[Phase 1: Find the Answer in User Grammar]
+[Phase 1: 사용자 문법에서 답 찾기]
   Brief + Brownfield → PRD → Architecture → Specs → Deliverables → Prototype
-  = Target state in user grammar
-  JP1: "Is the direction right?" (human validates search direction)
-  JP2: "Is this the answer?" (human validates target in user grammar)
+  = 사용자 문법으로 표현된 목표 상태
+  JP1: "방향이 맞는가?" (사람이 탐색 방향을 검증)
+  JP2: "이것이 답인가?" (사람이 사용자 문법으로 목표를 검증)
 
-[Phase 2: Translate and Measure]
-  translate(Approved Prototype) → Target in development grammar
+[Phase 2: 번역과 측정]
+  translate(승인된 Prototype) → 개발 문법의 목표
   + carry-forward(NFR, Security, Migration, Operations)
-  = Complete Target Specs
+  = 완전한 목표 명세
 
   Complete Target Specs - Brownfield = Delta
-  = Precisely defined gap between current and target
+  = 현재와 목표 사이의 정밀하게 정의된 차이
 
-[Phase 3: Execute]
-  Implement Delta → Brownfield transforms into Target
-  Validate: implemented system ≈ prototype behavior
+[Phase 3: 실행]
+  델타 구현 → Brownfield가 목표로 변환됨
+  검증: 구현된 시스템 ≈ 프로토타입 동작
 ```
 
-### What Each Stage Really Does
+### 각 단계가 실제로 하는 것
 
-| Stage | Previous Understanding | Reframed Understanding |
+| 단계 | 기존 이해 | 재구성된 이해 |
 |---|---|---|
-| Phase 0 (Smart Launcher) | Collect inputs | **Establish brownfield baseline in development grammar** |
-| Brownfield Scan | Gather existing system info | **Parse current state into structured development grammar** |
-| PRD Generation | Define requirements | **Explore solution space toward user grammar answer** |
-| Architecture | Make technical decisions | **Constrain solution space (carry-forward source)** |
-| Specs 4-file | Define implementation contract | **Intermediate scaffold for prototype generation** |
-| Deliverables | Create implementation artifacts | **Generate target state in user grammar (prototype)** |
-| JP1 | Judge requirements | **Validate search direction before investing in prototype** |
-| JP2 | Judge experience | **Confirm target state in user grammar ("this IS the answer")** |
-| Crystallize | Reconcile specs with prototype | **Translate user grammar → development grammar + extract delta** |
-| Execute | Implement specs | **Realize delta: transform current into target** |
-| Validate | Verify implementation | **Verify: current + delta ≈ target** |
+| Phase 0 (Smart Launcher) | 입력 수집 | **개발 문법으로 Brownfield 베이스라인 수립** |
+| Brownfield 스캔 | 기존 시스템 정보 수집 | **현재 상태를 구조화된 개발 문법으로 파싱** |
+| PRD 생성 | 요구사항 정의 | **사용자 문법의 답을 향한 솔루션 공간 탐색** |
+| Architecture | 기술적 결정 | **솔루션 공간 제약 (캐리포워드 출처)** |
+| Specs 4-file | 구현 계약 정의 | **프로토타입 생성을 위한 중간 스캐폴드** |
+| Deliverables | 구현 산출물 생성 | **사용자 문법으로 목표 상태 생성 (프로토타입)** |
+| JP1 | 요구사항 판단 | **프로토타입에 투자하기 전에 탐색 방향 검증** |
+| JP2 | 경험 판단 | **사용자 문법으로 목표 상태 확인 ("이것이 답이다")** |
+| Crystallize | 명세를 프로토타입과 정합 | **사용자 문법 → 개발 문법 번역 + 델타 추출** |
+| Execute | 명세 구현 | **델타 실현: 현재를 목표로 변환** |
+| Validate | 구현 검증 | **검증: 현재 + 델타 ≈ 목표** |
 
-### The 3-Pass Pattern Reframed
+### 3패스 패턴 재구성
 
-| Pass | Previous Name | Reframed Name | What Happens |
+| 패스 | 기존 이름 | 재구성된 이름 | 수행 내용 |
 |---|---|---|---|
-| 1st | Generative | **Answer Discovery** | Find the right answer in user grammar (human-validated) |
-| 2nd | Reconciliatory | **Translation & Delta Extraction** | Convert user grammar answer to dev grammar, measure gap from brownfield |
-| 3rd | Realization | **Delta Execution** | Implement the precisely defined gap |
+| 1차 | 생성적 | **답 발견** | 사용자 문법에서 올바른 답 찾기 (사람이 검증) |
+| 2차 | 정합적 | **번역 및 델타 추출** | 사용자 문법의 답을 개발 문법으로 변환, Brownfield와의 차이 측정 |
+| 3차 | 실현적 | **델타 실행** | 정밀하게 정의된 차이를 구현 |
 
 ---
 
-## 6. Why This Makes "Concrete → Abstract" a Strength
+## 6. "구체 → 추상"이 강점이 되는 이유
 
-The previous concern: "Crystallize abstracts from prototype to specs — but AI is bad at abstraction."
+기존 우려: "Crystallize는 프로토타입에서 명세로 추상화한다 — 그런데 AI는 추상화를 잘 못한다."
 
-The reframe: **Crystallize is not abstraction. It is translation between two known grammars.**
+재구성: **Crystallize는 추상화가 아니다. 두 개의 알려진 문법 사이의 번역이다.**
 
-| Operation | What AI Does | AI Suitability |
+| 연산 | AI가 하는 것 | AI 적합도 |
 |---|---|---|
-| Abstraction (Emergent Design) | Discover new patterns from code | Low — requires aesthetic judgment, full context |
-| **Translation (Crystallize)** | **Convert known user grammar elements to known dev elements using mapping rules** | **High — rule-based, structured, verifiable** |
+| 추상화 (창발적 설계) | 코드에서 새로운 패턴을 발견 | 낮음 — 미적 판단과 전체 맥락이 필요 |
+| **번역 (Crystallize)** | **알려진 사용자 문법 요소를 매핑 규칙으로 알려진 개발 요소로 변환** | **높음 — 규칙 기반, 구조적, 검증 가능** |
 
-The translation is mechanical because:
-1. **Both grammars are known** — user grammar elements and dev elements are enumerated
-2. **Mapping rules exist** — each user grammar element has a defined dev equivalent
-3. **Input is bounded** — prototype is a finite set of screens, actions, states
-4. **Output format is fixed** — specs files have defined structure
-5. **Verification is possible** — round-trip: specs → re-generate prototype → compare with original
-
----
-
-## 7. Round-Trip Verification
-
-To verify that translation didn't lose information:
-
-```
-Prototype (original, JP2-approved)
-  → translate → Specs (development grammar)
-    → re-generate → Re-Prototype (from specs alone)
-      → compare → Original Prototype ≈ Re-Prototype?
-```
-
-If the re-generated prototype structurally matches the original (same routes, same components, same API calls, same states), the translation was lossless. Differences indicate translation gaps.
-
-This is the Crystallize S5 (Cross-Artifact Consistency) check, reframed as a translation verification step.
+번역이 기계적인 이유:
+1. **두 문법 모두 알려져 있다** — 사용자 문법 요소와 개발 요소가 열거되어 있음
+2. **매핑 규칙이 존재한다** — 각 사용자 문법 요소에 정의된 개발 등가물이 있음
+3. **입력이 유한하다** — 프로토타입은 유한한 화면, 동작, 상태의 집합
+4. **출력 형식이 고정되어 있다** — 명세 파일에 정의된 구조가 있음
+5. **검증이 가능하다** — 왕복 검증: 명세 → 프로토타입 재생성 → 원본과 비교
 
 ---
 
-## 8. Implications for Greenfield
+## 7. 왕복 검증
 
-When there is no brownfield (new system from scratch):
+번역에서 정보가 손실되지 않았는지 검증하기 위해:
 
 ```
-Brownfield = ∅ (empty)
+Prototype (원본, JP2 승인)
+  → translate → Specs (개발 문법)
+    → re-generate → Re-Prototype (명세만으로 재생성)
+      → compare → 원본 Prototype ≈ Re-Prototype?
+```
+
+재생성된 프로토타입이 원본과 구조적으로 일치하면 (같은 라우트, 같은 컴포넌트, 같은 API 호출, 같은 상태), 번역은 무손실이었다. 차이가 있으면 번역 누락을 나타낸다.
+
+이것은 Crystallize S5 (교차 산출물 일관성) 검사를 번역 검증 단계로 재구성한 것이다.
+
+---
+
+## 8. Greenfield에 대한 시사점
+
+Brownfield가 없는 경우 (완전히 새로운 시스템):
+
+```
+Brownfield = ∅ (비어있음)
 Delta = translate(Prototype) + carry-forward - ∅
       = translate(Prototype) + carry-forward
-      = Complete Specs (the entire system)
+      = Complete Specs (전체 시스템)
 ```
 
-The model degrades gracefully. For greenfield, delta IS the full spec. For brownfield, delta is the changeset. The pipeline is identical; only the brownfield baseline changes.
+모델은 우아하게 퇴화한다. Greenfield에서 델타는 전체 명세 자체다. Brownfield에서 델타는 변경 세트다. 파이프라인은 동일하며, Brownfield 베이스라인만 달라진다.
 
 ---
 
-## 9. Implementation Implications
+## 9. 구현 시사점
 
-This reframe has implications for Sprint Kit components including: Crystallize pipeline, design.md format, Specs as intermediate vs final artifact, handoff, Validate phase, translation rule completeness, and carry-forward mechanism.
+이 관점 전환은 Crystallize 파이프라인, design.md 형식, 중간 산출물 대 최종 산출물로서의 Specs, 핸드오프, Validate 단계, 번역 규칙 완전성, 캐리포워드 메커니즘 등 Sprint Kit 구성 요소에 대한 시사점을 갖는다.
 
-> Detailed re-evaluation and implementation plan: [`reviews/lld-gap-analysis-and-implementation-plan.md`](reviews/lld-gap-analysis-and-implementation-plan.md)
+> 상세 재평가 및 구현 계획: [`reviews/lld-gap-analysis-and-implementation-plan.md`](reviews/lld-gap-analysis-and-implementation-plan.md)
 
 ---
 
-## 10. Design Principles (Core Principles + Design Judgments)
+## 10. 설계 원칙 (핵심 원칙 + 설계 판단)
 
-### Core Principles
+### 핵심 원칙
 
-These are foundational beliefs that drive all Sprint Kit decisions. Updated to reflect the delta-driven design reframe.
+Sprint Kit의 모든 결정을 이끄는 기본 신념이다. Delta-Driven Design 관점 전환을 반영하여 갱신되었다.
 
-#### CP1: Human judgment is the only lasting asset (RETAINED)
+#### CP1: 사람의 판단만이 영속 자산이다 (유지)
 
-All AI artifacts are disposable and regenerable. Human input raises generation quality; human judgment sets direction. This principle is unchanged — it is the foundation of JDD.
+모든 AI 산출물은 소모품이며 재생성 가능하다. 사람의 입력이 생성 품질을 높이고, 사람의 판단이 방향을 결정한다. 이 원칙은 변하지 않는다 — JDD의 기반이다.
 
-**Delta frame reinforcement**: In the delta frame, human judgment confirms the target state (JP2) and search direction (JP1). Everything else — translation, delta extraction, execution — is AI's domain.
+**델타 프레임 강화**: 델타 프레임에서 사람의 판단은 목표 상태(JP2)와 탐색 방향(JP1)을 확인한다. 그 외 모든 것 — 번역, 델타 추출, 실행 — 은 AI의 영역이다.
 
-#### CP2: Prototype adapts to the system's actual user (NEW)
+#### CP2: 프로토타입은 시스템의 실제 사용자에 맞추어 적응한다 (신규)
 
-Prototype is NOT limited to visual UI mockups. The prototype form must match the system's actual user:
-- Human users → Visual prototype (React + MSW)
-- Service consumers → API mock (OpenAPI + mock server)
-- AI consumers → Structured documents (YAML/JSON)
-- Data pipelines → Sample data + transformation scripts
+프로토타입은 시각적 UI 목업에 국한되지 않는다. 프로토타입의 형태는 시스템의 실제 사용자에 맞춰야 한다:
+- 사람 사용자 → 시각 프로토타입 (React + MSW)
+- 서비스 소비자 → API 목 (OpenAPI + 목 서버)
+- AI 소비자 → 구조화된 문서 (YAML/JSON)
+- 데이터 파이프라인 → 샘플 데이터 + 변환 스크립트
 
-**Rationale**: The prototype's purpose is to let the actual user validate correctness in their native grammar. If the user is another server, showing them a React UI is meaningless — they need an API contract to validate against.
+**근거**: 프로토타입의 목적은 실제 사용자가 자신의 고유 문법으로 정확성을 검증하도록 하는 것이다. 사용자가 다른 서버라면 React UI를 보여주는 것은 무의미하다 — 그들에게는 검증할 API 계약이 필요하다.
 
-**Implication**: `deliverable-generator.md` Stage 10 should be parameterized by user type, not hardcoded to React + MSW.
+**시사점**: `deliverable-generator.md` Stage 10은 React + MSW에 하드코딩되지 않고 사용자 유형에 따라 파라미터화되어야 한다.
 
-#### CP3: Spec completeness controls non-determinism; graceful degradation manages the remainder (NEW)
+#### CP3: 명세 완전성이 비결정성을 통제하고, 우아한 퇴화가 나머지를 관리한다 (신규)
 
-AI code generation is non-deterministic: same input can produce different output. However, non-determinism is not a fixed property of AI — it is a function of specification completeness:
+AI 코드 생성은 비결정적이다: 같은 입력이 다른 출력을 낼 수 있다. 그러나 비결정성은 AI의 고정 속성이 아니다 — 명세 완전성의 함수다:
 
 ```
 Non-determinism = f(1 / spec_completeness)
 ```
 
-- More complete specs (visual guides, UI patterns, API contracts, state machines) → less non-determinism
-- Less complete specs (vague requirements, no design guide) → more non-determinism
+- 더 완전한 명세 (시각적 가이드, UI 패턴, API 계약, 상태 머신) → 더 적은 비결정성
+- 덜 완전한 명세 (모호한 요구사항, 설계 가이드 없음) → 더 많은 비결정성
 
-**The trade-off**: Over-specification creates inefficiency (generation cost, maintenance burden, context window consumption). Under-specification creates non-determinism (inconsistent output, rework).
+**트레이드오프**: 과도한 명세는 비효율을 만든다 (생성 비용, 유지보수 부담, 컨텍스트 윈도우 소모). 불충분한 명세는 비결정성을 만든다 (일관되지 않은 출력, 재작업).
 
-**Sprint Kit's position**: Pursue the optimal trade-off, not the extreme. Accept that some non-determinism is inevitable and design for graceful degradation:
+**Sprint Kit의 입장**: 극단이 아니라 최적의 트레이드오프를 추구한다. 일부 비결정성은 불가피하다는 것을 수용하고 우아한 퇴화를 설계한다:
 
-| Spec Area | Sprint Kit's Level | Accepted Non-determinism |
+| 명세 영역 | Sprint Kit의 수준 | 허용되는 비결정성 |
 |---|---|---|
-| API contract | High (OpenAPI 3.1) | Near-zero (Specmatic enforces) |
-| DB schema | High (DBML) | Near-zero (migration scripts enforce) |
-| State transitions | Medium (XState when detected) | Low (state machine constrains) |
-| UI layout/style | Low (no visual guide) | **High** (CSS, component structure varies) |
-| Variable naming | Low (Entity Dictionary only) | Medium (internal naming varies) |
+| API 계약 | 높음 (OpenAPI 3.1) | 거의 없음 (Specmatic이 강제) |
+| DB 스키마 | 높음 (DBML) | 거의 없음 (마이그레이션 스크립트가 강제) |
+| 상태 전이 | 중간 (감지 시 XState) | 낮음 (상태 머신이 제약) |
+| UI 레이아웃/스타일 | 낮음 (시각적 가이드 없음) | **높음** (CSS, 컴포넌트 구조가 달라짐) |
+| 변수 명명 | 낮음 (Entity Dictionary만) | 중간 (내부 명명이 달라짐) |
 
-**Graceful degradation strategy**: Where non-determinism is high (UI layout, internal naming), accept variation and rely on Contract Testing + BDD to verify functional correctness. Don't over-specify to eliminate visual variation — it's not worth the cost.
+**우아한 퇴화 전략**: 비결정성이 높은 곳 (UI 레이아웃, 내부 명명)에서는 변동을 수용하고 Contract Testing + BDD로 기능적 정확성을 검증한다. 시각적 변동을 제거하기 위해 과도하게 명세하지 않는다 — 비용 대비 가치가 없다.
 
-#### CP4: Delta definition is Sprint Kit's primary goal (NEW)
+#### CP4: 델타 정의가 Sprint Kit의 주요 목표다 (신규)
 
-Sprint Kit's purpose is not "generating specs" or "building prototypes." It is **defining the delta between the current system (brownfield) and the target system (user-validated prototype)**, expressed in a format that machines can execute.
+Sprint Kit의 목적은 "명세 생성"이나 "프로토타입 구축"이 아니다. **현재 시스템(Brownfield)과 목표 시스템(사용자가 검증한 프로토타입) 사이의 델타를 정의하는 것**이며, 기계가 실행할 수 있는 형식으로 표현된다.
 
 ```
 Delta = translate(Prototype) + carry-forward - Brownfield
 ```
 
-If the delta is precisely defined, implementation is mechanical. The quality of development is bounded by the quality of delta definition.
+델타가 정밀하게 정의되면 구현은 기계적이다. 개발의 품질은 델타 정의의 품질에 의해 제한된다.
 
-#### CP5: Regeneration over modification (RETAINED, reframed)
+#### CP5: 수정보다 재생성 (유지, 재구성)
 
-When an artifact needs changing, regenerate it from source rather than editing it. AI regeneration cost is low; manual editing introduces inconsistency.
+산출물을 변경해야 할 때, 편집하는 것이 아니라 원본에서 재생성한다. AI 재생성 비용은 낮으며, 수동 편집은 불일치를 초래한다.
 
-**Delta frame addition**: This principle applies to the delta itself. If the delta changes (e.g., JP2 feedback modifies the target), regenerate the affected delta items rather than patching them.
+**델타 프레임 추가**: 이 원칙은 델타 자체에도 적용된다. 델타가 변경되면 (예: JP2 피드백이 목표를 수정하면), 영향받은 델타 항목을 패치하는 것이 아니라 재생성한다.
 
-#### CP6: Translation is rule-based, not judgment-based (NEW)
+#### CP6: 번역은 규칙 기반이지 판단 기반이 아니다 (신규)
 
-Crystallize's "concrete → abstract" step is translation between two known grammars, not open-ended abstraction. Translation follows a mapping table (User Grammar Element → Development Grammar Equivalent) with explicit rules.
+Crystallize의 "구체 → 추상" 단계는 열린 추상화가 아니라 두 개의 알려진 문법 사이의 번역이다. 번역은 명시적 규칙이 있는 매핑 테이블 (User Grammar 요소 → Development Grammar 등가물)을 따른다.
 
-Where translation rules are insufficient (inference-required items like auto-behavior text → scheduler definition), these items are explicitly flagged for carry-forward validation rather than silently guessed.
+번역 규칙이 불충분한 경우 (자동 동작 텍스트 → 스케줄러 정의와 같이 추론이 필요한 항목), 이런 항목은 조용히 추측되지 않고 캐리포워드 검증을 위해 명시적으로 플래그된다.
 
-### Design Judgments
+### 설계 판단
 
-Specific decisions made for Sprint Kit's implementation. These may change as the tool evolves.
+Sprint Kit 구현을 위한 구체적 결정들이다. 도구가 발전함에 따라 변경될 수 있다.
 
-#### DJ1: Expand design.md rather than create new files (RETAINED)
+#### DJ1: 새 파일 생성보다 design.md 확장 (유지)
 
-LLD sections go into design.md, not a separate `detailed-design.md`. Workers already read design.md as primary reference.
+LLD 섹션은 별도의 `detailed-design.md`가 아니라 design.md에 들어간다. Worker는 이미 design.md를 주요 참조로 읽는다.
 
-#### DJ2: Conditional activation over mandatory sections (RETAINED)
+#### DJ2: 필수 섹션보다 조건부 활성화 (유지)
 
-All LLD sections and translation outputs use always-detect / conditionally-generate. Simple projects see zero overhead.
+모든 LLD 섹션과 번역 출력은 항상 감지 / 조건부 생성 방식을 사용한다. 단순한 프로젝트는 오버헤드가 없다.
 
-#### DJ3: Devil's Advocate as separate pass (RETAINED, reframed)
+#### DJ3: Devil's Advocate는 별도 패스 (유지, 재구성)
 
-Adversarial verification is a dedicated step ("Is the delta complete?"), not embedded in generation. In the delta frame, it verifies delta completeness rather than deliverable quality.
+적대적 검증은 생성에 내장되지 않고 전용 단계("델타가 완전한가?")다. 델타 프레임에서는 산출물 품질이 아니라 델타 완전성을 검증한다.
 
-#### DJ4: PRD State Transition structures are business rules (RETAINED)
+#### DJ4: PRD 상태 전이 구조는 비즈니스 규칙이다 (유지)
 
-States/Transitions/Invariants in PRD FRs are user grammar elements (business rules), not development grammar (implementation). They're the input to translation, not the output.
+PRD FR의 States/Transitions/Invariants는 개발 문법(구현)이 아니라 사용자 문법 요소(비즈니스 규칙)다. 번역의 출력이 아니라 입력이다.
 
-#### DJ5: Fix Stage 7 input source (RETAINED)
+#### DJ5: Stage 7 입력 소스 수정 (유지)
 
-Change Stage 7 (XState) input from "Architecture state diagrams" to "design.md State Transitions section." This fixes a pipeline wiring bug.
+Stage 7 (XState) 입력을 "Architecture 상태 다이어그램"에서 "design.md 상태 전이 섹션"으로 변경한다. 이는 파이프라인 배선 버그를 수정한다.
 
-#### DJ6: Observability as mandatory NFR (RETAINED)
+#### DJ6: 관측성은 필수 NFR (유지)
 
-Every deployed service needs monitoring. Observability NFR is always required regardless of project type.
+배포되는 모든 서비스에 모니터링이 필요하다. 관측성 NFR은 프로젝트 유형과 무관하게 항상 필수다.
 
-#### DJ7: Carry-forward items require explicit lifecycle management (NEW)
+#### DJ7: 캐리포워드 항목은 명시적 생명주기 관리가 필요하다 (신규)
 
-Items that exist in development grammar but have no user grammar counterpart (NFR, security, migration, monitoring) must be:
-1. **Registered** at Phase 1 (in design.md carry-forward registry)
-2. **Preserved** through the prototype-centric pipeline (bypassing prototype, injected at Crystallize)
-3. **Verified** for completeness (Scope Gate check: all registered items present in final specs)
-4. **Classified** in delta (positive/modification/zero per item)
+개발 문법에는 존재하지만 사용자 문법 대응물이 없는 항목 (NFR, 보안, 마이그레이션, 모니터링)은 반드시:
+1. Phase 1에서 **등록**되어야 한다 (design.md 캐리포워드 레지스트리)
+2. 프로토타입 중심 파이프라인을 **통과**하며 보존되어야 한다 (프로토타입을 우회하고, Crystallize에서 주입)
+3. 완전성이 **검증**되어야 한다 (Scope Gate 검사: 등록된 모든 항목이 최종 명세에 존재)
+4. 델타에서 **분류**되어야 한다 (항목별 양성/수정/영)
 
-#### DJ8: Delta Manifest as standard Crystallize output (NEW)
+#### DJ8: Delta Manifest는 표준 Crystallize 출력이다 (신규)
 
-Crystallize must produce a Delta Manifest classifying every change as positive (new), modification (changed), negative (removed), or zero (unchanged). This manifest is the prerequisite for delta-typed testing, regression scoping, and handoff.
+Crystallize는 모든 변경을 양성(신규), 수정(변경), 음성(제거), 영(변경 없음)으로 분류하는 Delta Manifest를 산출해야 한다. 이 매니페스트는 델타 유형별 테스트, 회귀 범위 설정, 핸드오프의 전제 조건이다.
 
-#### DJ9: JP2 shows the delta in user grammar (NEW)
+#### DJ9: JP2는 사용자 문법으로 델타를 보여준다 (신규)
 
-JP2 Visual Summary must include a "Before/After" section showing what changes from the user's perspective. Users confirm not just "the prototype is right" but "this change from the current system is right."
+JP2 시각 요약은 사용자 관점에서 무엇이 변경되는지 보여주는 "이전/이후" 섹션을 포함해야 한다. 사용자는 "프로토타입이 맞다"뿐만 아니라 "현재 시스템에서 이 변경이 맞다"를 확인한다.
 
-#### DJ10: Non-determinism trade-off is explicit, not hidden (NEW)
+#### DJ10: 비결정성 트레이드오프는 명시적이지 은폐되지 않는다 (신규)
 
-Where Sprint Kit accepts non-determinism (e.g., UI layout variation), this is a documented design choice with a specific graceful degradation strategy — not an unacknowledged gap. The spec completeness level for each area is explicitly stated (see CP3 table).
+Sprint Kit이 비결정성을 수용하는 곳 (예: UI 레이아웃 변동)에서, 이는 특정 우아한 퇴화 전략을 갖는 문서화된 설계 선택이다 — 인정되지 않은 갭이 아니다. 각 영역의 명세 완전성 수준은 명시적으로 기술된다 (CP3 표 참조).
 
 ---
 
-## 11. What Does NOT Change
+## 11. 변경되지 않는 것
 
-| Element | Why It Stays |
+| 요소 | 유지 이유 |
 |---|---|
-| **CP1: Human judgment is the only lasting asset** | Foundation of JDD. Unchanged by delta reframe |
-| **JP1 / JP2 Structure** | JP1 validates search direction, JP2 validates the answer. Both use user grammar. No new JPs needed |
-| **Brownfield Scanner** | Establishes the baseline. Now explicitly framed as "current state in development grammar" |
-| **3-Pass Pattern** | Still Answer Discovery → Translation & Delta Extraction → Delta Execution |
-| **Contract-First (Specmatic)** | Contracts control non-determinism during execution (CP3 strategy) |
-| **BDD Scenarios** | Part of the translated target in development grammar |
-| **Brief → Prototype pipeline** | Each step serves Answer Discovery. No restructuring needed (Party Mode confirmed) |
-| **Pipeline execution flow** | Crystallize is mandatory after JP2. /parallel always receives reconciled/. Delta Manifest (S5b) always generated |
+| **CP1: 사람의 판단만이 영속 자산이다** | JDD의 기반. 델타 재구성에 의해 변경되지 않음 |
+| **JP1 / JP2 구조** | JP1은 탐색 방향을 검증하고, JP2는 답을 검증. 둘 다 사용자 문법을 사용. 새로운 JP 불필요 |
+| **Brownfield Scanner** | 베이스라인을 수립. 이제 "개발 문법으로 표현된 현재 상태"로 명시적으로 프레이밍 |
+| **3패스 패턴** | 여전히 답 발견 → 번역 및 델타 추출 → 델타 실행 |
+| **Contract-First (Specmatic)** | 계약이 실행 중 비결정성을 통제 (CP3 전략) |
+| **BDD Scenarios** | 개발 문법으로 번역된 목표의 일부 |
+| **Brief → Prototype 파이프라인** | 각 단계가 답 발견을 수행. 구조 변경 불필요 (Party Mode 확인) |
+| **파이프라인 실행 흐름** | JP2 후 Crystallize는 필수. /parallel은 항상 reconciled/를 수신. Delta Manifest (S5b)는 항상 생성 |
 
 ---
 
-## 12. Implementation Roadmap
+## 12. 구현 로드맵
 
-> Detailed implementation plan with file-by-file changes, phased rollout, and verification strategy: [`reviews/lld-gap-analysis-and-implementation-plan.md`](reviews/lld-gap-analysis-and-implementation-plan.md)
+> 파일별 변경 사항, 단계별 롤아웃, 검증 전략을 포함한 상세 구현 계획: [`reviews/lld-gap-analysis-and-implementation-plan.md`](reviews/lld-gap-analysis-and-implementation-plan.md)
 
-**Summary**: Option B (incremental integration) selected. Sprint Kit's pipeline already performs the correct operations — this reframe provides conceptual alignment.
+**요약**: 옵션 B (점진적 통합)가 선택되었다. Sprint Kit의 파이프라인은 이미 올바른 연산을 수행하고 있다 — 이 재구성은 개념적 정렬을 제공한다.
 
-| Phase | Scope | Key Changes |
+| 단계 | 범위 | 주요 변경 사항 |
 |---|---|---|
-| 0 | Documentation | Terminology, JDD reference, Blueprint reference |
-| 1 | LLD Foundation | design.md conditional sections, Scope Gate checks, PRD format |
-| 2 | Delta Integration | Delta Manifest, JP2 Before/After, carry-forward registry |
-| 3 | Validation | Delta completeness check, zero delta regression, carry-forward ratio measurement |
+| 0 | 문서화 | 용어, JDD 참조, Blueprint 참조 |
+| 1 | LLD 기반 | design.md 조건부 섹션, Scope Gate 검사, PRD 형식 |
+| 2 | 델타 통합 | Delta Manifest, JP2 이전/이후, 캐리포워드 레지스트리 |
+| 3 | 검증 | 델타 완전성 검사, 영 델타 회귀, 캐리포워드 비율 측정 |
 
 ---
 
-## Appendix A: Historical Context
+## 부록 A: 역사적 맥락
 
-This reframe emerged from a 5-round Party Mode analysis that began with "should we change the PRD format?" and progressively deepened:
+이 재구성은 "PRD 형식을 변경해야 하는가?"로 시작하여 점진적으로 심화된 5라운드 Party Mode 분석에서 나왔다:
 
-| Round | Question | Finding |
+| 라운드 | 질문 | 발견 |
 |---|---|---|
-| 1 | Should PRD format change? | PRD is not the problem; implementation-level detail belongs elsewhere |
-| 2 | Is a new document needed? | No — information exists but is distributed across files |
-| 3 | What specific changes fix the gaps? | 10 gaps need format expansions across 6+ files |
-| 4 | Is this structural or edge case? | Edge cases within correct boundaries; design.md needs LLD |
-| 5 | What methodology principles apply? | Sprint Kit is a unique 4-category hybrid; 3-pass pattern is novel |
-| **Synthesis** | **What is Sprint Kit's actual purpose?** | **Define the delta between brownfield and prototype-validated target** |
+| 1 | PRD 형식을 변경해야 하는가? | PRD가 문제가 아니다; 구현 수준 세부사항은 다른 곳에 속한다 |
+| 2 | 새 문서가 필요한가? | 아니다 — 정보는 존재하지만 파일에 분산되어 있다 |
+| 3 | 어떤 구체적 변경이 갭을 해결하는가? | 6개 이상 파일에 걸쳐 10개 갭에 형식 확장이 필요 |
+| 4 | 구조적인가 엣지 케이스인가? | 올바른 경계 내 엣지 케이스; design.md에 LLD가 필요 |
+| 5 | 어떤 방법론 원칙이 적용되는가? | Sprint Kit은 고유한 4범주 하이브리드; 3패스 패턴은 새로움 |
+| **종합** | **Sprint Kit의 실제 목적은 무엇인가?** | **Brownfield와 프로토타입으로 검증된 목표 사이의 델타를 정의하는 것** |
 
-The methodology survey (Round 5-6) revealed that Sprint Kit's Crystallize pass (concrete → abstract) is unique in the methodology landscape. The concern that "AI is bad at abstraction" was resolved by recognizing that Crystallize is not abstraction — it is **translation between two known grammars**, which is a rule-based operation that AI handles well.
+방법론 조사 (라운드 5-6)는 Sprint Kit의 Crystallize 패스 (구체 → 추상)가 방법론 지형에서 고유하다는 것을 밝혔다. "AI는 추상화를 잘 못한다"는 우려는 Crystallize가 추상화가 아니라 **두 개의 알려진 문법 사이의 번역**이며, 이는 AI가 잘 처리하는 규칙 기반 연산이라는 인식으로 해소되었다.
 
-| Round 7 | Party Mode re-evaluation of delta reframe (6 agents) | Pipeline already performs correct operations; reframe is conceptual. JP2 needs Before/After delta. Delta Manifest is critical prerequisite. carry-forward needs lifecycle management |
-| Round 8 | Design Principles finalization | CP1-CP6 (core principles) + DJ1-DJ10 (design judgments). Key additions: CP2 (prototype adapts to user type), CP3 (spec completeness ↔ non-determinism trade-off), CP4 (delta is primary goal). Option B selected |
+| 라운드 7 | 델타 재구성에 대한 Party Mode 재평가 (6개 에이전트) | 파이프라인은 이미 올바른 연산을 수행. 재구성은 개념적. JP2에 이전/이후 델타 필요. Delta Manifest는 핵심 전제 조건. 캐리포워드에 생명주기 관리 필요 |
+| 라운드 8 | 설계 원칙 확정 | CP1-CP6 (핵심 원칙) + DJ1-DJ10 (설계 판단). 주요 추가: CP2 (프로토타입이 사용자 유형에 적응), CP3 (명세 완전성 ↔ 비결정성 트레이드오프), CP4 (델타가 주요 목표). 옵션 B 선택 |
 
 ---
 
-## Appendix B: Methodology Survey
+## 부록 B: 방법론 조사
 
-> **Date**: 2026-02-21
-> **Scope**: 18 methodologies surveyed across academic papers, industry frameworks, and emerging AI-assisted engineering practices (2024-2026)
-> **Finding**: No existing methodology combines all 7 key traits. Maximum overlap found is 3/7.
+> **날짜**: 2026-02-21
+> **범위**: 학술 논문, 산업 프레임워크, 신흥 AI 지원 엔지니어링 실천법 (2024-2026)에 걸쳐 18개 방법론 조사
+> **발견**: 7가지 핵심 특성을 모두 결합한 기존 방법론은 없다. 최대 중첩은 3/7.
 
-### B.1 Seven Key Traits of Delta-Driven Design
+### B.1 Delta-Driven Design의 7가지 핵심 특성
 
-| # | Trait | Definition |
+| # | 특성 | 정의 |
 |---|-------|------------|
-| 1 | Delta as primary artifact | The changeset between current and target state is the main deliverable, not the full spec |
-| 2 | Prototype-first | Humans validate the target in user grammar (prototype), then AI translates to development specs |
-| 3 | Two Grammars | Formal distinction between User Grammar and Development Grammar |
-| 4 | Translation, not abstraction | Converting prototype to specs is rule-based translation between known grammars |
-| 5 | 3-Pass Pattern | Answer Discovery → Translation & Delta Extraction → Delta Execution |
-| 6 | Brownfield-aware | Existing system baseline explicitly factored into delta calculation |
-| 7 | Carry-forward | Non-visible requirements (NFRs, security, migration) added to translated output |
+| 1 | 주요 산출물로서의 델타 | 현재와 목표 상태 사이의 변경 세트가 전체 명세가 아닌 주요 결과물 |
+| 2 | 프로토타입 우선 | 사람이 사용자 문법으로 목표를 검증하고(프로토타입), AI가 개발 명세로 번역 |
+| 3 | 두 가지 문법 | User Grammar와 Development Grammar의 형식적 구분 |
+| 4 | 추상화가 아닌 번역 | 프로토타입을 명세로 변환하는 것은 알려진 문법 사이의 규칙 기반 번역 |
+| 5 | 3패스 패턴 | 답 발견 → 번역 및 델타 추출 → 델타 실행 |
+| 6 | Brownfield 인식 | 기존 시스템 베이스라인이 델타 계산에 명시적으로 반영 |
+| 7 | 캐리포워드 | 비가시 요구사항 (NFR, 보안, 마이그레이션)이 번역된 출력에 추가 |
 
-### B.2 Trait Coverage Matrix
+### B.2 특성 적용 매트릭스
 
-| Methodology | Delta | Proto-First | Two Grammars | Translation | 3-Pass | Brownfield | Carry-Fwd | Score |
+| 방법론 | 델타 | 프로토타입 우선 | 두 가지 문법 | 번역 | 3패스 | Brownfield | 캐리포워드 | 점수 |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **Kubernetes / IaC Reconciliation** | YES | - | - | - | YES | YES | - | 3/7 |
 | **OMG Model-Driven Architecture** | - | - | YES | YES | PARTIAL | - | - | 2.5/7 |
@@ -486,80 +486,80 @@ The methodology survey (Round 5-6) revealed that Sprint Kit's Crystallize pass (
 | **Context Engineering (2025)** | - | - | - | PARTIAL | - | - | - | 0.5/7 |
 | **IEEE 42010 Viewpoints** | - | - | CONCEPTUAL | - | - | - | - | 0.5/7 |
 
-### B.3 Top 5 Most Similar Methodologies
+### B.3 가장 유사한 상위 5개 방법론
 
 #### 1. Kubernetes / IaC Reconciliation Pattern (3/7)
 
-The reconciliation loop used by Kubernetes, Terraform, Pulumi, and ArgoCD. Core formula: `Delta = Desired State - Actual State`. Terraform `plan` computes and displays the delta; `apply` executes it.
+Kubernetes, Terraform, Pulumi, ArgoCD가 사용하는 조정 루프. 핵심 공식: `Delta = Desired State - Actual State`. Terraform의 `plan`이 델타를 계산하여 표시하고, `apply`가 이를 실행한다.
 
-**Shared traits**: Delta as primary artifact, 3-Pass (observe → compute diff → execute), Brownfield-aware (actual state explicitly observed).
+**공유 특성**: 주요 산출물로서의 델타, 3패스 (관찰 → 차이 계산 → 실행), Brownfield 인식 (실제 상태를 명시적으로 관찰).
 
-**Missing traits**: Prototype-first (desired state written directly in execution grammar like YAML/HCL, not validated via prototype), Two Grammars (single declarative language), Translation (desired state already in execution grammar), Carry-forward (no invisible requirements).
+**누락 특성**: 프로토타입 우선 (원하는 상태가 YAML/HCL 같은 실행 문법으로 직접 작성, 프로토타입 검증 없음), 두 가지 문법 (단일 선언형 언어), 번역 (원하는 상태가 이미 실행 문법에 있음), 캐리포워드 (비가시 요구사항 없음).
 
-**Relationship**: Strongest structural analogy. Delta-Driven Design applies the Kubernetes reconciliation pattern to the software specification domain. The formula `Delta = Desired - Actual` is identical in structure to `Delta = translate(Prototype) + carry-forward - Brownfield`.
+**관계**: 가장 강한 구조적 유추. Delta-Driven Design은 Kubernetes의 조정 패턴을 소프트웨어 명세 도메인에 적용한 것이다. `Delta = Desired - Actual` 공식은 `Delta = translate(Prototype) + carry-forward - Brownfield`와 구조적으로 동일하다.
 
 #### 2. OMG Model-Driven Architecture (MDA) (2.5/7)
 
-OMG's standard for model-driven development with three abstraction levels: CIM (Computation-Independent Model), PIM (Platform-Independent Model), PSM (Platform-Specific Model), with rule-based transformations between them using QVT (Query/View/Transformation).
+CIM (계산 독립 모델), PIM (플랫폼 독립 모델), PSM (플랫폼 특화 모델)의 세 가지 추상화 수준을 가진 OMG의 모델 주도 개발 표준으로, QVT (Query/View/Transformation)를 사용한 규칙 기반 변환을 수행한다.
 
-**Shared traits**: Two Grammars (CIM/PIM/PSM as distinct formal representations), Translation (QVT is a rule-based transformation language between model levels).
+**공유 특성**: 두 가지 문법 (CIM/PIM/PSM을 별개의 형식적 표현으로), 번역 (QVT는 모델 수준 간 규칙 기반 변환 언어).
 
-**Missing traits**: Delta (no delta computation against existing systems), Prototype-first (models are the starting point), Brownfield-aware (assumes forward engineering), Carry-forward.
+**누락 특성**: 델타 (기존 시스템에 대한 델타 계산 없음), 프로토타입 우선 (모델이 시작점), Brownfield 인식 (순방향 엔지니어링 가정), 캐리포워드.
 
-**Relationship**: Academic precursor for the "rule-based grammar transformation" concept. CIM-to-PIM transformation is structurally analogous to "User Grammar to Development Grammar." MDA never achieved widespread adoption due to formal modeling overhead.
+**관계**: "규칙 기반 문법 변환" 개념의 학술적 선행자. CIM-to-PIM 변환은 "User Grammar에서 Development Grammar로"와 구조적으로 유사하다. MDA는 형식적 모델링 오버헤드로 인해 광범위한 채택에 도달하지 못했다.
 
 #### 3. OpenSpec (Fission-AI, 2025) (2.5/7)
 
-An open-source spec-driven development framework for AI coding assistants. Explicitly "brownfield-first." Delta specs use ADDED/MODIFIED/REMOVED markers against a baseline spec.
+AI 코딩 어시스턴트를 위한 오픈소스 명세 주도 개발 프레임워크. 명시적으로 "Brownfield 우선"이다. 델타 명세는 베이스라인 명세에 대해 ADDED/MODIFIED/REMOVED 마커를 사용한다.
 
-**Shared traits**: Delta as primary artifact (delta specs with change markers), Brownfield-aware (core design: "most work happens on existing codebases (1→n) rather than greenfield (0→1)").
+**공유 특성**: 주요 산출물로서의 델타 (변경 마커가 있는 델타 명세), Brownfield 인식 (핵심 설계: "대부분의 작업은 Greenfield(0→1)보다 기존 코드베이스(1→n)에서 발생").
 
-**Missing traits**: Prototype-first (specs written directly, no prototype validation), Two Grammars (single Markdown spec format), 3-Pass Pattern (linear Propose→Apply→Archive flow), Carry-forward.
+**누락 특성**: 프로토타입 우선 (명세를 직접 작성, 프로토타입 검증 없음), 두 가지 문법 (단일 Markdown 명세 형식), 3패스 패턴 (선형 Propose→Apply→Archive 흐름), 캐리포워드.
 
-**Relationship**: Closest parallel development in the delta-as-artifact space, emerging independently in 2025. Structurally similar ADDED/MODIFIED/REMOVED classification maps to Delta-Driven Design's positive/modification/negative delta types.
+**관계**: 델타를 산출물로 다루는 영역에서 가장 가까운 병행 발전이며, 2025년에 독립적으로 등장했다. 구조적으로 유사한 ADDED/MODIFIED/REMOVED 분류는 Delta-Driven Design의 양성/수정/음성 델타 유형에 매핑된다.
 
 #### 4. Design-to-Code Pipelines (Figma MCP, Unity Spec, Builder.io) (2.5/7)
 
-Tools that translate design artifacts (Figma files, design tokens) into production code using structured metadata and AI.
+구조화된 메타데이터와 AI를 사용하여 디자인 산출물(Figma 파일, 디자인 토큰)을 프로덕션 코드로 변환하는 도구.
 
-**Shared traits**: Prototype-first (visual design is the starting point), Two Grammars (design grammar: Figma layers, variables, auto-layout vs code grammar: React components, CSS).
+**공유 특성**: 프로토타입 우선 (시각적 디자인이 시작점), 두 가지 문법 (디자인 문법: Figma 레이어, 변수, 자동 레이아웃 vs 코드 문법: React 컴포넌트, CSS).
 
-**Missing traits**: Delta (generates full components, not deltas), Brownfield-aware (no existing codebase consideration), 3-Pass Pattern (single-pass design→code), Carry-forward.
+**누락 특성**: 델타 (델타가 아닌 전체 컴포넌트 생성), Brownfield 인식 (기존 코드베이스 고려 없음), 3패스 패턴 (단일 패스 디자인→코드), 캐리포워드.
 
-**Relationship**: Most direct validation that User Grammar → Development Grammar translation is technically feasible. Demonstrates the core premise but in a narrower scope (component generation, not system-level delta).
+**관계**: User Grammar → Development Grammar 번역이 기술적으로 실현 가능하다는 가장 직접적인 검증. 핵심 전제를 입증하지만 더 좁은 범위 (시스템 수준 델타가 아닌 컴포넌트 생성)에서다.
 
 #### 5. Dual-Track Agile (Cagan & Patton, 2012) (1.5/7)
 
-Parallel Discovery (UX/product) and Delivery (engineering) tracks. Discovery validates what to build via prototypes; Delivery implements it.
+병렬적 Discovery (UX/제품) 트랙과 Delivery (엔지니어링) 트랙. Discovery는 프로토타입을 통해 무엇을 만들지 검증하고, Delivery가 이를 구현한다.
 
-**Shared traits**: Prototype-first ("the prototype serves as the spec for Delivery").
+**공유 특성**: 프로토타입 우선 ("프로토타입이 Delivery를 위한 명세 역할을 한다").
 
-**Missing traits**: Delta, Translation (handoff from Discovery to Delivery is informal and human-mediated), Brownfield-aware, Carry-forward.
+**누락 특성**: 델타, 번역 (Discovery에서 Delivery로의 핸드오프가 비공식적이고 사람이 매개), Brownfield 인식, 캐리포워드.
 
-**Relationship**: Practical precursor for prototype-first validation. Validates the principle that UX validation should precede development specification, but provides no formal mechanism for the translation step.
+**관계**: 프로토타입 우선 검증의 실무적 선행자. UX 검증이 개발 명세에 선행해야 한다는 원칙을 검증하지만, 번역 단계를 위한 공식적 메커니즘은 제공하지 않는다.
 
-### B.4 Intellectual Lineage by Trait
+### B.4 특성별 지적 계보
 
-| Trait | Precursors |
+| 특성 | 선행자 |
 |-------|-----------|
-| **Delta as primary artifact** | Kubernetes reconciliation (2014), TOGAF Gap Analysis (1995), OpenSpec (2025), Delta-Oriented Programming (2010) |
-| **Prototype-first** | Dual-Track Agile (2012), Design-Driven Development (2010s), Lean UX (2013) |
-| **Two Grammars** | MDA CIM/PIM/PSM (2001), IEEE 42010 Viewpoints (2000), Design-to-Code pipelines (2024) |
-| **Translation, not abstraction** | MDA QVT (2001), BDD Gherkin→step definitions (2006), Round-Trip Engineering (1990s) |
-| **Brownfield-aware** | OpenSpec (2025), SmartDelta (2024), Strangler Fig (2004), TOGAF (1995) |
-| **3-Pass Pattern** | Kubernetes observe→diff→execute (2014) |
-| **Carry-forward** | **No precursor found** — most unique trait |
+| **주요 산출물로서의 델타** | Kubernetes reconciliation (2014), TOGAF Gap Analysis (1995), OpenSpec (2025), Delta-Oriented Programming (2010) |
+| **프로토타입 우선** | Dual-Track Agile (2012), Design-Driven Development (2010s), Lean UX (2013) |
+| **두 가지 문법** | MDA CIM/PIM/PSM (2001), IEEE 42010 Viewpoints (2000), Design-to-Code pipelines (2024) |
+| **추상화가 아닌 번역** | MDA QVT (2001), BDD Gherkin→step definitions (2006), Round-Trip Engineering (1990s) |
+| **Brownfield 인식** | OpenSpec (2025), SmartDelta (2024), Strangler Fig (2004), TOGAF (1995) |
+| **3패스 패턴** | Kubernetes observe→diff→execute (2014) |
+| **캐리포워드** | **선행자 없음** — 가장 고유한 특성 |
 
-### B.5 Key Findings
+### B.5 핵심 발견
 
-**1. The trait combination is novel.** No existing methodology simultaneously addresses delta-as-primary-artifact, prototype-first validation, two-grammar formalization, rule-based translation, brownfield awareness, and carry-forward.
+**1. 특성 조합은 새롭다.** 주요 산출물로서의 델타, 프로토타입 우선 검증, 두 가지 문법 형식화, 규칙 기반 번역, Brownfield 인식, 캐리포워드를 동시에 다루는 기존 방법론은 없다.
 
-**2. Individual traits have strong precedents.** Each trait has established intellectual lineage (see B.4). Delta-Driven Design's contribution is the integration of these traits into a unified pipeline.
+**2. 개별 특성은 강한 선행 사례가 있다.** 각 특성에 확립된 지적 계보가 있다 (B.4 참조). Delta-Driven Design의 기여는 이러한 특성을 통합 파이프라인으로 결합한 것이다.
 
-**3. The "carry-forward" trait is the most unique.** No methodology explicitly formalizes the problem of carrying non-visible requirements (NFRs, security, migration constraints) into translated specifications because they have no user grammar counterpart. This is handled ad hoc in existing practice.
+**3. "캐리포워드" 특성이 가장 고유하다.** 사용자 문법 대응물이 없는 비가시 요구사항(NFR, 보안, 마이그레이션 제약조건)을 번역된 명세에 캐리포워드하는 문제를 명시적으로 형식화한 방법론은 없다. 기존 실무에서는 이것을 임기응변으로 처리한다.
 
-**4. The 2025 Spec-Driven Development wave is converging toward partial overlap.** OpenSpec (delta specs + brownfield-first), Tessl (spec-as-source), and Spec-Grounded Modernization (brownfield context for AI) are moving in a direction that partially overlaps with Delta-Driven Design. None formalizes the two-grammar distinction or prototype-first validation.
+**4. 2025년의 Spec-Driven Development 물결은 부분적 중첩으로 수렴하고 있다.** OpenSpec (델타 명세 + Brownfield 우선), Tessl (명세를 소스로), Spec-Grounded Modernization (AI를 위한 Brownfield 컨텍스트)은 Delta-Driven Design과 부분적으로 겹치는 방향으로 나아가고 있다. 어느 것도 두 가지 문법 구분이나 프로토타입 우선 검증을 형식화하지 않는다.
 
-**5. Delta-Driven Design can be described as a synthesis.** Applying Kubernetes' reconciliation pattern to software specification, using MDA's transformation principle between Dual-Track Agile's Discovery grammar and Delivery grammar, with OpenSpec's delta-as-artifact approach, plus a novel carry-forward mechanism for invisible requirements.
+**5. Delta-Driven Design은 종합으로 설명할 수 있다.** Kubernetes의 조정 패턴을 소프트웨어 명세에 적용하고, MDA의 변환 원칙을 Dual-Track Agile의 Discovery 문법과 Delivery 문법 사이에 사용하며, OpenSpec의 델타를 산출물로 다루는 접근법에, 비가시 요구사항을 위한 새로운 캐리포워드 메커니즘을 더한 것이다.
 
-**6. RM2PT (ICSE 2019) proves the inverse direction.** RM2PT automatically generates prototypes FROM formal requirements (specs → prototype). Delta-Driven Design operates in the opposite direction (prototype → specs). Both validate that automated translation between formal requirements and executable artifacts is technically feasible — the direction is reversed.
+**6. RM2PT (ICSE 2019)는 역방향을 증명한다.** RM2PT는 형식적 요구사항에서 자동으로 프로토타입을 생성한다 (명세 → 프로토타입). Delta-Driven Design은 반대 방향으로 작동한다 (프로토타입 → 명세). 둘 다 형식적 요구사항과 실행 가능한 산출물 사이의 자동 번역이 기술적으로 실현 가능하다는 것을 검증한다 — 방향만 반대다.

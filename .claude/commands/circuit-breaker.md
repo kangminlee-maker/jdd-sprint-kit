@@ -1,106 +1,106 @@
 ---
-description: "Systematic course correction on repeated VALIDATE failures"
+description: "VALIDATE 반복 실패 시 체계적인 방향 전환"
 ---
 
-# /circuit-breaker — Course Correction
+# /circuit-breaker — 방향 전환
 
-> **Dispatch Target**: Conditional — Auto Sprint → Phase 1 re-run / Non-Auto → `/bmad/bmm/workflows/correct-course`
+> **디스패치 대상**: 조건부 — Auto Sprint → Phase 1 재실행 / Non-Auto → `/bmad/bmm/workflows/correct-course`
 
-## Purpose
+## 목적
 
-Systematically correct course when VALIDATE failures repeat or critical issues are discovered.
+VALIDATE 실패가 반복되거나 치명적인 문제가 발견되었을 때 체계적으로 방향을 전환한다.
 
-## When to Use
+## 사용 시점
 
-### Auto-Trigger
-- 3 consecutive VALIDATE failures in the same category
-- 5 cumulative VALIDATE failures
-- Architecture-level design flaw discovered
+### 자동 트리거
+- 동일 카테고리에서 VALIDATE 연속 3회 실패
+- VALIDATE 누적 5회 실패
+- 아키텍처 수준의 설계 결함 발견
 
-### Manual Trigger
-- User or agent runs `/circuit-breaker`
+### 수동 트리거
+- 사용자 또는 에이전트가 `/circuit-breaker` 실행
 
-`$ARGUMENTS`: not used
+`$ARGUMENTS`: 사용하지 않음
 
-## Procedure
+## 절차
 
-Load config per Language Protocol in jdd-sprint-guide.md.
+jdd-sprint-guide.md의 Language Protocol에 따라 설정을 로드한다.
 
-### Step 1: Failure Context Summary (Context Compaction)
-Summarize current work state and append to `specs/{feature}/planning-artifacts/circuit-breaker-log.md`:
+### Step 1: 실패 컨텍스트 요약 (Context Compaction)
+현재 작업 상태를 요약하여 `specs/{feature}/planning-artifacts/circuit-breaker-log.md`에 추가한다:
 ```markdown
 ## Circuit Breaker Context — {timestamp}
 
 ### What Was Attempted
-- [What approaches were tried]
+- [시도한 접근 방식]
 
 ### Failure Causes
-- [Why they failed]
+- [실패 원인]
 
 ### Partial Successes
-- [What parts succeeded]
+- [성공한 부분]
 
 ### Learnings
-- [What was learned from this attempt]
+- [이번 시도에서 얻은 교훈]
 ```
 
-On re-run, pass this file as input to the relevant phase agent:
-"Previous attempt encountered the following issues: {see circuit-breaker-log.md}"
+재실행 시, 이 파일을 관련 Phase 에이전트의 입력으로 전달한다:
+"이전 시도에서 다음 문제가 발생했습니다: {circuit-breaker-log.md 참조}"
 
-### Step 2: Severity Assessment
+### Step 2: 심각도 평가
 
-Assess severity by referencing `failure_source` from Judge or Scope Gate results:
+Judge 또는 Scope Gate 결과의 `failure_source`를 참조하여 심각도를 평가한다:
 
-**Minor issues (resolvable within Execute) — `failure_source: local`:**
-- Task implementation difficulties
-- Repeated test failures
-- Code quality shortfalls
+**경미한 문제 (Execute 내에서 해결 가능) — `failure_source: local`:**
+- 태스크 구현 난항
+- 반복적인 테스트 실패
+- 코드 품질 미달
 
-→ Fix specs → re-run Execute
+→ Spec 수정 → Execute 재실행
 
-**Major issues (design-level) — `failure_source: upstream:{stage}`:**
-- Architecture-level design flaws (`upstream:architecture`)
-- PRD requirements contradictions (`upstream:prd`)
-- Tech stack change needed (`upstream:architecture`)
+**중대한 문제 (설계 수준) — `failure_source: upstream:{stage}`:**
+- 아키텍처 수준의 설계 결함 (`upstream:architecture`)
+- PRD 요구사항 모순 (`upstream:prd`)
+- 기술 스택 변경 필요 (`upstream:architecture`)
 
-→ Auto Sprint: re-run from cause stage ({stage}) with failure learnings
-→ Non-Auto Sprint: run BMad `/bmad/bmm/workflows/correct-course`
+→ Auto Sprint: 실패 교훈을 반영하여 원인 단계({stage})부터 재실행
+→ Non-Auto Sprint: BMad `/bmad/bmm/workflows/correct-course` 실행
 
-**When failure_source is absent**: Use existing classification (implementation difficulty = minor, design flaw = major)
+**`failure_source`가 없는 경우**: 기존 분류 기준 사용 (구현 난항 = 경미, 설계 결함 = 중대)
 
-### Step 3: Code Disposal (Disposable Code)
+### Step 3: 코드 폐기 (Disposable Code)
 ```
-Preserved:                    Disposed:
+보존:                         폐기:
 ─────                         ─────
-BMad PRD                      All generated code
-BMad Architecture + ADR       Worktrees
-BMad Epic/Story               Build artifacts
-specs/ (after fixes)
+BMad PRD                      생성된 모든 코드
+BMad Architecture + ADR       Worktree
+BMad Epic/Story               빌드 산출물
+specs/ (수정 후)
 brownfield-context.md
-Failure learning context
+실패 교훈 컨텍스트
 ```
 
-### Step 4: Recovery
+### Step 4: 복구
 
-**Minor → Execute re-run:**
-1. Reflect failure learnings in Specs
-2. Re-run Execute (PARALLEL → VALIDATE) with fixed Specs
+**경미한 문제 → Execute 재실행:**
+1. 실패 교훈을 Spec에 반영
+2. 수정된 Spec으로 Execute 재실행 (PARALLEL → VALIDATE)
 
-**Major → Return to design phase:**
+**중대한 문제 → 설계 단계로 복귀:**
 
-Auto Sprint mode:
-1. Pass failure learning context to Phase 1
-2. Re-run Auto Sprint Phase 1 (with failure learnings)
+Auto Sprint 모드:
+1. 실패 교훈 컨텍스트를 Phase 1에 전달
+2. Auto Sprint Phase 1 재실행 (실패 교훈 포함)
 
-Non-Auto Sprint mode:
-1. Present failure context summary to user (Step 1 result, in {communication_language})
-2. Offer choices (in {communication_language}):
-   a) `/bmad/bmm/workflows/correct-course` (BMad interactive correction)
-      → Pass failure context (`circuit-breaker-log.md`) as workflow input
-      → Change scope analysis → PRD/Architecture impact assessment → BMad artifact update
-   b) Manually edit Planning Artifacts → re-run `/specs`
-   c) Abort
+Non-Auto Sprint 모드:
+1. 사용자에게 실패 컨텍스트 요약 제시 (Step 1 결과, {communication_language} 사용)
+2. 선택지 제공 ({communication_language} 사용):
+   a) `/bmad/bmm/workflows/correct-course` (BMad 대화형 방향 전환)
+      → 실패 컨텍스트(`circuit-breaker-log.md`)를 워크플로우 입력으로 전달
+      → 범위 변경 분석 → PRD/Architecture 영향 평가 → BMad 산출물 업데이트
+   b) Planning Artifact 수동 편집 → `/specs` 재실행
+   c) 중단
 
-## Constraints
-Since specs — not code — are the asset, actual loss on Circuit Breaker trigger is minimized.
-Even full code disposal preserves specs, keeping reimplementation cost low.
+## 제약 사항
+코드가 아닌 Spec이 핵심 자산이므로, Circuit Breaker 트리거 시 실제 손실은 최소화된다.
+코드를 전부 폐기해도 Spec은 보존되기 때문에 재구현 비용이 낮게 유지된다.

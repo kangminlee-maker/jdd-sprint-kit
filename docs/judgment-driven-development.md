@@ -1,412 +1,411 @@
 # Judgment-Driven Development
 
-**Sprint Kit Design Philosophy — Execution Extension for the BMad Method**
+**Sprint Kit 설계 철학 — BMad Method 실행 확장팩**
 
-> jdd-sprint-kit aims to be a tool that enables product experts — not developers —
-> to realize their judgments as software deliverables using AI.
-> Users don't know code, but they know what their customers want.
-> They do only three things:
-> decide what to build, see if the result is right, and say why if it isn't.
-> Everything else is handled by AI,
-> with the goal of dramatically accelerating the speed of live-service development.
+> jdd-sprint-kit은 개발자가 아닌 프로덕트 전문가가
+> AI를 활용하여 자신의 판단을 소프트웨어 산출물로 실현할 수 있도록 하는 도구를 지향합니다.
+> 사용자는 코드를 모르지만, 고객이 원하는 것은 알고 있습니다.
+> 사용자가 하는 일은 세 가지뿐입니다:
+> 무엇을 만들지 결정하고, 결과가 맞는지 보고, 아니라면 왜 아닌지 말합니다.
+> 나머지는 모두 AI가 처리하며,
+> 라이브 서비스 개발 속도를 극적으로 가속하는 것이 목표입니다.
 >
-> The one principle: **Human judgment is the only lasting asset. All AI artifacts are disposable and regenerable.**
+> 유일한 원칙: **사람의 판단만이 영속 자산이다. AI 산출물은 전부 재생성 가능한 소모품이다.**
 
 ---
 
-## Background: Synthesis of Two Systems
+## 배경: 두 시스템의 통합
 
-### BMad Method — "Trustworthy AI Collaboration"
+### BMad Method — "신뢰할 수 있는 AI 협업"
 
-BMad Method is a top-down planning framework that uses AI as a facilitator.
-Through its 12-step step-file architecture, users participate in decisions at every stage,
-producing high-quality planning artifacts (Product Brief, PRD, Architecture, Epics).
+BMad Method는 AI를 퍼실리테이터로 활용하는 하향식 기획 프레임워크입니다.
+12단계 step-file 아키텍처를 통해 사용자가 모든 단계에서 의사결정에 참여하여
+높은 품질의 기획 산출물(Product Brief, PRD, Architecture, Epics)을 생산합니다.
 
-Core value: **Gap-free requirements definition through exploration and discovery**
+핵심 가치: **탐색과 발견을 통한 빈틈 없는 요구사항 정의**
 
-### Sprint Kit — "Converse Through Deliverables"
+### Sprint Kit — "산출물로 대화한다"
 
-Sprint Kit is an execution layer that runs on top of the BMad Method.
-It automatically collects pre-existing inputs (meeting notes, references) and existing system context,
-lets AI generate planning artifacts, and has product experts judge at key moments.
+Sprint Kit은 BMad Method 위에서 동작하는 실행 레이어입니다.
+기존 자료(회의록, 참고자료)와 기존 시스템 맥락을 자동으로 수집하고,
+AI가 기획 산출물을 생성하며, 프로덕트 전문가가 핵심 순간에 판단합니다.
 
-Core value: **Rapid realization through expert judgment on concrete deliverables**
+핵심 가치: **구체적 산출물에 대한 전문가 판단을 통한 빠른 실현**
 
-### Why the Synthesis
+### 통합의 이유
 
-The two systems don't conflict. Depending on **the shape of existing human knowledge**,
-they offer different routes, converging on the same artifact format and flowing into the same execution pipeline.
+두 시스템은 충돌하지 않습니다. **기존 인간 지식의 형태**에 따라
+서로 다른 경로를 제공하며, 동일한 산출물 포맷으로 합류하여 같은 실행 파이프라인으로 흘러갑니다.
 
 ```
-BMad Method (Base Platform)
-  ├─ Agent Framework (Mary, John, Winston, Sally, Bob...)
-  ├─ Workflow Engine (step-file architecture)
-  ├─ Facilitation Patterns (A/P/C menu, party mode)
-  └─ Artifact Formats (PRD, Architecture, Epics)
+BMad Method (기반 플랫폼)
+  ├─ 에이전트 프레임워크 (Mary, John, Winston, Sally, Bob...)
+  ├─ 워크플로우 엔진 (step-file 아키텍처)
+  ├─ 퍼실리테이션 패턴 (A/P/C 메뉴, Party Mode)
+  └─ 산출물 포맷 (PRD, Architecture, Epics)
 
-Sprint Kit (Execution Extension on BMad)
-  ├─ Input Layer: Pre-input processing + brownfield auto-collection
-  ├─ Generation Layer: Automated BMad agent orchestration
-  ├─ Judgment Layer: Customer-Lens JP1/JP2
-  ├─ Execution Layer: Specs → Deliverables → Prototype
-  └─ Regeneration: Apply-fix + propagation / regeneration pipeline
+Sprint Kit (BMad 실행 확장팩)
+  ├─ 입력 레이어: 사전 입력 처리 + Brownfield 자동 수집
+  ├─ 생성 레이어: BMad 에이전트 자동 오케스트레이션
+  ├─ 판단 레이어: 고객 관점 JP1/JP2
+  ├─ 실행 레이어: Specs → Deliverables → 프로토타입
+  └─ 재생성: 수정반영 + 전파 / 재생성 파이프라인
 ```
 
 ---
 
-## Design Judgments
+## 설계 판단
 
-### Artifacts as Medium
+### 매체로서의 산출물
 
-> Abstract questions yield inaccurate answers. Concrete deliverables yield precise reactions — the fastest, most accurate input.
+> 추상적 질문은 부정확한 답을 낳는다. 구체적 산출물은 정확한 반응을 이끌어낸다 — 가장 빠르고 정확한 입력이다.
 
-People answer abstract questions imprecisely, but react to concrete deliverables precisely.
-
-```
-Abstract question:     "What matters most in the search feature?"  → Imprecise answer
-Concrete deliverable:  "Is this search screen correct?"            → Precise judgment
-
-Abstract question:     "What APIs do we need?"                     → Vague answer
-Concrete deliverable:  "Are these 5 endpoints sufficient?"         → Clear judgment
-```
-
-This judgment extends BMad Method's "Facilitation Over Generation."
-Where BMad facilitates discovery through conversation,
-Sprint Kit **facilitates judgment through deliverables.**
-
-Both approaches draw out human expertise;
-which is more effective depends on the user's context and situation.
-
-### Input Reduces Cycles
-
-> Pre-inputs (meeting notes, references, existing system context) raise the quality
-> of the first generation, reducing regeneration count. Good input is more efficient than multiple judgments.
-
-AI generation cost is not zero. As regeneration count grows, human judgment time accumulates.
+사람은 추상적 질문에 부정확하게 답하지만, 구체적 산출물에는 정확하게 반응합니다.
 
 ```
-Total cost = (pre-input cost) + (generation cost × generation count) + (judgment cost × judgment count)
+추상적 질문:     "검색 기능에서 가장 중요한 것은?"        → 부정확한 답변
+구체적 산출물:   "이 검색 화면이 맞습니까?"               → 정확한 판단
 
-Rich pre-input:    generation count ↓, judgment count ↓  → total cost ↓
-No pre-input:      generation count ↑, judgment count ↑  → total cost ↑
+추상적 질문:     "어떤 API가 필요한가요?"                 → 모호한 답변
+구체적 산출물:   "이 5개 엔드포인트로 충분합니까?"         → 명확한 판단
 ```
 
-How Sprint Kit realizes this:
-- `specs/{feature}/inputs/`: Where meeting notes, references, and existing docs go
-- Brownfield Scanner: Automatically collects existing system context as additional input
-- Brief: The minimum direction-setting provided by the user
+이 설계 판단은 BMad Method의 "생성보다 퍼실리테이션"을 확장한 것입니다.
+BMad가 대화를 통해 발견을 촉진한다면,
+Sprint Kit은 **산출물을 통해 판단을 촉진합니다.**
 
-These three combine so the AI's first generation reaches not "roughly right" but "worth reviewing."
+두 접근 방식 모두 사람의 전문성을 끌어냅니다.
+어느 쪽이 더 효과적인지는 사용자의 맥락과 상황에 따라 다릅니다.
 
-**Real-world example**: If a product team has a 2-hour kickoff meeting
-and the notes exist as a document, those notes already contain
-most of the information a BMad 12-step interview would uncover.
-Simply placing them in inputs/ significantly raises the first PRD generation quality.
+### 입력이 반복을 줄인다
 
-### Regeneration Over Modification
+> 사전 입력(회의록, 참고자료, 기존 시스템 맥락)은 첫 생성의 품질을 높여
+> 재생성 횟수를 줄인다. 좋은 입력이 여러 번의 판단보다 효율적이다.
 
-> Regeneration, not modification, is the default. All AI artifacts are disposable,
-> but since regeneration cost is not zero, Input and Judgment minimize regeneration count.
-
-Pre-AI modification (patching) approach:
-```
-Doc v1 → feedback → partial edit to v1 → v1.1 → feedback → partial edit → v1.2
-Problem: Accumulated patches break document consistency
-```
-
-AI-era regeneration approach:
-```
-Doc v1 → feedback → entirely new v2 reflecting feedback → feedback → v3
-Advantage: Consistent results every time
-Prerequisite: Human judgments (feedback) accumulate and feed into the next generation
-```
-
-**Human judgment is the only lasting asset. Everything else is regenerable.**
-
-How Sprint Kit realizes this:
-- Circuit Breaker: A normal regeneration trigger, not an emergency mode
-- JP Comment → Regeneration: Regeneration scope dynamically determined by feedback magnitude
-- JP Comment → Apply-fix + propagation: Small feedback propagated bidirectionally within existing artifacts + Scope Gate verification
-- Regardless of approach, the user chooses after seeing the cost (cost transparency)
-
-**Practical balance**: Since regeneration cost is not zero,
-Input Reduces Cycles reduces the regeneration count,
-and Customer-Lens Judgment Points set direction at the right moments,
-preventing unnecessary regeneration.
-
-### Customer-Lens Judgment Points
-
-> Human intervention is placed at moments where one can judge
-> "what product will be served to the customer."
-> Judgment always takes place on top of concrete deliverables.
-
-Definition of a product expert:
-- ~~"Non-developer" as the opposite of developer~~
-- **A customer expert — the person best positioned to judge what the deliverables should look like**
-
-Checkpoints derive from this definition.
-
-Ideally, from Brief input one would go straight to the prototype (JP2), with the user judging only the deliverables. However, at current AI speeds, reaching JP2 in one shot takes tens of minutes, so JP1 is placed in between to confirm requirements direction first. **JP2 is the essential judgment point; JP1 is a pragmatic supplement for current technology limitations.** When AI becomes fast enough, Brief → JP2 without JP1 becomes possible.
-
-**JP1 (Judgment Point 1): "Is this the right product for the customer?"**
-```
-Subject:     Requirements, user scenarios, feature scope, priorities
-Format:      PRD core content presented as a customer journey narrative
-             "When the customer is in situation A trying to do B, the system provides C."
-Product expert judges:
-  - "Does this scenario match actual customer situations?"
-  - "Are any scenarios missing?"
-  - "Are the priorities correct?"
-Response: Confirm / Comment
-```
-
-**JP2 (Judgment Point 2): "Is this the experience the customer wants?"**
-```
-Subject:     Prototype, screen flows, interactions
-Format:      Working prototype + key scenario guide
-             "Try scenario 1: Login → Dashboard → Feature X"
-Product expert judges:
-  - "Is this screen layout natural for the customer?"
-  - "Does the feature work as the customer expects?"
-  - "Are any screens or flows missing?"
-Response: Confirm / Comment
-```
-
-**Comment — Feedback Corrects Direction:**
-
-When Comment is selected, the system analyzes the feedback's impact scope
-and presents two options with cost: apply-fix + propagation vs. regeneration.
-The user chooses after seeing the cost.
+AI 생성 비용은 제로가 아닙니다. 재생성 횟수가 늘어날수록 사람의 판단 시간이 누적됩니다.
 
 ```
-JP1/JP2 → Comment → feedback input
-  → System: impact analysis
-  → [Apply-fix + propagation] N files, ~M min, includes Scope Gate verification
-  → [Regeneration] From Phase X, ~M min
-  → User selects → execution → return to JP
+총 비용 = (사전 입력 비용) + (생성 비용 × 생성 횟수) + (판단 비용 × 판단 횟수)
+
+풍부한 사전 입력:   생성 횟수 ↓, 판단 횟수 ↓  → 총 비용 ↓
+사전 입력 없음:     생성 횟수 ↑, 판단 횟수 ↑  → 총 비용 ↑
 ```
 
-Regeneration scope is dynamically determined by feedback magnitude.
-Small feedback regenerates only Deliverables; large feedback starts from PRD;
-a direction change triggers Brief revision and Sprint restart.
-If JP2 reveals that the requirements themselves were wrong, the regeneration scope
-naturally extends to before JP1 — this is not failure but
-**a normal discovery facilitated by concrete deliverables.**
+Sprint Kit이 이를 실현하는 방법:
+- `specs/{feature}/inputs/`: 회의록, 참고자료, 기존 문서를 배치하는 곳
+- Brownfield Scanner: 기존 시스템 맥락을 추가 입력으로 자동 수집
+- Brief: 사용자가 제공하는 최소한의 방향 설정
 
-**Structural Assistance — BMad 12-step value compressed into a checklist:**
+이 세 가지가 결합되어 AI의 첫 생성이 "대충 맞는" 수준이 아닌 "검토할 가치가 있는" 수준에 도달합니다.
 
-When the product expert judges at JP1, BMad 12-step discoveries
-are provided as a structural checklist:
+**실제 사례**: 제품 팀이 2시간짜리 킥오프 미팅을 가졌고
+회의록이 문서로 존재한다면, 그 회의록에는
+BMad 12단계 인터뷰로 발견할 수 있는 정보의 대부분이 이미 담겨 있습니다.
+이를 inputs/에 배치하는 것만으로도 첫 PRD 생성 품질이 크게 높아집니다.
+
+### 수정보다 재생성
+
+> 수정이 아닌 재생성이 기본이다. 모든 AI 산출물은 소모품이지만,
+> 재생성 비용이 제로가 아니므로, 입력과 판단이 재생성 횟수를 최소화한다.
+
+AI 이전의 수정(패칭) 방식:
 ```
-□ Are all key user types included?
-□ Are edge-case scenarios considered?
-□ Is the relationship to existing features clear?
-□ Are success metrics measurable?
+문서 v1 → 피드백 → v1 부분 수정 → v1.1 → 피드백 → 부분 수정 → v1.2
+문제: 누적된 패치가 문서의 일관성을 깨뜨림
 ```
 
-This checklist compensates for bottom-up's weakness (difficulty spotting gaps)
-with top-down's strength (structured exploration).
+AI 시대의 재생성 방식:
+```
+문서 v1 → 피드백 → 피드백을 반영한 완전히 새로운 v2 → 피드백 → v3
+장점: 매번 일관된 결과
+전제: 사람의 판단(피드백)이 축적되어 다음 생성에 반영됨
+```
 
-### Knowledge Shape Determines Route
+**사람의 판단만이 영속 자산이다. 나머지는 모두 재생성 가능하다.**
 
-> The route depends on the shape in which human knowledge exists.
+Sprint Kit이 이를 실현하는 방법:
+- Circuit Breaker: 비상 모드가 아닌 정상적인 재생성 트리거
+- JP Comment → 재생성: 피드백 규모에 따라 재생성 범위가 동적으로 결정
+- JP Comment → 수정반영 + 전파: 작은 피드백은 기존 산출물 내에서 양방향 전파 + Scope Gate 검증
+- 어느 방식이든, 비용을 확인한 후 사용자가 선택 (비용 투명성)
+
+**실용적 균형**: 재생성 비용이 제로가 아니므로,
+"입력이 반복을 줄인다"가 재생성 횟수를 줄이고,
+"고객 관점 판단 시점"이 적절한 순간에 방향을 잡아
+불필요한 재생성을 방지합니다.
+
+### 고객 관점 판단 시점
+
+> "고객에게 어떤 제품이 제공될 것인가"를 판단할 수 있는 순간에
+> 사람의 개입이 배치된다.
+> 판단은 항상 구체적 산출물 위에서 이루어진다.
+
+프로덕트 전문가의 정의:
+- ~~개발자의 반대 개념인 "비개발자"~~
+- **고객 전문가 — 산출물이 어떤 모습이어야 하는지 판단하기에 가장 적합한 사람**
+
+이 정의에서 체크포인트가 도출됩니다.
+
+이상적으로는 Brief 입력에서 바로 프로토타입(JP2)까지 도달하여 사용자가 산출물만 판단하면 됩니다. 그러나 현재 AI 속도로는 JP2까지 한 번에 도달하는 데 수십 분이 걸리므로, 그 사이에 JP1을 배치하여 요구사항 방향을 먼저 확인합니다. **JP2가 본질적인 판단 시점이며, JP1은 현재 기술 한계에 대한 실용적 보완입니다.** AI가 충분히 빨라지면, JP1 없이 Brief → JP2로 직행할 수 있게 됩니다.
+
+**JP1 (Judgment Point 1): "고객에게 필요한 제품인가?"**
+```
+판단 대상:   요구사항, 사용자 시나리오, 기능 범위, 우선순위
+제시 형식:   PRD 핵심 내용을 고객 여정 서사로 제시
+             "고객이 A 상황에서 B를 하려고 할 때, 시스템이 C를 제공합니다."
+프로덕트 전문가가 판단:
+  - "이 시나리오가 실제 고객 상황과 맞는가?"
+  - "빠진 시나리오는 없는가?"
+  - "우선순위가 맞는가?"
+응답: Confirm / Comment
+```
+
+**JP2 (Judgment Point 2): "고객이 원하는 경험인가?"**
+```
+판단 대상:   프로토타입, 화면 흐름, 인터랙션
+제시 형식:   동작하는 프로토타입 + 핵심 시나리오 가이드
+             "시나리오 1을 시도해보세요: 로그인 → 대시보드 → 기능 X"
+프로덕트 전문가가 판단:
+  - "이 화면 레이아웃이 고객에게 자연스러운가?"
+  - "기능이 고객이 기대하는 대로 동작하는가?"
+  - "빠진 화면이나 흐름은 없는가?"
+응답: Confirm / Comment
+```
+
+**Comment — 피드백이 방향을 교정한다:**
+
+Comment를 선택하면, 시스템이 피드백의 영향 범위를 분석하고
+두 가지 옵션을 비용과 함께 제시합니다: 수정반영 + 전파 vs. 재생성.
+사용자는 비용을 확인한 후 선택합니다.
 
 ```
-Shape of Human Knowledge                Best Route
+JP1/JP2 → Comment → 피드백 입력
+  → 시스템: 영향 분석
+  → [수정반영 + 전파] N개 파일, ~M분, Scope Gate 검증 포함
+  → [재생성] Phase X부터, ~M분
+  → 사용자 선택 → 실행 → JP 복귀
+```
+
+재생성 범위는 피드백 규모에 따라 동적으로 결정됩니다.
+작은 피드백은 Deliverables만 재생성하고, 큰 피드백은 PRD부터 시작하며,
+방향 전환은 Brief 수정과 Sprint 재시작을 유발합니다.
+JP2에서 요구사항 자체가 잘못되었음이 드러나면, 재생성 범위가
+자연스럽게 JP1 이전까지 확장됩니다 — 이는 실패가 아니라
+**구체적 산출물이 촉진한 정상적인 발견입니다.**
+
+**구조적 보조 — BMad 12단계의 가치를 체크리스트로 압축:**
+
+프로덕트 전문가가 JP1에서 판단할 때, BMad 12단계의 발견 사항이
+구조적 체크리스트로 제공됩니다:
+```
+□ 주요 사용자 유형이 모두 포함되어 있는가?
+□ 엣지 케이스 시나리오가 고려되었는가?
+□ 기존 기능과의 관계가 명확한가?
+□ 성공 지표가 측정 가능한가?
+```
+
+이 체크리스트는 상향식의 약점(빈틈을 발견하기 어려움)을
+하향식의 강점(구조적 탐색)으로 보완합니다.
+
+### 지식의 형태가 경로를 결정한다
+
+> 경로는 사람의 지식이 존재하는 형태에 따라 달라진다.
+
+```
+사람의 지식 형태                         최적 경로
 ──────────────────────────────────────────────────────
-A. Rich unstructured context            Bottom-up (Sprint Kit Auto Sprint)
-   (meeting notes, data, experience)    AI structures → human judges → regenerate
+A. 풍부한 비정형 맥락                   상향식 (Sprint Kit Auto Sprint)
+   (회의록, 데이터, 경험)               AI가 구조화 → 사람이 판단 → 재생성
 
-B. Unexplored territory                 Top-down (BMad 12-step)
-   (new market, new problem)            AI asks → human discovers → AI structures
+B. 미탐색 영역                          하향식 (BMad 12단계)
+   (새로운 시장, 새로운 문제)           AI가 질문 → 사람이 발견 → AI가 구조화
 
-C. Already-structured artifacts         Direct (Sprint Kit /specs)
-   (existing PRD, complete specs)       Straight to the execution pipeline
+C. 이미 구조화된 산출물                 직행 (Sprint Kit /specs)
+   (기존 PRD, 완성된 명세)             바로 실행 파이프라인으로
 ```
 
-**The choice follows user context. The system does not force a route.**
+**선택은 사용자의 맥락을 따른다. 시스템이 경로를 강제하지 않는다.**
 
-Real-world usage patterns:
-| User Situation | Input Shape | Best Route | Entry Point |
-|----------------|-------------|------------|-------------|
-| PM after kickoff meeting | Meeting notes + references | Bottom-up | `/sprint feature-name` |
-| Founder ideating a new product | Just an idea | Top-down | `/create-product-brief` |
-| Designer executing from mockups | Figma URL + description | Bottom-up | `/sprint feature-name` |
-| Executing an existing PRD | Complete PRD | Direct | `/specs feature-name` |
-| Quick prototype for scope check | One-line brief | Bottom-up | `/sprint "description"` |
+실제 사용 패턴:
+| 사용자 상황 | 입력 형태 | 최적 경로 | 진입점 |
+|------------|----------|----------|--------|
+| 킥오프 미팅 후 PM | 회의록 + 참고자료 | 상향식 | `/sprint feature-name` |
+| 새 제품을 구상 중인 창업자 | 아이디어만 | 하향식 | `/create-product-brief` |
+| 목업 기반으로 실행하는 디자이너 | Figma URL + 설명 | 상향식 | `/sprint feature-name` |
+| 기존 PRD를 실행 | 완성된 PRD | 직행 | `/specs feature-name` |
+| 범위 확인을 위한 빠른 프로토타입 | 한 줄 Brief | 상향식 | `/sprint "description"` |
 
-**Top-down and bottom-up differ not in "depth":**
-- Top-down depth: Precision of problem definition — "exactly what should we build"
-- Bottom-up depth: Accuracy of judgment — "is this the right thing"
-- Both are deep. They're deep in different places.
+**하향식과 상향식은 "깊이"에서 차이가 나지 않는다:**
+- 하향식의 깊이: 문제 정의의 정밀도 — "정확히 무엇을 만들어야 하는가"
+- 상향식의 깊이: 판단의 정확도 — "이것이 맞는 것인가"
+- 둘 다 깊다. 깊은 곳이 다를 뿐이다.
 
-### Auto-Context, Human-Judgment
+### 맥락은 자동으로, 판단은 사람이
 
-> Technical context collection is automated by AI.
-> For humans, it is translated into customer impact and only judgment is requested.
+> 기술적 맥락 수집은 AI가 자동으로 수행한다.
+> 사람에게는 고객 영향으로 번역하여 판단만 요청한다.
 
-In brownfield environments, mapping relationships to existing systems
-is not the product expert's job. AI collects automatically,
-and presents to the product expert in a form suitable for judgment.
+Brownfield 환경에서 기존 시스템과의 관계를 파악하는 것은
+프로덕트 전문가의 일이 아닙니다. AI가 자동으로 수집하고,
+프로덕트 전문가에게는 판단에 적합한 형태로 제시합니다.
 
 ```
-AI collects:                            Presented to human:
-"Existing API /api/v1/tutors has        "The existing 'tutor management'
- GET, POST, DELETE endpoints.            feature will be affected. Adding
- TutorService class lacks a              a new 'block' feature to the
- blockTutor method.                      current tutor list screen will
- No tutor_block_list table in DB"        change the existing user experience.
-                                         Do you approve?"
+AI가 수집:                              사람에게 제시:
+"기존 API /api/v1/tutors에              "기존 '강사 관리' 기능이 영향을
+ GET, POST, DELETE 엔드포인트            받습니다. 현재 강사 목록 화면에
+ 존재. TutorService 클래스에             새로운 '차단' 기능을 추가하면
+ blockTutor 메서드 없음.                 기존 사용자 경험이 변경됩니다.
+ DB에 tutor_block_list 테이블 없음"      승인하시겠습니까?"
 ```
 
-How Sprint Kit realizes this:
-- Brownfield Scanner: Automatically collects from MCP servers, document-project, local codebase
-- brownfield-context.md: Layered structure from L1 (domain) → L2 (behavior) → L3 (component) → L4 (code)
-- At JP1/JP2: Technical brownfield data translated into customer impact for presentation
+Sprint Kit이 이를 실현하는 방법:
+- Brownfield Scanner: MCP 서버, document-project, 로컬 코드베이스에서 자동 수집
+- brownfield-context.md: L1(도메인) → L2(동작) → L3(컴포넌트) → L4(코드) 계층 구조
+- JP1/JP2에서: 기술적 Brownfield 데이터를 고객 영향으로 번역하여 제시
 
 ---
 
-## Mapping to Real Product Team Workflows
+## 실제 제품 팀 워크플로우와의 매핑
 
-Sprint Kit replaces the parts of a real product team's workflow that AI can handle,
-while preserving the parts where humans excel.
+Sprint Kit은 실제 제품 팀의 워크플로우에서 AI가 처리할 수 있는 부분을 대체하면서,
+사람이 잘하는 부분은 보존합니다.
 
 ```
-Real Product Team                        Sprint Kit Equivalent
+실제 제품 팀                             Sprint Kit 대응
 ──────────────────────────────────────────────────────────────
-1. Kickoff meeting (2 hours)            → Save notes in inputs/ (~0 min)
-2. Someone drafts PRD (1 day)           → ██ AI generates PRD ██ (~5 min)
-3. PRD review meeting (1 hour)          → JP1: PRD judgment (~10 min)
-4. PRD revision (half day)              → ██ AI regenerates if needed ██ (~3 min)
-5. Design → Prototype (1 week)          → ██ AI generates prototype ██ (~10 min)
-6. Prototype review (1 hour)            → JP2: Prototype judgment (~15 min)
-7. Revision → Final sign-off (days)     → ██ AI regenerates if needed ██ (~10 min)
+1. 킥오프 미팅 (2시간)                  → inputs/에 회의록 저장 (~0분)
+2. 누군가 PRD 작성 (1일)                → ██ AI가 PRD 생성 ██ (~5분)
+3. PRD 리뷰 미팅 (1시간)               → JP1: PRD 판단 (~10분)
+4. PRD 수정 (반일)                      → ██ 필요 시 AI가 재생성 ██ (~3분)
+5. 디자인 → 프로토타입 (1주)            → ██ AI가 프로토타입 생성 ██ (~10분)
+6. 프로토타입 리뷰 (1시간)              → JP2: 프로토타입 판단 (~15분)
+7. 수정 → 최종 승인 (수일)             → ██ 필요 시 AI가 재생성 ██ (~10분)
 
-Human time: ~25 min (previous: 4 hours 30 min + days of waiting)
+사람의 소요 시간: ~25분 (이전: 4시간 30분 + 수일의 대기)
 ```
 
-**What AI replaces:** Structuring, writing, implementation (tasks where humans are relatively slow)
-**What humans keep:** Providing context, judging, setting direction (tasks where humans are far more accurate)
+**AI가 대체하는 것:** 구조화, 작성, 구현 (사람이 상대적으로 느린 작업)
+**사람이 유지하는 것:** 맥락 제공, 판단, 방향 설정 (사람이 훨씬 정확한 작업)
 
 ---
 
-## Methodology Evolution in the AI Era
+## AI 시대의 방법론 진화
 
-### Lessons from Waterfall → Agile
+### 폭포수 → 애자일의 교훈
 
-Top-down (Waterfall) development pursued "gap-free upfront definition,"
-but in practice, gaps could never be reduced to zero. Acknowledging this limitation
-and compensating through iteration was Agile's core insight.
+하향식(폭포수) 개발은 "빈틈 없는 사전 정의"를 추구했지만,
+실제로는 빈틈을 제로로 줄일 수 없었습니다. 이 한계를 인정하고
+반복(이터레이션)으로 보완한 것이 애자일의 핵심 통찰이었습니다.
 
-### The Agile → Judgment-Driven Transition
+### 애자일 → Judgment-Driven 전환
 
-Bottom-up (Judgment-Driven) development pursues "AI builds, human judges,"
-but in practice, AI generation cost and time cannot reach zero.
-Acknowledging this limitation, **raising first-generation quality through pre-inputs
-and correcting direction at well-placed judgment points** is Sprint Kit's core design.
+상향식(Judgment-Driven) 개발은 "AI가 만들고 사람이 판단한다"를 추구하지만,
+실제로는 AI 생성 비용과 시간이 제로에 도달할 수 없습니다.
+이 한계를 인정하고, **사전 입력으로 첫 생성 품질을 높이며
+적절한 판단 시점에서 방향을 교정하는 것**이 Sprint Kit의 핵심 설계입니다.
 
 ```
-Waterfall:  Define gap-free → implement in one shot (ideal)
-            Gaps discovered → high cost of backtracking (reality)
+폭포수:   빈틈 없이 정의 → 한 번에 구현 (이상)
+          빈틈 발견 → 높은 되돌리기 비용 (현실)
 
-Agile:      Gradual improvement through iteration (solution)
-            But each iteration incurs implementation cost
+애자일:   반복을 통한 점진적 개선 (해결)
+          단, 매 반복마다 구현 비용 발생
 
-JDD:        AI generates fast → human judges → regenerate (ideal)
-            Regeneration cost ≠ 0, judgment also takes time (reality)
-            → Input quality ↑ + judgment timing optimization = minimal regeneration (solution)
+JDD:      AI가 빠르게 생성 → 사람이 판단 → 재생성 (이상)
+          재생성 비용 ≠ 0, 판단에도 시간 소요 (현실)
+          → 입력 품질 ↑ + 판단 타이밍 최적화 = 최소 재생성 (해결)
 ```
 
-**This is the core of a service used by many people in reality.**
-Not a theoretical ideal, but finding the working balance point in actual product organizations.
+**이것은 현실에서 많은 사람이 사용하는 서비스의 핵심입니다.**
+이론적 이상이 아니라, 실제 제품 조직에서 작동하는 균형점을 찾는 것입니다.
 
 ### Delta-Driven Design
 
-Sprint Kit's 3-pass pattern (Answer Discovery → Translation & Delta Extraction → Delta Execution) reframes the pipeline's purpose: **defining the delta between the current system (brownfield) and the target state (user-validated prototype)**, not generating specs.
+Sprint Kit의 3-pass 패턴(답 발견 → 번역 및 델타 추출 → 델타 실행)은 파이프라인의 목적을 재정의합니다: 명세를 생성하는 것이 아니라, **현재 시스템(Brownfield)과 목표 상태(사용자가 검증한 프로토타입) 사이의 델타를 정의하는 것**입니다.
 
-The prototype is the target state expressed in the system's actual user's grammar — visual UI for human users, API mocks for service consumers, structured documents for AI consumers. Crystallize translates this target into development grammar using rule-based mapping, not open-ended abstraction. The delta between translated target and brownfield baseline is what needs to be built.
+프로토타입은 시스템의 실제 사용자 문법으로 표현된 목표 상태입니다 — 사람 사용자를 위한 시각적 UI, 서비스 소비자를 위한 API 목, AI 소비자를 위한 구조화된 문서. Crystallize는 이 목표를 개방형 추상화가 아닌 규칙 기반 매핑을 사용하여 개발 문법으로 번역합니다. 번역된 목표와 Brownfield 기준선 사이의 델타가 구축해야 할 것입니다.
 
-Spec completeness controls AI non-determinism: more complete specs produce more consistent output. Sprint Kit accepts a trade-off — high specification where contracts matter (API, DB schema), lower specification where variation is acceptable (UI layout, internal naming) — and uses contract testing and BDD to verify functional correctness regardless of variation.
+명세의 완성도는 AI 비결정성을 제어합니다: 더 완전한 명세가 더 일관된 출력을 생산합니다. Sprint Kit은 트레이드오프를 수용합니다 — 계약이 중요한 곳(API, DB 스키마)에는 높은 명세화, 변이가 허용되는 곳(UI 레이아웃, 내부 네이밍)에는 낮은 명세화 — 그리고 변이와 무관하게 기능적 정확성을 검증하기 위해 계약 테스트와 BDD를 사용합니다.
 
-> Full theory, core principles (CP1-CP6), design judgments (DJ1-DJ10), translation rules, and methodology comparison: [`docs/delta-driven-design.md`](delta-driven-design.md)
+> 전체 이론, 핵심 원칙(CP1-CP6), 설계 판단(DJ1-DJ10), 번역 규칙, 방법론 비교: [`docs/delta-driven-design.md`](delta-driven-design.md)
 
 ---
 
-## Appendix: Key Insights from the Design Discussion Process
+## 부록: 설계 논의 과정의 주요 인사이트
 
-### The Problem with "Non-Developer" Framing
+### "비개발자" 프레이밍의 문제
 
-In early discussions, Sprint Kit's target user was defined as "non-developer."
-This is a subtractive definition — the anti of developer —
-that fails to capture these users' actual expertise.
+초기 논의에서 Sprint Kit의 대상 사용자는 "비개발자"로 정의되었습니다.
+이는 감산적 정의 — 개발자의 반대 — 로서
+이 사용자들의 실제 전문성을 포착하지 못합니다.
 
-**Revised definition**: "A customer expert — the person best positioned
-to judge what the deliverables should look like" — i.e., a product expert.
+**수정된 정의**: "고객 전문가 — 산출물이 어떤 모습이어야 하는지
+판단하기에 가장 적합한 사람" — 즉, 프로덕트 전문가.
 
-Impact of this redefinition on checkpoint design:
-- Before: Technical quality gates (Brief mapping %, Scope Gate results)
-- After: Customer-perspective judgment points (customer journey narrative, experience verification)
+이 재정의가 체크포인트 설계에 미친 영향:
+- 이전: 기술적 품질 게이트 (Brief 매핑률, Scope Gate 결과)
+- 이후: 고객 관점 판단 시점 (고객 여정 서사, 경험 검증)
 
-### Not "Deep vs Quick" but "Top-down vs Bottom-up"
+### "깊은 vs 빠른"이 아니라 "하향식 vs 상향식"
 
-In early discussions, routes were classified by "exploration depth" (Deep planning vs Quick execution).
-This framing reflects a typical developer perspective, implying bottom-up is "shallow."
+초기 논의에서 경로는 "탐색 깊이"(깊은 기획 vs 빠른 실행)로 분류되었습니다.
+이 프레이밍은 전형적인 개발자 관점을 반영하며, 상향식이 "얕다"고 암시합니다.
 
-**Revised framing**: Both routes are deep. They're deep in different areas.
-- Top-down: Deep in precision of problem definition
-- Bottom-up: Deep in accuracy of judgment on deliverables
+**수정된 프레이밍**: 두 경로 모두 깊습니다. 깊은 영역이 다릅니다.
+- 하향식: 문제 정의의 정밀도에서 깊음
+- 상향식: 산출물에 대한 판단의 정확도에서 깊음
 
-### Dissolving the Bridge Concept
+### Bridge 개념의 해소
 
-Early design planned a "Bridge" command to transfer BMad artifacts to Sprint Kit.
-Discussion revealed this concept was unnecessary:
+초기 설계에서는 BMad 산출물을 Sprint Kit으로 전달하는 "Bridge" 커맨드를 계획했습니다.
+논의를 통해 이 개념이 불필요함이 드러났습니다:
 
-1. The two systems already share the same artifact format (same prd-format-guide)
-2. Sprint Kit's `/specs` just needs to resolve the planning-artifacts path to connect
-3. A Bridge is a "translator between two systems," but in the extension-pack model no translation is needed
+1. 두 시스템은 이미 동일한 산출물 포맷을 공유 (같은 prd-format-guide)
+2. Sprint Kit의 `/specs`는 planning-artifacts 경로를 해석하기만 하면 연결 가능
+3. Bridge는 "두 시스템 간의 번역기"이지만, 확장팩 모델에서는 번역이 불필요
 
-**Conclusion**: Sprint Kit is not a separate system from BMad but an extension pack,
-so the connection point is not a command but a file-format contract (the planning-artifacts/ directory).
+**결론**: Sprint Kit은 BMad와 별개의 시스템이 아니라 확장팩이므로,
+연결점은 커맨드가 아니라 파일 포맷 계약(planning-artifacts/ 디렉토리)입니다.
 
-### Realistic Correction of the "Regeneration Cost ≈ 0" Assumption
+### "재생성 비용 ≈ 0" 가정의 현실적 교정
 
-Early discussions proceeded on the premise that "AI regeneration cost is roughly zero."
-Reality check:
-
-```
-Full Auto Sprint cycle: 5–15 min
-PRD regeneration: 2–5 min
-Prototype regeneration: 5–10 min
-```
-
-Cost is not zero. As regeneration count grows, human judgment time accumulates.
-This realistic constraint is the reason Input Reduces Cycles exists.
-
-**Practical balance point**: The goal is to reduce regeneration to 1–2 cycles
-by raising first-generation quality through pre-inputs and brownfield context.
-
-### Practical Correction of Regeneration Over Modification — When Apply-Fix Is Allowed
-
-"Regeneration over modification" is the default. Artifacts are disposable,
-and feedback-informed fresh generation ensures consistency.
-
-A boundary condition discovered during actual Sprint execution:
-In the pipeline, artifacts are not independent disposables but **intermediate state**.
-The same information (e.g., data model) exists in different formats across PRD, Architecture, Design,
-API Spec, Prototype, and more.
-Applying full regeneration to small changes inverts the cost-benefit ratio.
+초기 논의는 "AI 재생성 비용이 거의 제로"라는 전제 위에서 진행되었습니다.
+현실 확인:
 
 ```
-Premise:            Artifacts are independent disposables → regeneration is always efficient
-Real-world finding: Artifacts are interdependent state → regeneration is inefficient for small changes
-Correction:         Add apply-fix + propagation option + Scope Gate verification for consistency
+전체 Auto Sprint 사이클: 5-15분
+PRD 재생성: 2-5분
+프로토타입 재생성: 5-10분
 ```
 
-Why apply-fix is safe: The rationale for defaulting to regeneration is
-"modification breaks consistency."
-Since Scope Gate verifies cross-artifact consistency after modification,
-the risk of consistency breakdown is structurally blocked.
+비용은 제로가 아닙니다. 재생성 횟수가 늘어날수록 사람의 판단 시간이 누적됩니다.
+이 현실적 제약이 "입력이 반복을 줄인다"가 존재하는 이유입니다.
 
-**Regeneration is the default.** Apply-fix is
-an option the system presents alongside cost. The user decides after seeing the cost.
-Implemented in the protocol (jdd-sprint-protocol.md).
+**실용적 균형점**: 사전 입력과 Brownfield 맥락으로 첫 생성 품질을 높여
+재생성을 1-2회로 줄이는 것이 목표입니다.
+
+### "수정보다 재생성"의 실용적 교정 — 수정반영이 허용되는 경우
+
+"수정보다 재생성"이 기본입니다. 산출물은 소모품이며,
+피드백을 반영한 새로운 생성이 일관성을 보장합니다.
+
+실제 Sprint 실행 중 발견된 경계 조건:
+파이프라인에서 산출물은 독립적인 소모품이 아니라 **중간 상태**입니다.
+동일한 정보(예: 데이터 모델)가 PRD, Architecture, Design,
+API Spec, 프로토타입 등에 서로 다른 포맷으로 존재합니다.
+작은 변경에 전체 재생성을 적용하면 비용 대비 효과가 역전됩니다.
+
+```
+전제:           산출물은 독립적 소모품 → 재생성이 항상 효율적
+실제 발견:      산출물은 상호 의존 상태 → 작은 변경에 재생성은 비효율적
+교정:           수정반영 + 전파 옵션 추가 + Scope Gate 검증으로 일관성 확보
+```
+
+수정반영이 안전한 이유: 재생성을 기본으로 하는 근거는
+"수정이 일관성을 깨뜨린다"는 것입니다.
+Scope Gate가 수정 후 산출물 간 일관성을 검증하므로,
+일관성 붕괴의 위험이 구조적으로 차단됩니다.
+
+**재생성이 기본입니다.** 수정반영은
+시스템이 비용과 함께 제시하는 옵션입니다. 사용자가 비용을 확인한 후 결정합니다.
+프로토콜(jdd-sprint-protocol.md)에 구현되어 있습니다.

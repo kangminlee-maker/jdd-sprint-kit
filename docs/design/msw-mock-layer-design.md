@@ -1,11 +1,11 @@
-# MSW Mock Layer Design — Sprint Kit Prototype Stateful API
+# MSW Mock Layer 설계 — Sprint Kit 프로토타입 Stateful API
 
 > Party Mode 합의 (2026-02-17): Option C 채택. Prism 역할 분리 + MSW 도입.
 > Party Mode 검증 (2026-02-17): 7개 이슈 발견 → 전부 반영.
 > Party Mode 합의 (2026-02-17): Prism 완전 제거. OpenAPI lint + tsc로 대체.
 > Party Mode 검증 (2026-02-17): Prism 제거 반영 10건 검토 → 6건 반영, 4건 유지.
 
-## 1. Problem Statement
+## 1. 문제 정의
 
 ### 증상
 Sprint Kit 프로토타입에서 CRUD 플로우 간 상태가 유지되지 않는다.
@@ -26,7 +26,7 @@ Prism이 두 가지 역할을 동시에 수행하고 있다:
 
 > 이 두 역할은 현재 MSW(프로토타입) + redocly lint + tsc(spec 검증)로 대체되었다. Section 7 참조.
 
-## 2. Solution: MSW + Static Validation
+## 2. 솔루션: MSW + 정적 검증
 
 ### 설계 원칙
 - **MSW** = 프로토타입 상호작용 (Dev Server: `npm run dev`)
@@ -36,12 +36,12 @@ Prism이 두 가지 역할을 동시에 수행하고 있다:
 
 ### 아키텍처 변경
 
-**Before**:
+**변경 전**:
 ```
 React App → fetch() → Vite Proxy → Prism (stateless) → OpenAPI examples
 ```
 
-**After**:
+**변경 후**:
 ```
 [Dev Mode]
   React App → fetch() → MSW Service Worker (stateful) → in-memory store
@@ -63,7 +63,7 @@ React App → fetch() → Vite Proxy → Prism (stateless) → OpenAPI examples
 
 5. **onComplete 콜백 = 선택적 최적화**: MSW가 상태를 관리하므로, POST 후 GET 재호출만으로도 정확한 결과를 받을 수 있다. onComplete 콜백을 통한 낙관적 업데이트는 UX 최적화로서 **권장하지만 필수는 아니다**. deliverable-generator가 onComplete 패턴을 생성하면 더 빠른 피드백을 제공하지만, 없어도 CRUD 연속성은 보장된다.
 
-## 3. File Changes
+## 3. 파일 변경 사항
 
 ### 3.1 preview-template/ 변경 (모든 Sprint에 적용)
 
@@ -99,9 +99,9 @@ specs/{feature}/preview/
 
 ### 3.3 deliverable-generator.md 변경
 
-Stage 10 (React Prototype) 섹션에 MSW handler 생성 로직 추가.
+Stage 10 (React 프로토타입) 섹션에 MSW handler 생성 로직 추가.
 
-## 4. Detailed Design
+## 4. 상세 설계
 
 ### 4.1 preview-template/package.json
 
@@ -497,13 +497,13 @@ export const handlers = [
     return HttpResponse.json(response)
   }),
 
-  // Dev utility: Reset store
+  // Dev 유틸리티: store 리셋
   http.post(`${BASE}/__reset`, () => {
     resetStore()
     return HttpResponse.json({ ok: true })
   }),
 
-  // Dev utility: Dump store (DevPanel용)
+  // Dev 유틸리티: store 덤프 (DevPanel용)
   http.get(`${BASE}/__store`, () => {
     return HttpResponse.json({
       blocks: store.blocks,
@@ -532,9 +532,9 @@ export const handlers = [
 추가: preview-template/public/mockServiceWorker.js → preview/public/mockServiceWorker.js
 ```
 
-#### 5.2 Handler 생성 단계 (NEW)
+#### 5.2 Handler 생성 단계 (신규)
 
-Stage 10에서 React 컴포넌트 생성 **직후**, 다음 3파일을 자동 생성 (preview-template의 placeholder handlers.ts를 덮어씀):
+Stage 10에서 React 컴포넌트 생성 **직후**, 다음 3개 파일을 자동 생성 (preview-template의 placeholder handlers.ts를 덮어씀):
 
 1. **seed.ts**: api-spec.yaml의 각 GET 엔드포인트 example에서 초기 데이터 추출
 2. **store.ts**: seed.ts를 import하여 in-memory store 구성. 각 리소스별 배열 + counter.
@@ -555,7 +555,7 @@ Stage 10에서 React 컴포넌트 생성 **직후**, 다음 3파일을 자동 �
 - `resetStore()` + `POST /__reset` + `GET /__store` 엔드포인트를 항상 포함
 - BASE path는 client.ts의 `BASE_URL + VERSION`과 동일하게 설정
 
-#### 5.3 Smoke Test 변경 → Spec Validation
+#### 5.3 Smoke Test 변경 → Spec 검증
 
 Prism 기반 Smoke Test를 제거하고, 다음 2단계로 대체:
 
@@ -575,10 +575,10 @@ npx tsc --noEmit
 
 #### 5.4 Self-Validation 변경 사항
 
-기존 항목 7 ("Prototype 인터랙션")을 다음 3개 항목으로 교체:
+기존 항목 7 ("프로토타입 인터랙션")을 다음 3개 항목으로 교체:
 
 **항목 7a — MSW handler 엔드포인트 커버리지**:
-MSW handler가 api-spec.yaml의 모든 path × method 조합을 커버하는지 확인. handlers.ts에 누락된 endpoint가 있으면 Output Summary에 WARN.
+MSW handler가 api-spec.yaml의 모든 path x method 조합을 커버하는지 확인. handlers.ts에 누락된 endpoint가 있으면 Output Summary에 WARN.
 
 **항목 7b — BASE 경로 정합성**:
 handlers.ts의 `BASE` 상수가 client.ts의 `BASE_URL + VERSION`과 동일한지 확인. 불일치 시 MSW가 요청을 인터셉트하지 못하는 사일런트 실패가 발생하므로, 불일치 발견 시 **자동 수정** (handlers.ts의 BASE를 client.ts 기준으로 갱신) + Output Summary에 FIX 기록.
@@ -621,7 +621,7 @@ Spec 검증은 OpenAPI lint(`@redocly/cli`) + `tsc --noEmit`이 담당한다.
 - `POST /__reset` + `GET /__store` + `resetStore()` 함수를 항상 포함한다
 ```
 
-## 6. Migration: 기존 프로토타입 영향
+## 6. 마이그레이션: 기존 프로토타입 영향
 
 ### preview-template 변경이 기존 Sprint에 미치는 영향
 
@@ -650,8 +650,8 @@ Specmatic은 `/parallel` 단계에서 실제 구현체의 API 계약 준수를 �
 | 용도 | 도구 |
 |------|------|
 | `npm run dev` (프로토타입) | **MSW** |
-| `npm run lint:api` (Spec Validation) | **@redocly/cli** |
-| `npx tsc --noEmit` (Type Validation) | **TypeScript** |
+| `npm run lint:api` (Spec 검증) | **@redocly/cli** |
+| `npx tsc --noEmit` (타입 검증) | **TypeScript** |
 | API 계약 준수 (/parallel) | **Specmatic** (변경 없음) |
 
 **제거 대상**:
@@ -679,7 +679,7 @@ Specmatic은 `/parallel` 단계에서 실제 구현체의 API 계약 준수를 �
 5. `npx tsc --noEmit` 통과 (handler ↔ types.ts 스키마 정합성)
 6. 다른 Sprint에서 `/preview` 실행 시 동일 패턴으로 MSW handler 생성 확인 (후속 검증)
 
-## Appendix: 검증 이력
+## 부록: 검증 이력
 
 ### Party Mode 검증 (2026-02-17)
 

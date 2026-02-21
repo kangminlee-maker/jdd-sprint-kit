@@ -110,19 +110,19 @@ BMad 12단계 (사람-AI 대화):
 - John (PM): PRD, Epics & Stories
 - Winston (Architect): Architecture, ADR
 - Amelia (Dev): Story 구현
-- Bob (SM): Sprint Planning, Story 준비
-- Sally (UX Designer): UX Design
-- Barry (Quick Flow Solo Dev): Quick Spec → Dev → Review
-- Murat (Test Architect): Master Test Architect
-- Paige (Tech Writer): Technical Documentation
+- Bob (SM): Sprint 계획, Story 준비
+- Sally (UX Designer): UX 설계
+- Barry (Quick Flow Solo Dev): Quick Spec → 개발 → 리뷰
+- Murat (Test Architect): 마스터 테스트 아키텍트
+- Paige (Tech Writer): 기술 문서 작성
 
 ## Sprint 에이전트
 
 ### Auto Sprint
-- `@auto-sprint` — Sprint 오케스트레이션 + Conductor 4역할 (Goal Tracking, Scope Gate, Budget, Redirect)
-- `@scope-gate` — 3단계 검증 (Structured Probe + Checklist + Holistic Review)
+- `@auto-sprint` — Sprint 오케스트레이션 + Conductor 4역할 (목표 추적, Scope Gate, 예산, 방향 전환)
+- `@scope-gate` — 3단계 검증 (구조적 탐침 + 체크리스트 + 종합 리뷰)
 - `@brownfield-scanner` — MCP Brownfield 수집 (L1~L4)
-- `@deliverable-generator` — Full-stack 산출물 생성 (Specs + OpenAPI + DBML + BDD + Prototype)
+- `@deliverable-generator` — 풀스택 산출물 생성 (Specs + OpenAPI + DBML + BDD + Prototype)
 
 ### Execute
 - `@worker` — 독립 워크트리에서 태스크 구현 + Specmatic API 계약 자체 검증
@@ -133,10 +133,10 @@ BMad 12단계 (사람-AI 대화):
 ## Sprint 커맨드
 
 - `/sprint` — **Sprint 경로**: Brief/자료 → 자동 Specs + Deliverables + Prototype (JP 2개)
-- `/specs` — **Specs 생성**: Planning Artifacts → Specs 4-file
+- `/specs` — **Specs 생성**: 기획 산출물 → Specs 4-file
 - `/preview` — **Deliverables 생성**: Specs → OpenAPI + DBML + BDD + Prototype
 - `/parallel` — 멀티에이전트 병렬 실행
-- `/validate` — 3-Phase 검증 파이프라인
+- `/validate` — 3단계 검증 파이프라인
 - `/circuit-breaker` — 방향 전환
 - `/summarize-prd` — PRD 요약/분석 + 피드백 반영
 

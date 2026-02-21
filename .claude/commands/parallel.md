@@ -1,115 +1,115 @@
 ---
-description: "Multi-agent parallel task execution via Native Teams + Git Worktree"
+description: "Native Teams + Git Worktree를 활용한 멀티 에이전트 병렬 실행"
 ---
 
-# /parallel — Multi-Agent Parallel Execution
+# /parallel — 멀티 에이전트 병렬 실행
 
-> **Dispatch Target**: Native Teams `@worker` agents
+> **디스패치 대상**: Native Teams `@worker` 에이전트
 
-## Purpose
+## 목적
 
-Execute tasks in parallel using Native Teams + Git Worktree + gh CLI.
+Native Teams + Git Worktree + gh CLI를 사용하여 태스크를 병렬로 실행합니다.
 
-## When to Use
+## 사용 시점
 
-After Specs + Deliverables generation is complete. Run after JP2 approval.
+명세 + 산출물 생성이 완료된 후. JP2 승인 이후에 실행합니다.
 
-## Inputs
+## 입력값
 
-`$ARGUMENTS`: not used
+`$ARGUMENTS`: 사용하지 않음
 
-Parameters (when invoked from auto-sprint):
-- `specs_root`: Base directory for specs files. Default: `specs/{feature}/`. After Crystallize: `specs/{feature}/reconciled/`.
+auto-sprint에서 호출될 때의 파라미터:
+- `specs_root`: 명세 파일의 기본 디렉터리. 기본값: `specs/{feature}/`. Crystallize 이후: `specs/{feature}/reconciled/`.
 
-Prerequisites:
-- `{specs_root}/tasks.md` exists
-- `{specs_root}/brownfield-context.md` exists (or `{specs_root}/planning-artifacts/brownfield-context.md` for reconciled/)
-- File Ownership assignment complete
-- Interface contracts (shared types) defined
+사전 조건:
+- `{specs_root}/tasks.md` 존재
+- `{specs_root}/brownfield-context.md` 존재 (reconciled/ 경우 `{specs_root}/planning-artifacts/brownfield-context.md`)
+- File Ownership 할당 완료
+- 인터페이스 계약(공유 타입) 정의 완료
 
-**Path resolution**: All specs file references in this command use `{specs_root}` as base path. When `specs_root` is not provided, default to `specs/{feature}/`.
+**경로 해석**: 이 커맨드에서 참조하는 모든 명세 파일은 `{specs_root}`를 기준 경로로 사용합니다. `specs_root`가 제공되지 않으면 `specs/{feature}/`를 기본값으로 사용합니다.
 
-## Procedure
+## 절차
 
-Load config per Language Protocol in jdd-sprint-guide.md.
+jdd-sprint-guide.md의 Language Protocol에 따라 설정을 불러옵니다.
 
-### Step 1: Interface Contract Creation
-Create shared types/interfaces first (referenced by all Workers):
-- Extract interface contracts from tasks.md
-- Generate shared type files (e.g., `src/types.ts`)
-- This step is not parallelized
+### Step 1: 인터페이스 계약 생성
+모든 Worker가 참조하는 공유 타입/인터페이스를 먼저 생성합니다:
+- tasks.md에서 인터페이스 계약 추출
+- 공유 타입 파일 생성 (예: `src/types.ts`)
+- 이 단계는 병렬화하지 않음
 
-### Step 2: GitHub Issues Creation (gh CLI)
-Create each task as a GitHub Issue via gh CLI (`gh issue create`):
+### Step 2: GitHub Issues 생성 (gh CLI)
+gh CLI(`gh issue create`)를 통해 각 태스크를 GitHub Issue로 생성합니다:
 ```
-Each Task → GitHub Issue
-- Title: Task description
-- Body: owned files, interfaces, dependencies, Entropy level
-- Labels: entropy-high / entropy-medium / entropy-low
+각 태스크 → GitHub Issue
+- 제목: 태스크 설명
+- 본문: 소유 파일, 인터페이스, 의존성, Entropy 레벨
+- 라벨: entropy-high / entropy-medium / entropy-low
 ```
 
-### Step 3: Git Worktree Setup
-Create per-task Git Worktrees to prevent file conflicts at the source:
+### Step 3: Git Worktree 설정
+파일 충돌을 소스 단계에서 방지하기 위해 태스크별 Git Worktree를 생성합니다:
 ```bash
-# Create independent worktree per task
+# 태스크별 독립 worktree 생성
 git worktree add ../worktree-{task-id} -b task/{task-id}
 ```
-- Assign each Worker an independent worktree
-- Branch from main branch
+- 각 Worker에 독립된 worktree 할당
+- 메인 브랜치에서 분기
 
-### Step 4: Native Teams Worker Creation
-Create Worker agents via Claude Code Native Teams:
-1. Create team via TeamCreate
-2. Create each Worker via Task tool (`subagent_type: "worker"`, `model: "sonnet"`)
-3. Create tasks via TaskCreate, assign via TaskUpdate
-4. Instruct each Worker to reference `{specs_root}/brownfield-context.md` (or `{specs_root}/planning-artifacts/brownfield-context.md` for reconciled/):
-   - Follow existing code patterns/conventions (based on configured client-docs MCP)
-   - Maintain compatibility when extending existing APIs (based on configured backend-docs MCP)
-   - Verify alignment with existing customer journey flows (based on configured svc-map MCP)
+### Step 4: Native Teams Worker 생성
+Claude Code Native Teams를 통해 Worker 에이전트를 생성합니다:
+1. TeamCreate로 팀 생성
+2. Task 도구로 각 Worker 생성 (`subagent_type: "worker"`, `model: "sonnet"`)
+3. TaskCreate로 태스크 생성, TaskUpdate로 할당
+4. 각 Worker가 `{specs_root}/brownfield-context.md` (reconciled/ 경우 `{specs_root}/planning-artifacts/brownfield-context.md`)를 참조하도록 지시:
+   - 기존 시스템 코드 패턴/컨벤션 준수 (설정된 client-docs MCP 기반)
+   - 기존 시스템 API 확장 시 호환성 유지 (설정된 backend-docs MCP 기반)
+   - 기존 시스템 고객 여정 흐름과의 정합성 검증 (설정된 svc-map MCP 기반)
 
-### Step 5: Parallel Execution Monitoring
-- Each Worker executes its task
-- API tasks: Worker self-verifies via Specmatic before completion
-- On Worker completion → handoff via SendMessage
-- Close Issue via `gh issue close`
+### Step 5: 병렬 실행 모니터링
+- 각 Worker가 할당된 태스크 실행
+- API 태스크: Worker가 완료 전 Specmatic으로 자체 검증
+- Worker 완료 시 → SendMessage로 핸드오프
+- `gh issue close`로 Issue 종료
 
-#### Worker Failure Protocol
-- **Worker crash/timeout**: Mark task as FAILED.
-  Other Workers with independent tasks continue.
-  Workers dependent on FAILED Worker wait.
-- **Failure persists after 2 retries**: Report to user + offer partial merge option with remaining Worker results.
-- **Blocker report**: When Worker reports blocker via SendMessage, team lead reassigns to another Worker or escalates to user.
+#### Worker 실패 프로토콜
+- **Worker 크래시/타임아웃**: 해당 태스크를 FAILED로 표시.
+  독립 태스크를 가진 다른 Worker는 계속 진행.
+  FAILED Worker에 의존하는 Worker는 대기.
+- **2회 재시도 후에도 실패 지속**: 사용자에게 보고 + 나머지 Worker 결과로 부분 Merge 옵션 제시.
+- **블로커 보고**: Worker가 SendMessage로 블로커를 보고하면 팀 리드가 다른 Worker에 재할당하거나 사용자에게 에스컬레이션.
 
-### Step 6: Merge & Integration
-After all Workers complete:
-1. Merge each worktree's changes into main branch in dependency order
-2. Run integration tests
-3. On conflict → apply Merge Conflict Resolution Protocol
-4. Report merge results to user + confirm whether to auto-run `/validate` (in {communication_language})
-   - **Auto-proceed** → run `/validate`
-   - **Manual** → user runs `/validate` themselves
+### Step 6: Merge & 통합
+모든 Worker 완료 후:
+1. 각 worktree의 변경사항을 의존성 순서대로 메인 브랜치에 Merge
+2. 통합 테스트 실행
+3. 충돌 발생 시 → Merge Conflict Resolution Protocol 적용
+4. 사용자에게 Merge 결과 보고 + `/validate` 자동 실행 여부 확인 ({communication_language}로)
+   - **자동 진행** → `/validate` 실행
+   - **수동** → 사용자가 직접 `/validate` 실행
 
 ### Merge Conflict Resolution Protocol
-1. **Shared type file conflicts**: Should not occur since pre-created in Step 1.
-   If it does → adopt the version that matches api-spec.yaml.
-2. **package.json conflicts**: Merge dependencies as union.
-3. **Business logic file conflicts**: File Ownership violation. Request fix from responsible Worker.
-4. **Unresolvable conflicts**: Report to user + present relevant diff.
+1. **공유 타입 파일 충돌**: Step 1에서 사전 생성했으므로 발생하지 않아야 합니다.
+   발생하는 경우 → api-spec.yaml과 일치하는 버전을 채택.
+2. **package.json 충돌**: 의존성을 합집합으로 Merge.
+3. **비즈니스 로직 파일 충돌**: File Ownership 위반. 해당 Worker에게 수정 요청.
+4. **해결 불가 충돌**: 사용자에게 보고 + 관련 diff 제시.
 
-## Constraints
-Use the following format for Worker handoffs:
+## 제약사항
+Worker 핸드오프 시 다음 형식을 사용합니다:
 ```markdown
 ## Handoff: Worker-N → Worker-M
 
 ### Goal
-[What was achieved]
+[달성한 내용]
 
 ### Changes
-- [file]: [change description]
+- [파일]: [변경 설명]
 
 ### Open Questions
-- [unresolved issues]
+- [미해결 사항]
 
 ### Next Owner
-Worker-M — [next task description]
+Worker-M — [다음 태스크 설명]
 ```

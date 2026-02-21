@@ -1,290 +1,290 @@
 ---
 name: summarize-prd
-description: 'Summarize and analyze a PRD document, collect feedback, and edit the original PRD. Use the analyze subcommand for PRD analysis. Pass the project folder name as an argument.'
+description: 'PRD 문서를 요약 및 분석하고, 피드백을 수집하여 원본 PRD를 편집합니다. analyze 하위 명령어로 PRD 분석을 수행합니다. 인수로 프로젝트 폴더 이름을 전달하세요.'
 ---
 
-# /summarize-prd — PRD Summary, Analysis & Edit
+# /summarize-prd — PRD 요약, 분석 및 편집
 
-> **Dispatch Target**: None (direct CLI execution, no sub-agent delegation)
+> **디스패치 대상**: 없음 (직접 CLI 실행, 하위 에이전트 위임 없음)
 
-## Purpose
+## 목적
 
-Summarize and analyze PRD documents in `prd/`, then **directly edit the original PRD file** based on user feedback.
+`prd/` 내의 PRD 문서를 요약 및 분석한 후, 사용자 피드백에 따라 **원본 PRD 파일을 직접 편집**합니다.
 
-## When to Use
+## 사용 시점
 
-When you need to summarize, analyze, or edit a PRD document.
+PRD 문서를 요약, 분석, 또는 편집해야 할 때 사용합니다.
 
-## Inputs
+## 입력
 
-Parse `$ARGUMENTS`:
-- `$ARGUMENTS[0]`: project-name or `help`
-- `$ARGUMENTS[1]`: optional `analyze`
+`$ARGUMENTS` 파싱:
+- `$ARGUMENTS[0]`: 프로젝트 이름 또는 `help`
+- `$ARGUMENTS[1]`: 선택적 `analyze`
 
-Formats:
-- `<project-name>` → Default Mode (summary → feedback → edit original)
-- `<project-name> analyze` → Analyze Mode (summary + PRD analysis → feedback → edit original)
-- `help` → Help Mode (usage instructions)
+형식:
+- `<project-name>` → Default Mode (요약 → 피드백 → 원본 편집)
+- `<project-name> analyze` → Analyze Mode (요약 + PRD 분석 → 피드백 → 원본 편집)
+- `help` → Help Mode (사용법 안내)
 
-If argument is `help` → **Help Mode**. If last argument is `analyze` → **Analyze Mode**. Otherwise → **Default Mode**.
+인수가 `help`이면 → **Help Mode**. 마지막 인수가 `analyze`이면 → **Analyze Mode**. 그 외에는 → **Default Mode**.
 
-## Procedure
+## 절차
 
-Load config per Language Protocol in jdd-sprint-guide.md.
+jdd-sprint-guide.md의 언어 프로토콜에 따라 설정을 로드합니다.
 
 ### Help Mode
 
-If argument is `help`, output the following (in {communication_language}) and exit.
+인수가 `help`이면 아래 내용을 ({communication_language}로) 출력하고 종료합니다.
 
 ```
-/summarize-prd Usage
+/summarize-prd 사용법
 
-Summarize a PRD document, collect feedback, and edit the original PRD.
+PRD 문서를 요약하고, 피드백을 수집하여 원본 PRD를 편집합니다.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Usage:
+사용법:
   /summarize-prd <project-name>           Default mode
   /summarize-prd <project-name> analyze   Analyze mode
-  /summarize-prd help                     This help
+  /summarize-prd help                     이 도움말
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Default Mode
-  Summarize the PRD, then collect feedback to directly edit the original PRD.
+  PRD를 요약한 후, 피드백을 수집하여 원본 PRD를 직접 편집합니다.
 
-  Flow: Select PRD → Summary output → Feedback → Edit original → Repeat → Done
+  흐름: PRD 선택 → 요약 출력 → 피드백 → 원본 편집 → 반복 → 완료
 
-  Example:
+  예시:
     /summarize-prd trial-lesson-flow
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Analyze Mode (analyze)
-  Outputs a PRD analysis report in addition to the summary.
-  Auto-reviews internal conflicts, ambiguous definitions, missing edge cases, etc.
+  요약 외에 PRD 분석 보고서를 추가로 출력합니다.
+  내부 충돌, 모호한 정의, 누락된 엣지 케이스 등을 자동 검토합니다.
 
-  Analysis items:
-    1. Internal conflicts     - Contradictory content between sections
-    2. Ambiguous definitions  - Vague expressions like TBD, "appropriate"
-    3. Missing edge cases     - Unhandled error/state combinations
-    4. Success metric issues  - Unmeasurable metrics
-    5. Priority/dependency    - P0 depending on P1, etc.
-    6. Technical risks        - Concurrency, API design gaps, etc.
+  분석 항목:
+    1. 내부 충돌       - 섹션 간 모순되는 내용
+    2. 모호한 정의     - TBD, "적절한" 등 불명확한 표현
+    3. 누락된 엣지 케이스 - 처리되지 않은 오류/상태 조합
+    4. 성공 지표 문제  - 측정 불가능한 지표
+    5. 우선순위/의존성 - P0이 P1에 의존하는 경우 등
+    6. 기술적 위험     - 동시성, API 설계 공백 등
 
-  Severity: CRITICAL | WARNING | INFO
+  심각도: CRITICAL | WARNING | INFO
 
-  Example:
+  예시:
     /summarize-prd trial-lesson-flow analyze
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Feedback Loop (shared by Default/Analyze)
-  After summary (+analysis) output, your feedback directly edits the original PRD.
-  A preview is shown before applying changes, requiring your approval.
-  Enter "done" to finish.
+피드백 루프 (Default/Analyze 공통)
+  요약(+분석) 출력 후, 피드백이 원본 PRD를 직접 편집합니다.
+  변경 사항 적용 전에 미리보기가 표시되며, 승인이 필요합니다.
+  "done"을 입력하면 종료합니다.
 
-  Feedback examples:
-    - "Fix the conflict issue #1 from the analysis report"
-    - "Add DAU metric to success metrics"
-    - "Change the error message in FR17"
-    - "Make the reservation failure UX policy more specific"
+  피드백 예시:
+    - "분석 보고서 #1번 충돌 문제를 수정해 주세요"
+    - "성공 지표에 DAU 지표를 추가해 주세요"
+    - "FR17의 오류 메시지를 변경해 주세요"
+    - "예약 실패 UX 정책을 더 구체적으로 작성해 주세요"
 ```
 
-### Common Steps
+### 공통 단계
 
-#### 1. Verify Project Folder
+#### 1. 프로젝트 폴더 확인
 
-If project folder name is empty, list projects in `prd/` and ask for selection (in {communication_language}).
+프로젝트 폴더 이름이 비어 있으면 `prd/`의 프로젝트 목록을 나열하고 선택을 요청합니다 ({communication_language}로).
 
-Verify that `prd/<project-name>/` folder exists. If not, list projects in `prd/` and guide to the correct name (in {communication_language}).
+`prd/<project-name>/` 폴더가 존재하는지 확인합니다. 없으면 `prd/`의 프로젝트 목록을 나열하고 올바른 이름으로 안내합니다 ({communication_language}로).
 
-#### 2. Select PRD File
+#### 2. PRD 파일 선택
 
-List all `.md` files in the folder and **confirm which file is the latest PRD** (in {communication_language}).
+폴더 내 모든 `.md` 파일을 나열하고 **최신 PRD 파일이 무엇인지 확인**합니다 ({communication_language}로).
 
-#### 3. Read and Summarize PRD
+#### 3. PRD 읽기 및 요약
 
-Read the user-specified file and summarize with the following structure (in {document_output_language}):
+사용자가 지정한 파일을 읽고 다음 구조로 요약합니다 ({document_output_language}로):
 
 ```markdown
-# [Project Name] PRD Summary
+# [프로젝트 이름] PRD 요약
 
-## One-Line Summary
-[Core purpose of the project in one sentence]
+## 한 줄 요약
+[프로젝트의 핵심 목적을 한 문장으로]
 
-## Background & Intent
-- Why this project is needed
-- Core problem being solved
+## 배경 및 의도
+- 이 프로젝트가 필요한 이유
+- 해결하려는 핵심 문제
 
-## Key Features (by priority)
+## 주요 기능 (우선순위 순)
 
 ### MVP (P0)
-- Feature 1: description
-- Feature 2: description
+- 기능 1: 설명
+- 기능 2: 설명
 
 ### MVP (P1)
-- Feature 3: description
+- 기능 3: 설명
 
-### Growth Phase
-- Feature 4: description
+### 성장 단계
+- 기능 4: 설명
 
-## Success Metrics
-| Metric | Current | Target |
-|--------|---------|--------|
-| Metric name | Current value | Target value |
+## 성공 지표
+| 지표 | 현재 값 | 목표 값 |
+|------|---------|---------|
+| 지표 이름 | 현재 값 | 목표 값 |
 
-## Technical Considerations
-- Key technical issues or constraints
+## 기술적 고려사항
+- 핵심 기술 이슈 또는 제약사항
 
-## MVP Scope vs Follow-up
-- What's included in MVP / what's excluded (summary)
+## MVP 범위 vs 후속 작업
+- MVP 포함 항목 / 제외 항목 (요약)
 ```
 
 ### Default Mode
 
-After summary output, enter **Feedback Loop** immediately.
+요약 출력 후 즉시 **피드백 루프**를 시작합니다.
 
 ### Analyze Mode
 
-After summary output, **output PRD analysis report** then enter Feedback Loop.
+요약 출력 후 **PRD 분석 보고서를 출력**한 다음 피드백 루프를 시작합니다.
 
-#### Analysis Report Writing
+#### 분석 보고서 작성
 
-Thoroughly review the full PRD and find issues per category. Mark categories with no issues as "No issues found."
+전체 PRD를 철저히 검토하고 카테고리별로 문제를 찾습니다. 문제가 없는 카테고리는 "문제 없음"으로 표시합니다.
 
 ```markdown
-# PRD Analysis Report
+# PRD 분석 보고서
 
-## 1. Internal Conflicts
-Find contradictory or conflicting content within the document.
-- Section A says X, but Section B says Y
-- Numbers/conditions differ across sections
-- Priorities stated differently across sections
+## 1. 내부 충돌
+문서 내 모순되거나 충돌하는 내용을 찾습니다.
+- A 섹션은 X를 말하지만 B 섹션은 Y를 말하는 경우
+- 섹션 간 숫자/조건이 다른 경우
+- 섹션 간 우선순위가 다르게 기술된 경우
 
-Example:
-> WARNING: **[Conflict]** Executive Summary says "reservation period +2 days", but
-> FR4-1 says "3 days including today". Same policy but confusing expression.
-> Location: Executive Summary vs FR4-1
+예시:
+> WARNING: **[충돌]** 실행 요약에서는 "예약 기간 +2일"이라고 했지만
+> FR4-1에서는 "오늘 포함 3일"이라고 명시. 동일한 정책인데 표현이 혼재.
+> 위치: 실행 요약 vs FR4-1
 
-## 2. Ambiguous or Unclear Definitions
-Find vague expressions that make development/QA judgment difficult.
-- Unclear expressions like "appropriate", "as needed", "etc."
-- Requirements missing specific values/conditions
-- Items remaining as TBD
+## 2. 모호하거나 불명확한 정의
+개발/QA 판단을 어렵게 하는 불명확한 표현을 찾습니다.
+- "적절한", "필요에 따라", "등" 같은 불명확한 표현
+- 구체적인 값/조건이 누락된 요구사항
+- TBD로 남아있는 항목
 
-Example:
-> WARNING: **[Ambiguous]** FR3 says "specific image assets require further discussion (TBD)".
-> Must be finalized before development starts.
-> Location: FR3
+예시:
+> WARNING: **[모호]** FR3에서 "특정 이미지 에셋은 추가 논의 필요(TBD)"라고 명시.
+> 개발 시작 전에 확정되어야 합니다.
+> 위치: FR3
 
-## 3. Missing Edge Cases / Omitted Scenarios
-Find unhandled cases in documented flows.
-- Missing error/failure scenarios
-- Unaddressed user state combinations
-- Concurrency/timing issues
+## 3. 누락된 엣지 케이스 / 생략된 시나리오
+문서화된 흐름에서 처리되지 않은 케이스를 찾습니다.
+- 누락된 오류/실패 시나리오
+- 다루지 않은 사용자 상태 조합
+- 동시성/타이밍 문제
 
-Example:
-> WARNING: **[Missing]** When network disconnects right after reservation completion,
-> server sees success but client perceives failure — this case is not in test scenarios.
-> Location: QA Considerations > Test Scenarios
+예시:
+> WARNING: **[누락]** 예약 완료 직후 네트워크가 끊어졌을 때
+> 서버는 성공으로 처리했지만 클라이언트는 실패로 인식하는 케이스가 테스트 시나리오에 없음.
+> 위치: QA 고려사항 > 테스트 시나리오
 
-## 4. Success Metrics / Measurability Issues
-Review realism of target numbers and specificity of measurement methods.
-- Metrics with unclear measurement methods
-- Metrics lacking current values to judge achievement
-- Misaligned causal relationships between metrics
+## 4. 성공 지표 / 측정 가능성 문제
+목표 수치의 현실성과 측정 방법의 구체성을 검토합니다.
+- 측정 방법이 불명확한 지표
+- 달성 여부 판단을 위한 현재 값이 없는 지표
+- 지표 간 인과 관계가 맞지 않는 경우
 
-## 5. Priority / Dependency Issues
-Find problems with feature dependencies or priority placement.
-- P0 feature depending on P1 feature
-- Growth Phase features conflicting with MVP features
-- Features that should come first but are placed later
+## 5. 우선순위 / 의존성 문제
+기능 의존성이나 우선순위 배치의 문제를 찾습니다.
+- P0 기능이 P1 기능에 의존하는 경우
+- 성장 단계 기능이 MVP 기능과 충돌하는 경우
+- 먼저 와야 할 기능이 나중에 배치된 경우
 
-## 6. Technical Risks
-Find implementation concerns.
-- Inadequate concurrency/race condition handling
-- Gap between performance targets and feature complexity
-- Missing parts of API design
+## 6. 기술적 위험
+구현 관련 우려사항을 찾습니다.
+- 동시성/레이스 컨디션 처리 미흡
+- 성능 목표와 기능 복잡성 간의 괴리
+- API 설계의 누락된 부분
 
-## Summary
+## 요약
 
-| Severity | Count | Key Issues |
-|----------|-------|------------|
-| CRITICAL (must fix) | N | ... |
-| WARNING (recommend fix) | N | ... |
-| INFO (can improve) | N | ... |
+| 심각도 | 건수 | 주요 이슈 |
+|--------|------|-----------|
+| CRITICAL (반드시 수정) | N | ... |
+| WARNING (수정 권장) | N | ... |
+| INFO (개선 가능) | N | ... |
 ```
 
-### Feedback Loop
+### 피드백 루프
 
-#### 5. Request Feedback
+#### 5. 피드백 요청
 
-After summary (+ analysis report in Analyze Mode) output, request feedback for editing the original PRD (in {communication_language}).
+요약(+ Analyze Mode의 경우 분석 보고서) 출력 후, 원본 PRD 편집을 위한 피드백을 요청합니다 ({communication_language}로).
 
 ```
 ---
-If there are parts to modify/improve in the original PRD, please provide feedback.
-If none, enter "done".
+원본 PRD에서 수정/개선할 부분이 있으면 피드백을 제공해 주세요.
+없으면 "done"을 입력하세요.
 
-Examples:
-- "Fix the conflict issue #1 from the analysis report"
-- "Success metrics are missing DAU. Add it."
-- "Reservation failure UX policy is vague. Make it specific."
-- "Change the error message in FR17 requirement."
+예시:
+- "분석 보고서 #1번 충돌 문제를 수정해 주세요"
+- "성공 지표에 DAU가 빠져 있습니다. 추가해 주세요."
+- "예약 실패 UX 정책이 모호합니다. 구체적으로 작성해 주세요."
+- "FR17 요구사항의 오류 메시지를 변경해 주세요."
 ```
 
-#### 6. Edit Original PRD
+#### 6. 원본 PRD 편집
 
-When user provides feedback:
+사용자가 피드백을 제공하면:
 
-1. **Find the relevant section in the original PRD file.**
-   - Read the original PRD file selected in step 2 to locate the edit target.
+1. **원본 PRD 파일에서 해당 섹션을 찾습니다.**
+   - 2단계에서 선택한 원본 PRD 파일을 읽어 편집 대상을 찾습니다.
 
-2. **Show edit preview** (in {communication_language}):
+2. **편집 미리보기를 표시합니다** ({communication_language}로):
    ```
-   Edit target: prd/<project-name>/<filename>
+   편집 대상: prd/<project-name>/<filename>
 
-   Changes:
-   - (before) ...
-   + (after) ...
+   변경 사항:
+   - (이전) ...
+   + (이후) ...
 
-   Apply these changes?
+   이 변경 사항을 적용하시겠습니까?
    ```
 
-3. **Edit the original file after user approval.**
-   - On approval: edit the original PRD file using the Edit tool.
-   - On rejection: collect additional feedback on the edit direction.
+3. **사용자 승인 후 원본 파일을 편집합니다.**
+   - 승인 시: Edit tool을 사용하여 원본 PRD 파일을 편집합니다.
+   - 거부 시: 편집 방향에 대한 추가 피드백을 수집합니다.
 
-4. **Request feedback again after edit** (in {communication_language}):
+4. **편집 후 다시 피드백을 요청합니다** ({communication_language}로):
    ```
    ---
-   Original PRD has been updated.
-   If there are more parts to modify, please provide feedback. If none, enter "done".
+   원본 PRD가 업데이트되었습니다.
+   수정할 부분이 더 있으면 피드백을 제공해 주세요. 없으면 "done"을 입력하세요.
    ```
 
-Repeat this process until user enters "done".
+사용자가 "done"을 입력할 때까지 이 과정을 반복합니다.
 
-#### 7. Completion
+#### 7. 완료
 
-Output (in {communication_language}):
+({communication_language}로) 출력:
 ```
-PRD editing complete.
-Modified file: prd/<project-name>/<filename>
+PRD 편집이 완료되었습니다.
+수정된 파일: prd/<project-name>/<filename>
 ```
 
-## Outputs
+## 출력물
 
-- Modified PRD file: `prd/<project-name>/<filename>`
+- 수정된 PRD 파일: `prd/<project-name>/<filename>`
 
-## Constraints
+## 제약사항
 
-1. **Always cite evidence.** Specify the exact location in the original PRD (section name, FR number, table, etc.) with a `Location:` marker.
-2. **Classify severity.**
-   - CRITICAL: Conflicts/omissions that must be resolved before development
-   - WARNING: Should fix, but development can proceed
-   - INFO: Suggestions for quality improvement
-3. **Provide fix suggestions.** Don't just point out problems — concretely suggest how to fix them.
-4. **Don't force issues.** Mark categories with genuinely no problems as "No issues found."
+1. **항상 근거를 인용합니다.** `Location:` 마커와 함께 원본 PRD의 정확한 위치(섹션 이름, FR 번호, 표 등)를 명시합니다.
+2. **심각도를 분류합니다.**
+   - CRITICAL: 개발 전에 반드시 해결해야 하는 충돌/누락
+   - WARNING: 수정해야 하지만 개발 진행은 가능
+   - INFO: 품질 개선을 위한 제안
+3. **수정 제안을 제공합니다.** 문제를 지적하는 데 그치지 않고 구체적인 수정 방법을 제안합니다.
+4. **억지로 문제를 찾지 않습니다.** 진정으로 문제가 없는 카테고리는 "문제 없음"으로 표시합니다.
 
 $ARGUMENTS

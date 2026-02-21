@@ -1,107 +1,107 @@
 ---
-description: "Generate Specs 4-file from BMad artifacts (Brownfield L4 + Entity Dictionary)"
+description: "BMad 산출물에서 명세 4파일을 생성합니다 (Brownfield L4 + Entity Dictionary)"
 ---
 
-# /specs — Specs Generation
+# /specs — 명세 생성
 
-> **Dispatch Target**: `@brownfield-scanner` (L4) + `@deliverable-generator` (specs-only)
+> **디스패치 대상**: `@brownfield-scanner` (L4) + `@deliverable-generator` (specs-only)
 
-## Purpose
+## 목적
 
-Generate Specs 4-file from BMad artifacts.
+BMad 산출물에서 명세 4파일을 생성합니다.
 
-## When to Use
+## 사용 시점
 
-After BMad Phase 3 artifacts are ready and pass Implementation Readiness.
+BMad Phase 3 산출물이 준비되고 Implementation Readiness를 통과한 후 사용합니다.
 
-## Inputs
+## 입력
 
-`$ARGUMENTS`: feature-name (kebab-case, optional)
-- `/specs feature-name` — specify feature name
-- `/specs` (no args) — auto-detect BMad artifacts + suggest feature-name
+`$ARGUMENTS`: feature-name (kebab-case, 선택사항)
+- `/specs feature-name` — 피처 이름을 직접 지정
+- `/specs` (인수 없음) — BMad 산출물 자동 감지 + feature-name 제안
 
-## Procedure
+## 절차
 
-Load config per Language Protocol in jdd-sprint-guide.md.
+jdd-sprint-guide.md의 Language Protocol에 따라 설정을 로드합니다.
 
-### Step 0: Feature Directory + Artifact Discovery
+### Step 0: 피처 디렉토리 + 산출물 탐색
 
-#### Step 0a: Determine Feature Name
+#### Step 0a: 피처 이름 결정
 
-1. Parse `$ARGUMENTS`:
-   - **feature-name provided** → `feature = $ARGUMENTS`, validate then proceed to Step 0b
-   - **No args** → Auto-detect (below)
+1. `$ARGUMENTS` 파싱:
+   - **feature-name 제공됨** → `feature = $ARGUMENTS`, 유효성 검사 후 Step 0b로 진행
+   - **인수 없음** → 자동 감지 (아래 참조)
 
-2. **Auto-detect** (when no args):
-   a. Check for `_bmad-output/planning-artifacts/prd.md`
-   b. If found: extract feature-name from PRD title (frontmatter `title` or first H1, convert to kebab-case)
-   c. Confirm with user (in {communication_language}):
+2. **자동 감지** (인수 없을 때):
+   a. `_bmad-output/planning-artifacts/prd.md` 확인
+   b. 발견되면: PRD 제목(frontmatter `title` 또는 첫 번째 H1)에서 feature-name 추출 (kebab-case로 변환)
+   c. 사용자에게 확인 ({communication_language}로):
       ```
-      BMad planning artifacts found.
-      PRD: "{PRD title}" → feature-name: {extracted name}
+      BMad 기획 산출물을 찾았습니다.
+      PRD: "{PRD 제목}" → feature-name: {추출된 이름}
 
-      [1] Proceed with {extracted name} (Recommended)
-      [2] Enter a different name
+      [1] {추출된 이름}으로 진행 (권장)
+      [2] 다른 이름 입력
       ```
-   d. If not found: display usage (in {communication_language}) and exit:
+   d. 발견되지 않으면: 사용법 출력 ({communication_language}로) 후 종료:
       ```
-      Usage: /specs feature-name
+      사용법: /specs feature-name
 
-      Examples:
-        /specs tutor-exclusion     — work in specs/tutor-exclusion/
-        /specs rating-popup        — work in specs/rating-popup/
+      예시:
+        /specs tutor-exclusion     — specs/tutor-exclusion/ 에서 작업
+        /specs rating-popup        — specs/rating-popup/ 에서 작업
 
-      After BMad 12-step: /specs {feature-name}
-      To start from references: /sprint {feature-name}
+      BMad 12단계 완료 후: /specs {feature-name}
+      참고 자료에서 시작: /sprint {feature-name}
       ```
 
-3. Validate feature-name: `/^[a-z0-9][a-z0-9-]*$/`
+3. feature-name 유효성 검사: `/^[a-z0-9][a-z0-9-]*$/`
 
-#### Step 0b: Planning Artifacts Discovery
+#### Step 0b: 기획 산출물 탐색
 
-Search for artifacts in the following order:
+다음 순서로 산출물을 탐색합니다:
 
-**Path 1**: `specs/{feature}/planning-artifacts/` (Sprint Kit default)
-- Check for prd.md, architecture.md, epics*.md
+**Path 1**: `specs/{feature}/planning-artifacts/` (Sprint Kit 기본값)
+- prd.md, architecture.md, epics*.md 확인
 
-**Path 2**: `_bmad-output/planning-artifacts/` (BMad Guided output)
-- Search only if Path 1 yields nothing
-- If found: create `specs/{feature}/planning-artifacts/` directory + copy files
-- File name mapping: `epics.md` → `epics-and-stories.md`
-- Optional files: `product-brief.md`, `ux-design-specification.md` (copy if present)
+**Path 2**: `_bmad-output/planning-artifacts/` (BMad Guided 출력)
+- Path 1에서 아무것도 없을 때만 탐색
+- 발견되면: `specs/{feature}/planning-artifacts/` 디렉토리 생성 + 파일 복사
+- 파일명 매핑: `epics.md` → `epics-and-stories.md`
+- 선택적 파일: `product-brief.md`, `ux-design-specification.md` (있으면 복사)
 
-**Discovery failure**: If neither path has artifacts, error (in {communication_language}):
+**탐색 실패**: 두 경로 모두 산출물이 없는 경우, 오류 출력 ({communication_language}로):
 ```
-Cannot find planning artifacts.
+기획 산출물을 찾을 수 없습니다.
 
-Checked locations:
-  1. specs/{feature}/planning-artifacts/  (Sprint route)
-  2. _bmad-output/planning-artifacts/     (BMad Guided route)
+확인한 위치:
+  1. specs/{feature}/planning-artifacts/  (Sprint 경로)
+  2. _bmad-output/planning-artifacts/     (BMad Guided 경로)
 
-BMad 12-step: /create-product-brief → /create-prd → /create-architecture → /create-epics
-Sprint route: /sprint {feature-name}
+BMad 12단계: /create-product-brief → /create-prd → /create-architecture → /create-epics
+Sprint 경로: /sprint {feature-name}
 ```
 
-#### Step 0c: Artifact Completeness Check
+#### Step 0c: 산출물 완전성 검사
 
-| Artifacts Present | Status | Guidance |
+| 존재하는 산출물 | 상태 | 안내 |
 |---|---|---|
-| PRD + Architecture + Epics | **Complete** — proceed to Step 0d | — |
-| PRD + Architecture (no Epics) | **Partial** | "Epics required. Generate with `/create-epics`." |
-| PRD only (no Architecture) | **Partial** | "Architecture and Epics required. Generate with `/create-architecture` → `/create-epics`." |
-| No PRD | **Incomplete** | "PRD required. Start with `/create-prd`." |
+| PRD + Architecture + Epics | **완전** — Step 0d로 진행 | — |
+| PRD + Architecture (Epics 없음) | **부분적** | "Epics가 필요합니다. `/create-epics`로 생성하세요." |
+| PRD만 있음 (Architecture 없음) | **부분적** | "Architecture와 Epics가 필요합니다. `/create-architecture` → `/create-epics` 순서로 생성하세요." |
+| PRD 없음 | **불완전** | "PRD가 필요합니다. `/create-prd`로 시작하세요." |
 
-On partial/incomplete status: display error message (in {communication_language}) and exit.
+부분적/불완전 상태인 경우: 오류 메시지 출력 ({communication_language}로) 후 종료.
 
-#### Step 0d: sprint-input.md Check + Generation
+#### Step 0d: sprint-input.md 확인 + 생성
 
-> **Order dependency**: This step must run before Step 1 (Brownfield). Brownfield Scanner (Broad Scan) references sprint-input.md as input.
+> **순서 의존성**: 이 단계는 Step 1 (Brownfield) 전에 반드시 실행되어야 합니다. Brownfield Scanner (Broad Scan)는 sprint-input.md를 입력으로 참조합니다.
 
-1. Check for `specs/{feature}/inputs/sprint-input.md`
-2. **If exists**: check `tracking_source` field.
-   - `tracking_source` present → use existing value (do not edit file)
-   - `tracking_source` missing → add `tracking_source: success-criteria` to frontmatter
-3. **If missing**: create `specs/{feature}/inputs/` directory + minimal sprint-input.md:
+1. `specs/{feature}/inputs/sprint-input.md` 확인
+2. **존재하는 경우**: `tracking_source` 필드 확인.
+   - `tracking_source` 있음 → 기존 값 사용 (파일 수정하지 않음)
+   - `tracking_source` 없음 → frontmatter에 `tracking_source: success-criteria` 추가
+3. **없는 경우**: `specs/{feature}/inputs/` 디렉토리 생성 + 최소 sprint-input.md 생성:
 
 ```yaml
 ---
@@ -124,13 +124,13 @@ flags:
 specs-direct: Specs generated directly from BMad planning artifacts (Sprint Phase 0 bypassed)
 ```
 
-> `goals: []` is handled by Scope Gate's Goals Fallback (extracts from PRD Success Criteria).
-> `brief_grade: A` assumes BMad/manual artifacts have been user-verified.
-> `complexity` field omitted — not consumed by downstream agents in specs-direct route.
+> `goals: []`는 Scope Gate의 Goals Fallback이 처리합니다 (PRD Success Criteria에서 추출).
+> `brief_grade: A`는 BMad/수동 산출물이 사용자에 의해 검증되었다고 가정합니다.
+> `complexity` 필드는 생략 — specs-direct 경로의 다운스트림 에이전트가 사용하지 않습니다.
 
-### Step 1: Brownfield L4 Append
+### Step 1: Brownfield L4 추가
 
-Invoke `@brownfield-scanner` in targeted mode to add L4 (Code Layer):
+`@brownfield-scanner`를 targeted 모드로 실행하여 L4 (코드 레이어)를 추가합니다:
 
 ```
 Task(subagent_type: "general-purpose", model: "sonnet")
@@ -146,44 +146,44 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     Note: Scanner reads external_resources.external_repos from sprint-input.md to discover external data sources."
 ```
 
-> Frozen snapshot copy is handled by `@deliverable-generator` Stage 2.
+> Frozen snapshot 복사는 `@deliverable-generator` Stage 2에서 처리합니다.
 
-**Behavior based on existing Brownfield state**:
+**기존 Brownfield 상태에 따른 동작**:
 
-| Existing State | Action |
+| 기존 상태 | 동작 |
 |----------------|--------|
-| None | Suggest Brownfield scan (see below) |
-| L1+L2 only | Targeted Scan to add L3+L4 |
-| L1~L3 | Targeted Scan to add L4 only |
-| L1~L4 | Copy frozen snapshot only (skip Targeted Scan) |
+| 없음 | Brownfield 수집 제안 (아래 참조) |
+| L1+L2만 있음 | L3+L4 추가를 위한 Targeted Scan 실행 |
+| L1~L3 있음 | L4만 추가를 위한 Targeted Scan 실행 |
+| L1~L4 있음 | Frozen snapshot 복사만 수행 (Targeted Scan 생략) |
 
-**When no Brownfield exists**:
+**Brownfield가 없을 때**:
 
-First, perform quick topology detection (same logic as sprint.md Step 0f-3):
-- Detect build tool files + .mcp.json
+먼저 빠른 토폴로지 감지를 수행합니다 (sprint.md Step 0f-3과 동일한 로직):
+- 빌드 도구 파일 + .mcp.json 감지
 
-| Detection Result | Action |
+| 감지 결과 | 동작 |
 |------------------|--------|
-| greenfield (no build tools, no MCP) | Proceed to Step 2 without brownfield-context.md |
-| Build tools or MCP present | AskUserQuestion (in {communication_language}): "Existing system detected. Running Brownfield scan enables more accurate Specs." [1] Run (Broad + Targeted) [2] Skip |
+| greenfield (빌드 도구 없음, MCP 없음) | brownfield-context.md 없이 Step 2로 진행 |
+| 빌드 도구 또는 MCP 존재 | AskUserQuestion ({communication_language}로): "기존 시스템이 감지되었습니다. Brownfield 수집을 실행하면 더 정확한 명세를 생성할 수 있습니다." [1] 실행 (Broad + Targeted) [2] 건너뛰기 |
 
-[1] selected:
-1. Determine topology using sprint.md Step 0f-3 logic (build tools + .mcp.json + monorepo files)
-2. Detect `--add-dir` external repo paths using sprint.md Step 0f-2A logic → record in sprint-input.md `external_resources.external_repos`
-3. Run @brownfield-scanner broad mode → generate L1+L2
-   - `sprint_input_path: specs/{feature}/inputs/sprint-input.md` (created in Step 0d, with external_repos recorded)
-   - `topology: {detected topology}`
-   - `local_codebase_root: {if topology is co-located/msa/monorepo then '.' else null}`
-4. Follow with Targeted Scan (L3+L4, passing same topology) → append to brownfield-context.md
-5. **Update sprint-input.md frontmatter**:
-   - `brownfield_status` → `configured` / `local-only` based on scan results
-   - `brownfield_topology` → detection result (`standalone` / `co-located` / `msa` / `monorepo`)
+[1] 선택 시:
+1. sprint.md Step 0f-3 로직으로 토폴로지 결정 (빌드 도구 + .mcp.json + 모노레포 파일)
+2. sprint.md Step 0f-2A 로직으로 `--add-dir` 외부 레포 경로 감지 → sprint-input.md `external_resources.external_repos`에 기록
+3. @brownfield-scanner broad 모드 실행 → L1+L2 생성
+   - `sprint_input_path: specs/{feature}/inputs/sprint-input.md` (Step 0d에서 생성, external_repos 기록됨)
+   - `topology: {감지된 토폴로지}`
+   - `local_codebase_root: {토폴로지가 co-located/msa/monorepo인 경우 '.' 아니면 null}`
+4. Targeted Scan 실행 (L3+L4, 동일한 토폴로지 전달) → brownfield-context.md에 추가
+5. **sprint-input.md frontmatter 업데이트**:
+   - `brownfield_status` → 수집 결과에 따라 `configured` / `local-only`
+   - `brownfield_topology` → 감지 결과 (`standalone` / `co-located` / `msa` / `monorepo`)
 
-[2] selected: proceed to Step 2 without scan (sprint-input.md retains default `greenfield`)
+[2] 선택 시: 수집 없이 Step 2로 진행 (sprint-input.md는 기본값 `greenfield` 유지)
 
-### Step 2: Specs Generation
+### Step 2: 명세 생성
 
-Invoke `@deliverable-generator` in specs-only mode:
+`@deliverable-generator`를 specs-only 모드로 실행합니다:
 
 ```
 Task(subagent_type: "general-purpose", model: "sonnet")
@@ -195,18 +195,18 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     mode: specs-only"
 ```
 
-This mode generates Entity Dictionary (Stage 1) + Specs 4-file (Stage 2) only:
-- Entity Dictionary for naming consistency
-- requirements.md (PRD → requirements)
-- design.md (Architecture → design)
-- tasks.md (Epics → parallel tasks + Entropy + File Ownership)
+이 모드는 Entity Dictionary (Stage 1) + 명세 4파일 (Stage 2)만 생성합니다:
+- 명명 일관성을 위한 Entity Dictionary
+- requirements.md (PRD → 요구사항)
+- design.md (Architecture → 설계)
+- tasks.md (Epics → 병렬 태스크 + Entropy + File Ownership)
 
-### Step 3: Plan Output
+### Step 3: 결과물 출력
 
-Present generated `tasks.md` to user for approval.
-After approval, proceed to `/preview` (Deliverables generation).
+생성된 `tasks.md`를 사용자에게 제시하여 승인을 받습니다.
+승인 후 `/preview` (Deliverables 생성)로 진행합니다.
 
-## Outputs
+## 출력물
 - `specs/{feature-name}/brownfield-context.md`
 - `specs/{feature-name}/requirements.md`
 - `specs/{feature-name}/design.md`

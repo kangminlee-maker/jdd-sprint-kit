@@ -1,39 +1,39 @@
 ---
-description: "Entropy-based 3-Phase verification pipeline (Auto + AI Judge + Visual)"
+description: "Entropy 기반 3단계 검증 파이프라인 (자동화 + AI Judge + 시각적 검증)"
 ---
 
-# /validate — Multi-Phase Verification Pipeline
+# /validate — 다단계 검증 파이프라인
 
-> **Dispatch Target**: `@judge-quality` + `@judge-security` + `@judge-business` (parallel)
+> **디스패치 대상**: `@judge-quality` + `@judge-security` + `@judge-business` (병렬)
 
-## Purpose
+## 목적
 
-A multi-dimensional verification pipeline that adjusts verification density based on Entropy Tolerance.
+Entropy Tolerance에 따라 검증 밀도를 조정하는 다차원 검증 파이프라인.
 
-## When to Use
+## 사용 시점
 
-After Worker implementation is complete. Run after PARALLEL completion + merge.
+Worker 구현 완료 후. 병렬 실행 완료 + 머지 이후에 실행.
 
-## Inputs
+## 입력
 
-`$ARGUMENTS`: not used
+`$ARGUMENTS`: 사용하지 않음
 
-Parameters (when invoked from auto-sprint):
-- `specs_root`: Base directory for specs files. Default: `specs/{feature}/`. After Crystallize: `specs/{feature}/reconciled/`.
+파라미터 (auto-sprint에서 호출 시):
+- `specs_root`: 명세 파일의 기본 디렉토리. 기본값: `specs/{feature}/`. Crystallize 이후: `specs/{feature}/reconciled/`.
 
-Prerequisites:
-- PARALLEL complete: all Worker tasks done
-- Code merged into main branch
-- Build succeeds
+사전 조건:
+- 병렬 실행 완료: 모든 Worker 태스크 완료
+- 코드가 main 브랜치에 머지됨
+- 빌드 성공
 
-**Path resolution**: All specs file references in this command use `{specs_root}` as base path. When `specs_root` is not provided, default to `specs/{feature}/`. This ensures Judges verify against reconciled artifacts when Crystallize was used.
+**경로 해석**: 이 커맨드의 모든 명세 파일 참조는 `{specs_root}`를 기본 경로로 사용. `specs_root`가 제공되지 않으면 `specs/{feature}/`를 기본값으로 사용. 이를 통해 Crystallize 사용 시 Judge가 reconciled 산출물을 기준으로 검증하도록 보장.
 
-## Procedure
+## 절차
 
-Load config per Language Protocol in jdd-sprint-guide.md.
+jdd-sprint-guide.md의 언어 프로토콜에 따라 설정 로드.
 
-### Phase 1: Automated Verification (all tasks)
-Applied to all Entropy levels:
+### Phase 1: 자동화 검증 (전체 태스크)
+모든 Entropy 레벨에 적용:
 
 ```bash
 npm run lint
@@ -42,41 +42,41 @@ npm run test
 npm run build
 ```
 
-Phase 1 failure → request fix from file's owning Worker → re-run Phase 1 after fix
+Phase 1 실패 → 해당 파일 소유 Worker에게 수정 요청 → 수정 후 Phase 1 재실행
 
-### Phase 2: AI Judge Verification (Medium + Low Entropy)
-Run Judge agents in parallel. Pass each Judge:
-- `changed_files`: result of `git diff --name-only {base_branch}...HEAD`
-- `feature_dir`: `{specs_root}` (default: `specs/{feature}/`)
-- `brownfield_path`: `{specs_root}/brownfield-context.md` (or `{specs_root}/planning-artifacts/brownfield-context.md` for reconciled/)
+### Phase 2: AI Judge 검증 (Medium + Low Entropy)
+Judge 에이전트를 병렬로 실행. 각 Judge에 다음을 전달:
+- `changed_files`: `git diff --name-only {base_branch}...HEAD` 결과
+- `feature_dir`: `{specs_root}` (기본값: `specs/{feature}/`)
+- `brownfield_path`: `{specs_root}/brownfield-context.md` (또는 reconciled/ 사용 시 `{specs_root}/planning-artifacts/brownfield-context.md`)
 
-1. **Code Quality Judge** (`judge-quality`):
-   - Code structure, patterns, duplication
-   - Project convention compliance
-   - **Existing codebase pattern compliance** (based on configured client-docs MCP)
-   - Specmatic API contract final verification
+1. **코드 품질 Judge** (`judge-quality`):
+   - 코드 구조, 패턴, 중복
+   - 프로젝트 컨벤션 준수
+   - **기존 시스템 코드베이스 패턴 준수** (설정된 client-docs MCP 기반)
+   - Specmatic API 계약 최종 검증
 
-2. **Security Judge** (`judge-security`):
-   - OWASP Top 10 vulnerability check
-   - Injection, XSS, auth bypass
-   - **Consistency with existing auth/permission patterns** (based on configured backend-docs MCP)
+2. **보안 Judge** (`judge-security`):
+   - OWASP Top 10 취약점 점검
+   - 인젝션, XSS, 인증 우회
+   - **기존 시스템 인증/권한 패턴과의 일관성** (설정된 backend-docs MCP 기반)
 
-3. **Business Logic Judge** (`judge-business`):
-   - Implementation verification against BMad PRD acceptance criteria
-   - Architecture ADR compliance
-   - **Alignment with existing domain policies/customer journeys** (based on configured backend-docs, svc-map MCP)
+3. **비즈니스 로직 Judge** (`judge-business`):
+   - BMad PRD 수용 기준 대비 구현 검증
+   - Architecture ADR 준수
+   - **기존 시스템 도메인 정책/고객 여정과의 정합성** (설정된 backend-docs, svc-map MCP 기반)
 
-**Low Entropy tasks**: Judges operate in Adversarial mode — thorough review, findings classified by severity:
-- `CRITICAL`: Functional failure or security vulnerability. Must fix.
-- `HIGH`: Design violation or performance issue. Must fix.
-- `SUGGESTION`: Style, refactoring suggestions. Record only, does not block.
+**Low Entropy 태스크**: Judge는 Adversarial 모드로 동작 — 철저한 리뷰, 발견 사항을 심각도별로 분류:
+- `CRITICAL`: 기능 장애 또는 보안 취약점. 반드시 수정.
+- `HIGH`: 설계 위반 또는 성능 문제. 반드시 수정.
+- `SUGGESTION`: 스타일, 리팩토링 제안. 기록만 하며 블록하지 않음.
 
-**Adversarial exit condition**: PASS when 0 new CRITICAL/HIGH findings. SUGGESTION-only means pass.
+**Adversarial 종료 조건**: 새로운 CRITICAL/HIGH 발견이 0건일 때 PASS. SUGGESTION만 있으면 통과.
 
-Judge invocation — **must invoke all 3 Tasks simultaneously in a single response**.
-Note: `{specs_root}` defaults to `specs/{feature}/`. After Crystallize: `specs/{feature}/reconciled/`.
-For brownfield_path: use `{specs_root}/brownfield-context.md` if exists, otherwise `{specs_root}/planning-artifacts/brownfield-context.md`.
-sprint_input_path always uses original `specs/{feature}/inputs/sprint-input.md` (not affected by Crystallize).
+Judge 호출 — **단일 응답에서 3개의 Task를 반드시 동시에 호출해야 함**.
+참고: `{specs_root}` 기본값은 `specs/{feature}/`. Crystallize 이후: `specs/{feature}/reconciled/`.
+brownfield_path: `{specs_root}/brownfield-context.md` 파일이 존재하면 해당 경로 사용, 없으면 `{specs_root}/planning-artifacts/brownfield-context.md` 사용.
+sprint_input_path는 항상 원본 `specs/{feature}/inputs/sprint-input.md`를 사용 (Crystallize의 영향을 받지 않음).
 
 ```
 Task(subagent_type: "judge-quality", model: "sonnet")
@@ -98,48 +98,48 @@ Task(subagent_type: "judge-business", model: "sonnet")
     brownfield_path: {specs_root}/brownfield-context.md (fallback: {specs_root}/planning-artifacts/brownfield-context.md)
     sprint_input_path: specs/{feature}/inputs/sprint-input.md"
 ```
-→ Collect all 3 results
-→ Critical finding present → FAIL
-→ Classify each finding's `failure_source`:
-  - `local`: Worker can fix (code bugs, test failures, etc.)
-  - `upstream:architecture`: Architecture ADR violation, design mismatch
-  - `upstream:prd`: PRD AC contradiction, requirements conflict
-→ `local` findings → request Worker fix → re-run only affected Judge
-→ `upstream` findings → forward to Circuit Breaker (include failure_source)
+→ 3개 결과 모두 수집
+→ CRITICAL 발견 존재 시 → FAIL
+→ 각 발견 사항의 `failure_source` 분류:
+  - `local`: Worker가 수정 가능 (코드 버그, 테스트 실패 등)
+  - `upstream:architecture`: Architecture ADR 위반, 설계 불일치
+  - `upstream:prd`: PRD AC 모순, 요구사항 충돌
+→ `local` 발견 사항 → Worker에게 수정 요청 → 영향받은 Judge만 재실행
+→ `upstream` 발견 사항 → Circuit Breaker로 전달 (failure_source 포함)
 
-### Phase 3: Visual Verification (UI-related tasks)
-Applied only to tasks with UI:
-1. Visual regression check against BMad UX Design
-2. **Change verification against existing service map screens** (configured svc-map MCP screenshots)
-3. **Match verification against latest Figma design mockups** (`figma` MCP)
-4. Responsive design check
-5. Basic accessibility check
+### Phase 3: 시각적 검증 (UI 관련 태스크)
+UI가 있는 태스크에만 적용:
+1. BMad UX 설계 대비 시각적 회귀 점검
+2. **기존 시스템 서비스 맵 화면 대비 변경 사항 검증** (설정된 svc-map MCP 스크린샷)
+3. **최신 Figma 디자인 목업 대비 일치 여부 검증** (`figma` MCP)
+4. 반응형 디자인 점검
+5. 기본 접근성 점검
 
-### Entropy-Based Phase Matrix
+### Entropy 기반 단계 매트릭스
 
 | Entropy | Phase 1 | Phase 2 | Phase 3 |
 |---------|---------|---------|---------|
 | High    | O       | -       | -       |
-| Medium  | O       | O       | (if UI) |
-| Low     | O       | O (Adversarial) | (if UI) |
+| Medium  | O       | O       | (UI 있을 때) |
+| Low     | O       | O (Adversarial) | (UI 있을 때) |
 
-## Constraints
+## 제약 사항
 
-### Fix Process
-After `/parallel` completion, Workers are inactive. On verification failure, follow this procedure:
-1. Judge generates failure report (file path + line number + severity + fix suggestion)
-2. **Create new fix tasks** (TaskCreate) per failed task
-3. Re-run small-scale `/parallel` for fix implementation
-4. Re-run `/validate` for re-verification
+### 수정 프로세스
+`/parallel` 완료 후 Worker는 비활성 상태. 검증 실패 시 다음 절차 수행:
+1. Judge가 실패 보고서 생성 (파일 경로 + 라인 번호 + 심각도 + 수정 제안)
+2. 실패한 태스크별로 **새 수정 태스크 생성** (TaskCreate)
+3. 수정 구현을 위한 소규모 `/parallel` 재실행
+4. 재검증을 위한 `/validate` 재실행
 
-### Retry Limits
-- Max **5 iterations** of the above cycle
-- Adversarial mode (Low Entropy): failure determined by CRITICAL/HIGH only. SUGGESTIONs do not count toward loop
-- **5 cumulative failures** or **3 consecutive failures in same category** → Circuit Breaker auto-triggers
-- On Circuit Breaker trigger → run `/circuit-breaker`
+### 재시도 한도
+- 위 사이클 최대 **5회 반복**
+- Adversarial 모드 (Low Entropy): CRITICAL/HIGH 기준으로만 실패 판정. SUGGESTION은 루프 횟수에 미산입
+- **누적 5회 실패** 또는 **동일 카테고리에서 연속 3회 실패** → Circuit Breaker 자동 발동
+- Circuit Breaker 발동 시 → `/circuit-breaker` 실행
 
-## Outputs
-Verification result report:
+## 출력
+검증 결과 보고서:
 ```markdown
 ## VALIDATE Report: {feature}
 - Phase 1 (Auto): PASS/FAIL — [details]
