@@ -129,13 +129,40 @@ Complete Specs = translate(Prototype) + carry-forward(PRD, Architecture, Brownfi
 
 ```
 Delta = Complete Specs - Brownfield
-      = [translate(Prototype) + carry-forward] - Brownfield
+      = [translate(Prototype, Constraints) + carry-forward] - Brownfield
 ```
 
 Where:
-- **translate(Prototype)**: All user grammar elements converted to development grammar
+- **translate(Prototype, Constraints)**: All user grammar elements converted to development grammar, parameterized by brownfield Constraint Profile
 - **carry-forward**: Non-visible requirements (NFR, security, migration, operations)
-- **Brownfield**: Existing system described in development grammar (brownfield-context.md L1-L4)
+- **Brownfield**: Existing system described in development grammar (brownfield-context.md L1-L4 + Constraint Profile)
+
+### Precise Delta
+
+The quality of delta computation depends on the precision of both the **target** (translated prototype) and the **baseline** (brownfield). Two levels of brownfield precision exist:
+
+| Level | Brownfield Content | Delta Precision | Sufficient For |
+|-------|-------------------|-----------------|---------------|
+| **Structural** (L1-L4) | Domain concepts, APIs, components, file paths | "What to touch" | Planning, task decomposition, impact analysis |
+| **Constraint** (L1-L4 + CP) | Above + nullable rules, enum DB values, naming patterns, transaction managers, lock patterns | "What rules to respect while touching" | Translation accuracy, migration planning, implementation correctness |
+
+Without Constraint Profile, translation may produce specs that conflict with existing code (e.g., using `UNLIMITED` when the DB stores `UNLIMIT`, or assuming a field is nullable when it is not). The Constraint Profile bridges this gap by providing **rule-level** brownfield data to the translation function.
+
+```
+translate(Prototype, ∅)           → specs may conflict with existing code
+translate(Prototype, Constraints) → specs respect existing code patterns
+```
+
+### Brownfield Scanning: Two Purposes
+
+Brownfield scanning serves two fundamentally different purposes at different pipeline stages:
+
+| Purpose | Timing | Question Answered | Precision Level |
+|---------|--------|-------------------|-----------------|
+| **Direction scanning** | Phase 1 (Pass 1 + Pass 2) | "What exists in the system that affects our feature?" | Structural (L1-L4) + Constraint Profile bulk |
+| **Delta scanning** | Crystallize S2 | "Are there constraints for concepts added during JP2 iteration?" | Incremental CP only (delta concepts) |
+
+The Phase 1 scan collects both structural layers AND Constraint Profile in a single pass (constraints extracted during Stage 3 traversal — no additional file reads). The Crystallize scan is incremental — it only covers domain concepts that appeared in the prototype but were not in the Phase 1 CP.
 
 ### Delta Components
 
@@ -247,7 +274,7 @@ Prototype (original, JP2-approved)
 
 If the re-generated prototype structurally matches the original (same routes, same components, same API calls, same states), the translation was lossless. Differences indicate translation gaps.
 
-This is the Crystallize S5 (Cross-Artifact Consistency) check, reframed as a translation verification step.
+This is the Crystallize S7 (Cross-Artifact Consistency) check, reframed as a translation verification step.
 
 ---
 
@@ -270,6 +297,30 @@ The model degrades gracefully. For greenfield, delta IS the full spec. For brown
 
 This reframe has implications for Sprint Kit components including: Crystallize pipeline, design.md format, Specs as intermediate vs final artifact, handoff, Validate phase, translation rule completeness, and carry-forward mechanism.
 
+### 9.1 Constraint Profile as Translation Parameter
+
+Each Translation Rule (§3 table) has an implicit brownfield parameter. Constraint Profile makes this explicit:
+
+| Translation Rule | CP Parameter | Effect |
+|---|---|---|
+| Status badge → Entity enum | CP.6 Enum/State Values | Use existing DB-stored values instead of prototype display labels |
+| User action → API endpoint | CP.5 API Patterns | Follow existing versioning, path naming, response envelope |
+| Data displayed → API response | CP.1 Entity Constraints | Respect nullable, column types, FK relationships |
+| Error message → Error code | CP.2 Naming Conventions | Follow existing error code patterns |
+| Auto-behavior → Scheduler | CP.3 Transaction Patterns | Use existing transaction manager |
+| Permission → Auth middleware | CP.5 API Patterns (auth header) | Follow existing auth structure |
+
+Without CP, translation must guess these parameters — leading to specs that require post-hoc correction during implementation. With CP, translation is fully parameterized: `translate(element, CP) → spec`.
+
+### 9.2 Crystallize Validation Layer
+
+S3 (Constraint-Aware Validation) addresses a gap in the original pipeline: the translation input (prototype) was never validated against brownfield constraints before translation began. Two parallel validators catch different issue classes:
+
+- **Constraint Validator**: Catches conflicts between prototype assumptions and existing code rules (hypothesis: 30-40% of CRITICALs)
+- **Structural Validator**: Catches logic completeness issues within the prototype itself (hypothesis: 40-50% of CRITICALs)
+
+Combined catch rate hypothesis: 70-80% of CRITICAL issues before translation. These percentages are design targets, not empirically measured values. Actual catch rates will be calibrated after the first real Sprint execution (Phase 3-3). The remaining 20-30% are expected to be domain-specific or cross-cutting issues only discoverable through full team analysis.
+
 > Detailed re-evaluation and implementation plan: [`reviews/lld-gap-analysis-and-implementation-plan.md`](reviews/lld-gap-analysis-and-implementation-plan.md)
 
 ---
@@ -280,13 +331,13 @@ This reframe has implications for Sprint Kit components including: Crystallize p
 
 These are foundational beliefs that drive all Sprint Kit decisions. Updated to reflect the delta-driven design reframe.
 
-#### CP1: Human judgment is the only lasting asset (RETAINED)
+#### FP1: Human judgment is the only lasting asset (RETAINED)
 
 All AI artifacts are disposable and regenerable. Human input raises generation quality; human judgment sets direction. This principle is unchanged — it is the foundation of JDD.
 
 **Delta frame reinforcement**: In the delta frame, human judgment confirms the target state (JP2) and search direction (JP1). Everything else — translation, delta extraction, execution — is AI's domain.
 
-#### CP2: Prototype adapts to the system's actual user (NEW)
+#### FP2: Prototype adapts to the system's actual user (NEW)
 
 Prototype is NOT limited to visual UI mockups. The prototype form must match the system's actual user:
 - Human users → Visual prototype (React + MSW)
@@ -298,7 +349,7 @@ Prototype is NOT limited to visual UI mockups. The prototype form must match the
 
 **Implication**: `deliverable-generator.md` Stage 10 should be parameterized by user type, not hardcoded to React + MSW.
 
-#### CP3: Spec completeness controls non-determinism; graceful degradation manages the remainder (NEW)
+#### FP3: Spec completeness controls non-determinism; graceful degradation manages the remainder (NEW)
 
 AI code generation is non-deterministic: same input can produce different output. However, non-determinism is not a fixed property of AI — it is a function of specification completeness:
 
@@ -323,7 +374,7 @@ Non-determinism = f(1 / spec_completeness)
 
 **Graceful degradation strategy**: Where non-determinism is high (UI layout, internal naming), accept variation and rely on Contract Testing + BDD to verify functional correctness. Don't over-specify to eliminate visual variation — it's not worth the cost.
 
-#### CP4: Delta definition is Sprint Kit's primary goal (NEW)
+#### FP4: Delta definition is Sprint Kit's primary goal (NEW)
 
 Sprint Kit's purpose is not "generating specs" or "building prototypes." It is **defining the delta between the current system (brownfield) and the target system (user-validated prototype)**, expressed in a format that machines can execute.
 
@@ -333,13 +384,13 @@ Delta = translate(Prototype) + carry-forward - Brownfield
 
 If the delta is precisely defined, implementation is mechanical. The quality of development is bounded by the quality of delta definition.
 
-#### CP5: Regeneration over modification (RETAINED, reframed)
+#### FP5: Regeneration over modification (RETAINED, reframed)
 
 When an artifact needs changing, regenerate it from source rather than editing it. AI regeneration cost is low; manual editing introduces inconsistency.
 
 **Delta frame addition**: This principle applies to the delta itself. If the delta changes (e.g., JP2 feedback modifies the target), regenerate the affected delta items rather than patching them.
 
-#### CP6: Translation is rule-based, not judgment-based (NEW)
+#### FP6: Translation is rule-based, not judgment-based (NEW)
 
 Crystallize's "concrete → abstract" step is translation between two known grammars, not open-ended abstraction. Translation follows a mapping table (User Grammar Element → Development Grammar Equivalent) with explicit rules.
 
@@ -391,7 +442,7 @@ JP2 Visual Summary must include a "Before/After" section showing what changes fr
 
 #### DJ10: Non-determinism trade-off is explicit, not hidden (NEW)
 
-Where Sprint Kit accepts non-determinism (e.g., UI layout variation), this is a documented design choice with a specific graceful degradation strategy — not an unacknowledged gap. The spec completeness level for each area is explicitly stated (see CP3 table).
+Where Sprint Kit accepts non-determinism (e.g., UI layout variation), this is a documented design choice with a specific graceful degradation strategy — not an unacknowledged gap. The spec completeness level for each area is explicitly stated (see FP3 table).
 
 ---
 
@@ -399,14 +450,14 @@ Where Sprint Kit accepts non-determinism (e.g., UI layout variation), this is a 
 
 | Element | Why It Stays |
 |---|---|
-| **CP1: Human judgment is the only lasting asset** | Foundation of JDD. Unchanged by delta reframe |
+| **FP1: Human judgment is the only lasting asset** | Foundation of JDD. Unchanged by delta reframe |
 | **JP1 / JP2 Structure** | JP1 validates search direction, JP2 validates the answer. Both use user grammar. No new JPs needed |
-| **Brownfield Scanner** | Establishes the baseline. Now explicitly framed as "current state in development grammar" |
+| **Brownfield Scanner** | Establishes the baseline. Now collects both structural layers (L1-L4) and Constraint Profile (CP.1-CP.7) — "current state in development grammar at two precision levels" |
 | **3-Pass Pattern** | Still Answer Discovery → Translation & Delta Extraction → Delta Execution |
-| **Contract-First (Specmatic)** | Contracts control non-determinism during execution (CP3 strategy) |
+| **Contract-First (Specmatic)** | Contracts control non-determinism during execution (FP3 strategy) |
 | **BDD Scenarios** | Part of the translated target in development grammar |
 | **Brief → Prototype pipeline** | Each step serves Answer Discovery. No restructuring needed (Party Mode confirmed) |
-| **Pipeline execution flow** | Crystallize is mandatory after JP2. /parallel always receives reconciled/. Delta Manifest (S5b) always generated |
+| **Pipeline execution flow** | Crystallize is mandatory after JP2. /parallel always receives reconciled/. Delta Manifest (S8) always generated |
 
 ---
 
@@ -441,7 +492,7 @@ This reframe emerged from a 5-round Party Mode analysis that began with "should 
 The methodology survey (Round 5-6) revealed that Sprint Kit's Crystallize pass (concrete → abstract) is unique in the methodology landscape. The concern that "AI is bad at abstraction" was resolved by recognizing that Crystallize is not abstraction — it is **translation between two known grammars**, which is a rule-based operation that AI handles well.
 
 | Round 7 | Party Mode re-evaluation of delta reframe (6 agents) | Pipeline already performs correct operations; reframe is conceptual. JP2 needs Before/After delta. Delta Manifest is critical prerequisite. carry-forward needs lifecycle management |
-| Round 8 | Design Principles finalization | CP1-CP6 (core principles) + DJ1-DJ10 (design judgments). Key additions: CP2 (prototype adapts to user type), CP3 (spec completeness ↔ non-determinism trade-off), CP4 (delta is primary goal). Option B selected |
+| Round 8 | Design Principles finalization | FP1-FP6 (core principles) + DJ1-DJ10 (design judgments). Key additions: FP2 (prototype adapts to user type), FP3 (spec completeness ↔ non-determinism trade-off), FP4 (delta is primary goal). Option B selected |
 
 ---
 

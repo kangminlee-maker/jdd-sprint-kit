@@ -210,9 +210,168 @@ Pass 2 완료 후 brownfield-context.md 본문 말미에 생성한다. Pass 1 �
 - Primary Source: 해당 엔티티의 가장 상세한 정보를 제공한 소스
 - Pass 2 완료 후 자동 생성 (brownfield-scanner Rules 참조)
 
-## 키 원칙
+## Constraint Profile
 
-1. **점진적 구체화**: L1(어디) → L2(무엇을) → L3(어떻게) → L4(정확히 어디에)
-2. **중복 방지**: 각 레이어의 search_keywords를 확인하여 이전 레이어에서 이미 검색한 키워드 제외
-3. **추적 가능성**: source_step으로 어느 워크플로우 단계에서 생성되었는지 추적
-4. **발견 수량 기록**: discovered 필드로 각 레이어의 검색 효과를 정량화
+Constraint Profile (CP) captures implementation-level constraints from the existing codebase. It is separate from L1-L4 layers — L1-L4 describe "what exists," while CP describes "what rules the existing code enforces."
+
+**When generated**: During Pass 2 Stage 3 (3-hop Structural Traversal). Constraints are extracted simultaneously while reading files for L3/L4 data. No additional pass is needed.
+
+**When skipped**: `complexity=simple` projects skip CP extraction entirely (cost > benefit for simple changes).
+
+**Crystallize integration**: Crystallize S2 performs incremental CP — scanning files referenced by the prototype but missing from the existing CP. Crystallize S4 uses CP data as brownfield parameters for translation rules.
+
+### CP YAML Frontmatter Extension
+
+Add to the existing `scan_metadata` section:
+
+```yaml
+scan_metadata:
+  # ... existing fields ...
+  constraint_profile:
+    status: collected | skipped | partial
+    collected_at: {date}
+    file_count: {N}           # number of files scanned for constraints
+    concept_coverage: [{list}] # domain concepts covered
+    skip_reason: "complexity=simple" | null
+```
+
+### CP.1 Entity Constraints
+
+Captures JPA/ORM annotations, column definitions, and foreign key relationships.
+
+```markdown
+### CP.1 Entity Constraints
+
+| Entity | File | Field | Annotation | DB Column | Nullable | Type |
+|--------|------|-------|------------|-----------|----------|------|
+| Ticket | Ticket.java | ticketStartDate | @Column(nullable=false) | TICKET_START_DATE | false | LocalDate |
+| Ticket | Ticket.java | subscribeMappId | @JoinColumn(name="SUBSCRIBE_MAPP_ID") | SUBSCRIBE_MAPP_ID | false | Long |
+```
+
+**Extraction rules**:
+- Parse `@Column`, `@JoinColumn`, `@ManyToOne`, `@OneToMany` annotations
+- When `@MappedSuperclass` is found, follow up to 2-hops through parent class chain and extract all inherited fields (covers BaseEntity → AuditableEntity → ConcreteEntity patterns)
+- Record actual DB column names (not Java field names)
+
+### CP.2 Naming Conventions
+
+Captures consistent naming patterns across the codebase.
+
+```markdown
+### CP.2 Naming Conventions
+
+| Category | Pattern | Example Count | Confidence |
+|----------|---------|---------------|------------|
+| Table prefix | le_{entity} | 12 | HIGH |
+| Controller | {Domain}ControllerV{N} | 8 | HIGH |
+| Service | {Domain}ServiceImplV{N} | 6 | HIGH |
+| DTO suffix | {Entity}Dto / {Entity}ResponseDto | 10 | HIGH |
+| Error code | DUPLICATE_{ENTITY} / NOT_FOUND_{ENTITY} | 5 | MEDIUM |
+| Package | com.{org}.{domain}.{layer} | 15 | HIGH |
+```
+
+**Confidence levels**:
+- HIGH: 3+ consistent examples found
+- MEDIUM: 2 consistent examples found
+- LOW: 1 example only (recorded but not used in translation)
+
+### CP.3 Transaction Patterns
+
+Captures transaction manager configuration and propagation patterns.
+
+```markdown
+### CP.3 Transaction Patterns
+
+| Service | Transaction Manager | Propagation | Isolation | Source File |
+|---------|-------------------|-------------|-----------|-------------|
+| TicketServiceImpl | legacyTransactionManager | REQUIRED | DEFAULT | TicketServiceImpl.java |
+| PaymentGateway | (none — delegates to services) | — | — | PaymentGateway.java |
+```
+
+**Extraction rules**:
+- Parse `@Transactional(value=..., propagation=..., isolation=...)`
+- Record when no `@Transactional` is present (indicates delegation pattern)
+
+### CP.4 Lock Patterns
+
+Captures distributed lock and database lock patterns.
+
+```markdown
+### CP.4 Lock Patterns
+
+| Resource | Lock Type | Implementation | Key Pattern | Source File |
+|----------|-----------|----------------|-------------|-------------|
+| ticket_purchase | Redis distributed lock | RedisLockTemplate | ticket:{ticketId}:purchase | TicketPurchaseService.java |
+| payment_process | DB pessimistic lock | @Lock(PESSIMISTIC_WRITE) | — | PaymentRepository.java |
+```
+
+### CP.5 API Patterns
+
+Captures API versioning, path naming, response envelope, and pagination patterns.
+
+```markdown
+### CP.5 API Patterns
+
+| Pattern | Value | Example Count | Source |
+|---------|-------|---------------|--------|
+| Versioning | /api/v{N}/ | 24 | Route definitions |
+| Response envelope | { data: T, message: string } | 18 | Controller responses |
+| Pagination | { content: T[], totalPages, totalElements, pageable } | 8 | List endpoints |
+| Error response | { code: string, message: string } | 12 | ExceptionHandler |
+| Auth header | Authorization: Bearer {token} | — | SecurityConfig |
+```
+
+### CP.6 Enum/State Values
+
+Captures actual enum values stored in the database (not display labels).
+
+```markdown
+### CP.6 Enum/State Values
+
+| Enum | Values (DB stored) | Storage Type | Source File |
+|------|-------------------|--------------|-------------|
+| EventType | UNLIMIT, COUNT, PODO_TRIAL | String (constructor param) | EventType.java |
+| LangType | EN, JP, ENJP | String (simpleCode field) | LangType.java |
+| TicketStatus | ACTIVE, EXPIRED, HELD | String (name()) | TicketStatus.java |
+```
+
+**Extraction rules**:
+- For enums with constructor parameters: parse constructor to find DB-stored value
+- For simple enums: DB value = `name()` (enum constant name)
+- For enums with `@JsonValue` or custom serializer: use the annotated field as DB value
+- Record storage type: `String (name())`, `String (constructor param)`, `String (simpleCode field)`, `Integer (ordinal)`
+
+### CP.7 Domain Boundaries
+
+Captures package structure and gateway dependency patterns.
+
+```markdown
+### CP.7 Domain Boundaries
+
+| Domain | Package | Gateway Class | Dependencies |
+|--------|---------|---------------|-------------|
+| ticket | com.podo.ticket | TicketGateway | subscribe, payment |
+| subscribe | com.podo.subscribe | SubscribeGateway | — |
+| payment | com.podo.payment | PaymentGateway | subscribe |
+```
+
+**Extraction rules**:
+- Identify Gateway/Facade classes that mediate cross-domain access
+- Map package-level dependencies via import analysis
+- Record direct dependencies only (not transitive)
+
+### Constraint Profile Confidence Usage
+
+| Confidence | Condition | Translation (S4) Usage | Worker Usage |
+|------------|-----------|----------------------|-------------|
+| HIGH | 3+ examples | **Apply**: Used as brownfield parameter in translation rules | Must follow |
+| MEDIUM | 2 examples | **Reference**: Tagged `[CP-MEDIUM: {pattern}]`, Worker decides | Should follow |
+| LOW | 1 example | **Ignore**: Not used in S4. Recorded in constraint-report.md only | Informational |
+
+## Key Principles
+
+1. **Progressive refinement**: L1 (where) → L2 (what) → L3 (how) → L4 (exactly where) + CP (what rules)
+2. **No duplication**: Check each layer's search_keywords to exclude keywords already searched in previous layers
+3. **Traceability**: source_step tracks which workflow step generated the data
+4. **Discovery count**: discovered field quantifies each layer's search effectiveness
+5. **Constraint extraction**: CP is extracted during Pass 2 Stage 3 traversal (no separate pass needed)

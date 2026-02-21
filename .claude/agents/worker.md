@@ -35,6 +35,21 @@ When file contents conflict, follow this priority order:
 | Data model | `schema.dbml` | `design.md` data model section |
 | Requirements/AC | `requirements.md` | `tasks.md` AC references |
 | Task definition | `tasks.md` | — |
+| Implementation constraints | `tasks.md` `### Constraints` subsection | `constraint-report.md` (consolidated view) |
+
+### 1.6. Task-Level Constraints
+
+If the assigned task in `tasks.md` has a `### Constraints` subsection (added by Crystallize S9), these constraints are **mandatory implementation rules**:
+
+- **CP.1 Entity Constraints**: Respect nullable, column names, FK relationships exactly as specified
+- **CP.2 Naming Conventions** (HIGH confidence): Follow the naming pattern. For MEDIUM confidence (tagged `[CP-MEDIUM]`): follow unless you have a justified reason not to
+- **CP.3 Transaction Patterns**: Use the specified transaction manager for the domain
+- **CP.4 Lock Patterns**: Use the specified lock type for the resource
+- **CP.5 API Patterns**: Follow versioning, envelope, pagination patterns
+- **CP.6 Enum Values**: Use existing DB-stored values. Items tagged `[NEW-ENUM: {value}]` are new values to add
+- **Migration items**: Execute the specified migration (ALTER TABLE, ADD COLUMN, etc.) as part of the task
+
+If no `### Constraints` subsection exists, proceed with standard brownfield-context.md reference (Step 1 above).
 
 ### 2. Implementation (in isolated worktree)
 - Read the full story/spec file before starting

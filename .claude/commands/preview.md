@@ -68,16 +68,16 @@ Present generated Sprint Output Package to user for review (in {communication_la
 
 | Option | Label | Description |
 |--------|-------|-------------|
-| **A** | Approve & Build | Confirm prototype → Crystallize (translate + compute delta, ~15-20 min) → `/parallel` |
-| **F1** | Feedback (Deliverables) | Re-run Step 2 (Specs preserved) |
-| **F2** | Feedback (design) | Re-run `/specs` (modify Planning Artifacts) |
+| **S** | Start Crystallize | Approve prototype → Crystallize (translate + compute delta, ~20-25 min) |
+| **C1** | Comment (Deliverables) | Re-run Step 2 (Specs preserved) |
+| **C2** | Comment (design) | Re-run `/specs` (modify Planning Artifacts) |
 | **X** | Abort | Exit (artifacts preserved) |
 
-**On feedback (F1/F2)**: Record feedback to `specs/{feature}/decision-diary.md` Decisions table (Type, Content, Processing, Result) before re-running.
+**On comment (C1/C2)**: Record feedback to `specs/{feature}/decision-diary.md` Decisions table (Type, Content, Processing, Result) before re-running.
 
-**On [A] Approve & Build**: Record selection in decision-diary.md → invoke `/crystallize {feature}` → on completion proceed to `/parallel` with `specs_root=reconciled/`.
+**On [S] Start Crystallize**: Record selection in decision-diary.md → invoke `/crystallize {feature}` → on Crystallize S10: user selects proceed to `/parallel` with `specs_root=reconciled/`, review, or exit.
 
-**Iteration limit**: F1/F2 selections combined max 5 times. On exceed, warn (in {communication_language}): "5 review/edit rounds complete. Select [A] Approve & Build or [X] Abort."
+**Iteration limit**: C1/C2 selections combined max 5 times. On exceed, warn (in {communication_language}): "5 review/edit rounds complete. Select [S] Start Crystallize or [X] Abort."
 
 ## Outputs
 - `specs/{feature-name}/api-spec.yaml`

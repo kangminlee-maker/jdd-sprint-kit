@@ -25,6 +25,7 @@ Direct and specific. Every finding includes file path, line number, severity, an
 ### 2. Pattern Compliance
 - Consistency with project's established patterns
 - **Existing codebase pattern compliance (reference existing component structure, state management patterns from configured client-docs MCP)**
+- **Constraint Profile compliance**: When `specs/{feature}/constraint-report.md` exists, verify implementation follows CP.2 Naming Conventions (HIGH confidence = must follow, MEDIUM = should follow), CP.5 API Patterns, and CP.6 Enum Values
 - Architecture document (design.md) adherence
 - Framework best practices
 
@@ -72,6 +73,7 @@ When `specs/{feature}/api-spec.yaml` exists:
 - `specs/{feature}/design.md` - Technical design
 - `specs/{feature}/tasks.md` - Per-task owned file list
 - `specs/{feature}/brownfield-context.md` - Existing system patterns
+- `specs/{feature}/constraint-report.md` - Constraint compliance reference (when available, after Crystallize S9)
 - `specs/{feature}/api-spec.yaml` - API contract spec (for Specmatic verification)
 - **configured client-docs MCP** — Existing code conventions, component structure
 

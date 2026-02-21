@@ -145,7 +145,7 @@ This catches isolated relevant elements not connected to the main entity graph.
 
 ### Pass 2: Targeted Scan (mode="targeted")
 
-Produces **L3 (Component) + L4 (Code)** layers. Uses all configured external data sources.
+Produces **L3 (Component) + L4 (Code)** layers + **Constraint Profile** (CP.1-CP.7). Uses all configured external data sources.
 
 Same 4 stages but with Architecture decisions and Epic module names as input instead of Brief text.
 
@@ -155,6 +155,42 @@ Same 4 stages but with Architecture decisions and Epic module names as input ins
 - Data model adjacencies (tables that will be affected)
 - File paths and function signatures (exact modification targets)
 - API contracts to respect (existing endpoint behaviors)
+
+#### Constraint Profile Extraction (during Pass 2 Stage 3)
+
+**Skip condition**: When `complexity=simple`, skip CP extraction entirely. Log: "Constraint Profile skipped: complexity=simple". Set `constraint_profile.status: skipped` in frontmatter.
+
+**Topology condition**: CP extraction runs only for `co-located` and `monorepo` topologies. For `standalone` and `msa`, skip CP (no local codebase or insufficient local context). Set `constraint_profile.status: skipped` with `skip_reason: "topology={topology}"`.
+
+During Stage 3 (Structural Traversal / Import Tracing), extract constraints **simultaneously** while reading each file for L3/L4 data. Do not re-read files — extract constraints in the same pass.
+
+**Extraction protocol per file type**:
+
+| File Pattern | Extract To |
+|---|---|
+| `*Entity.java`, `*Model.java`, `*.entity.ts` | CP.1 Entity Constraints |
+| Controller, Service, Repository, Gateway classes | CP.2 Naming Conventions (pattern accumulation) |
+| `@Transactional`-annotated methods | CP.3 Transaction Patterns |
+| Lock template usage, `@Lock` annotations | CP.4 Lock Patterns |
+| Route definitions, Controller endpoints | CP.5 API Patterns |
+| Enum classes/types | CP.6 Enum/State Values |
+| Gateway/Facade classes, package imports | CP.7 Domain Boundaries |
+
+**Special extraction rules**:
+
+1. **@MappedSuperclass handling**: When an entity extends a class annotated with `@MappedSuperclass`, follow up to 2-hops through the parent class chain. Extract parent fields into CP.1 under the child entity name (since the child inherits those columns).
+
+2. **Enum DB value parsing**: Enums often store a different value than their constant name.
+   - If enum has constructor with String parameter: parse constructor to find the DB-stored value (e.g., `UNLIMIT("unlimited")` → DB value is `"unlimited"`, but if `UNLIMIT("UNLIMIT")` → DB value is `"UNLIMIT"`)
+   - If enum has `@JsonValue` annotated field: that field is the serialized value
+   - If enum has a `simpleCode` or similar field: that field value is DB-stored
+   - If simple enum (no constructor): DB value = `name()` (the constant name itself)
+
+3. **Confidence calculation**: After all files are scanned, calculate confidence per CP.2 row:
+   - Count examples matching the pattern
+   - 3+ → HIGH, 2 → MEDIUM, 1 → LOW
+
+**Output**: Append `## Constraint Profile` section to brownfield-context.md after L4. Follow the format defined in `_bmad/docs/brownfield-context-format.md` Constraint Profile section. Update YAML frontmatter with `constraint_profile` metadata.
 
 ### Local Codebase Scan (when `local_codebase_root` is non-null)
 
@@ -218,6 +254,7 @@ After collection, perform self-check:
 | Topology Compliance | topology={topology}, local_stages={N}, external_attempted={N}, merge_priority={local/external} — COMPLIANT / NON-COMPLIANT |
 | Source Coverage | L1: {sources}, L2: {sources} — per-layer source existence check |
 | Keyword Coverage | {N}/{M} Brief keywords have ≥1 result from any source (weighted: goal-related keywords count 2x) |
+| Constraint Profile | CP status: {collected/skipped/partial}, {N} files scanned, {N} entities in CP.1, confidence distribution: {H}/{M}/{L} — or "skipped: {reason}" |
 | Ontology Coverage | {N}/{M} document-project entities found in scan results (or "N/A" if document_project_path is null) |
 | Document-Project Coverage | {N}/{M} expected files found and parsed (or "N/A" if document_project_path is null) |
 | Cross-Validation | {description of source consistency across document-project, external sources, local} |
@@ -393,3 +430,4 @@ After Pass 2 completes, scan all L1~L4 content and build the Entity Index:
 6. **Max 3 hops** in Structural Traversal (external sources) and Import Tracing (Local) to prevent unbounded exploration
 7. **Topology determines merge priority** — co-located/monorepo: local > external. msa/standalone: external > local. Record conflicts with both sources.
 8. **Entity Index** — Pass 1: reserve empty table. Pass 2: populate after all layers complete.
+9. **Constraint Profile** — Pass 2 only. Skip when `complexity=simple` or `topology=standalone/msa`. Extract during Stage 3 traversal (no separate pass). Follow `_bmad/docs/brownfield-context-format.md` Constraint Profile format.

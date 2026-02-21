@@ -51,7 +51,10 @@ Requirements-focused. References spec document sections and acceptance criteria 
 
 ### 7. Delta Verification (when delta-manifest.md available)
 
-When `{feature_dir}/delta-manifest.md` exists, apply delta-typed verification:
+When `{feature_dir}/delta-manifest.md` exists, apply delta-typed verification.
+When `{feature_dir}/constraint-report.md` also exists, cross-reference constraint compliance:
+- For each delta item with `constraint_ref`: verify implementation respects the referenced constraint
+- For each `migration_needed: Yes` item: verify migration script/code exists and matches the specified type
 
 | Delta Type | Verification Focus |
 |---|---|
@@ -85,6 +88,7 @@ When `{feature_dir}/adversarial-scenarios.md` exists:
 - **configured svc-map MCP** — Existing customer journey consistency verification
 - `specs/{feature}/inputs/sprint-input.md` - Causal chain (always original path, not affected by Crystallize)
 - `{feature_dir}/delta-manifest.md` - Delta classification (when available, after Crystallize)
+- `{feature_dir}/constraint-report.md` - Constraint compliance reference (when available, after Crystallize S9)
 - `{feature_dir}/adversarial-scenarios.md` - Adversarial analysis (when available, from Devil's Advocate)
 
 ## Output Format

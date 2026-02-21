@@ -328,7 +328,7 @@ The prototype is the target state expressed in the system's actual user's gramma
 
 Spec completeness controls AI non-determinism: more complete specs produce more consistent output. Sprint Kit accepts a trade-off — high specification where contracts matter (API, DB schema), lower specification where variation is acceptable (UI layout, internal naming) — and uses contract testing and BDD to verify functional correctness regardless of variation.
 
-> Full theory, core principles (CP1-CP6), design judgments (DJ1-DJ10), translation rules, and methodology comparison: [`docs/delta-driven-design.md`](delta-driven-design.md)
+> Full theory, core principles (FP1-FP6), design judgments (DJ1-DJ10), translation rules, and methodology comparison: [`docs/delta-driven-design.md`](delta-driven-design.md)
 
 ---
 

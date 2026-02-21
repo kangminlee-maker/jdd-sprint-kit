@@ -23,12 +23,12 @@ This is a **mandatory step** before /parallel — without translation, Workers w
 
 ## When to Use
 
-- **Automatic**: Runs after JP2 approval on all routes — Sprint ([A] Approve & Build), Guided/Direct ([A] Approve & Build at `/preview` Step 3)
+- **Triggered**: Runs after JP2 approval on all routes — Sprint ([S] Start Crystallize), Guided/Direct ([S] Start Crystallize at `/preview` Step 3)
 - **Standalone**: `/crystallize feature-name` — for re-running translation independently
 
-**On Crystallize failure**: If any gate (S2-G, S3-G, S5) fails and cannot be auto-fixed, the user is offered recovery options:
+**On Crystallize failure**: If any gate (S4-G, S5-G, S7) fails and cannot be auto-fixed, the user is offered recovery options:
 - **[R] Return to JP2**: Abort Crystallize, clean up partial reconciled/, return to JP2 menu for further iteration
-- **[S] Skip Crystallize**: Proceed to /parallel with original specs (specs_root=specs/{feature}/). Delta manifest will not be available. Warning displayed.
+- **[K] Skip Crystallize**: Proceed to /parallel with original specs (specs_root=specs/{feature}/). Delta manifest will not be available. Warning displayed.
 - **[X] Exit**: Abort Sprint entirely. All artifacts preserved.
 
 ## Inputs
@@ -56,13 +56,12 @@ Load config per Language Protocol in jdd-sprint-guide.md.
 
 ### Step S0: Decision Context Analysis
 
-Analyze JP2 decision records to understand the intent and context behind prototype modifications BEFORE analyzing the code. This enables S1 and S2 to distinguish deliberate business decisions from implementation details.
+Analyze JP2 decision records to understand the intent and context behind prototype modifications BEFORE analyzing the code. This enables S1 and S4 to distinguish deliberate business decisions from implementation details.
 
-**Progress**: `"[S0/8] Analyzing JP2 decision context..."`
+**Progress**: `"[S0/11] Analyzing JP2 decision context..."`
 
 1. Create `specs/{feature}/reconciled/` directory and `reconciled/planning-artifacts/`
-2. Copy immutable files:
-   - `specs/{feature}/planning-artifacts/brownfield-context.md` → `reconciled/planning-artifacts/brownfield-context.md`
+2. (brownfield-context.md copy deferred to S2 — may be incrementally updated first)
 3. Copy decision records to reconciled/ (if exists):
    - `specs/{feature}/decision-diary.md` → `reconciled/decision-diary.md`
    - OR `specs/{feature}/jp2-review-log.md` → `reconciled/jp2-review-log.md` (fallback, serves equivalent role)
@@ -98,7 +97,7 @@ If no decision records exist, skip this step and proceed to S1 without decision 
 
 Analyze the finalized prototype code and produce a structured analysis document.
 
-**Progress**: `"[S1/8] Analyzing prototype structure..."`
+**Progress**: `"[S1/11] Analyzing prototype structure..."`
 
 Invoke prototype analyzer:
 
@@ -141,13 +140,185 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     Be exhaustive — every page, component, endpoint, entity, and flow must be captured."
 ```
 
-### Step S2: Reconcile Planning Artifacts
+### Step S2: Incremental Constraint Profile
 
-Reconcile PRD, Architecture, and Epics using the prototype analysis as primary input and existing documents as context.
+Compare S1 prototype analysis domain concepts against existing Constraint Profile (CP) coverage. Scan only missing concepts.
+
+**Progress**: `"[S2/11] Checking Constraint Profile coverage..."`
+
+**Skip conditions** (any one triggers skip):
+- `complexity=simple` → skip ("Constraint Profile not applicable for simple projects")
+- `topology=standalone` or `topology=msa` → skip ("Constraint Profile requires co-located or monorepo topology")
+- brownfield-context.md has no `## Constraint Profile` section → skip ("No base Constraint Profile from Phase 1")
+
+**Pre-S2: brownfield-context.md copy** (always executes before S2, regardless of whether S2 scan will run):
+- If `specs/{feature}/planning-artifacts/brownfield-context.md` exists:
+  Copy → `reconciled/planning-artifacts/brownfield-context.md`
+- If file does not exist (greenfield): skip copy. Downstream steps handle missing CP via their fallback logic ("If no Constraint Profile section exists: proceed without constraint parameters").
+
+**Invariant**: S2 never modifies `planning-artifacts/brownfield-context.md` (original). All incremental writes go to `reconciled/planning-artifacts/brownfield-context.md` (copy).
+
+**Logic**:
+1. Read `specs/{feature}/reconciled/prototype-analysis.md` — extract domain concepts (entity names, feature areas)
+2. Read `specs/{feature}/reconciled/planning-artifacts/brownfield-context.md` `## Constraint Profile` — extract covered concepts from CP.1 Entity column + CP.6 Enum column + CP.7 Domain column
+3. Compute delta: `prototype_concepts - cp_concepts = uncovered_concepts`
+4. If `uncovered_concepts` is empty → skip ("Constraint Profile coverage sufficient")
+5. If `uncovered_concepts` is non-empty → scan backend files for uncovered concepts only
+
+```
+Task(subagent_type: "general-purpose", model: "sonnet")
+  prompt: "Perform incremental Constraint Profile scan.
+
+    IMPORTANT: Write ALL output in {document_output_language}.
+
+    The following domain concepts were found in the prototype but are NOT covered
+    in the existing Constraint Profile:
+    {uncovered_concepts list}
+
+    For each concept, search the local codebase for its backend implementation:
+    - Entity classes (e.g., {Concept}.java, {concept}.entity.ts)
+    - Related enums, services, repositories
+    - Follow @MappedSuperclass up to 2-hops to parent classes
+
+    Extract constraints per _bmad/docs/brownfield-context-format.md Constraint Profile format:
+    - CP.1: @Column, @JoinColumn, nullable, type
+    - CP.3: @Transactional patterns
+    - CP.6: Enum DB-stored values (parse constructors)
+
+    Append findings to specs/{feature}/reconciled/planning-artifacts/brownfield-context.md
+    under the existing ## Constraint Profile section.
+
+    If a finding conflicts with an existing CP entry for the same entity,
+    the NEW finding takes precedence (mark old entry as superseded).
+
+    Output summary: {N} concepts scanned, {N} new CP entries added."
+  max_turns: 10
+```
+
+**Budget**: 0 turns (skip) ~ 10 turns (incremental scan).
+
+### Step S3: Constraint-Aware Validation
+
+Cross-validate Constraint Profile + prototype analysis before translation. Two agents run in parallel.
+
+**Progress**: `"[S3/11] Validating prototype against constraints (2 parallel agents)..."`
+
+**Skip conditions**:
+- `complexity=simple` → skip entire S3
+- `topology=standalone` or `topology=msa` → run Agent B (Structural) only, skip Agent A (Constraint). Log: "Agent A (Constraint Validator) skipped: no Constraint Profile available for {topology} topology"
+- No `## Constraint Profile` section in brownfield-context.md (including greenfield) → run Agent B (Structural) only, skip Agent A (Constraint). Log: "Agent A (Constraint Validator) skipped: no Constraint Profile data"
+
+**Agent A: Constraint Validator**
+
+```
+Task(subagent_type: "general-purpose", model: "sonnet")
+  prompt: "You are a Constraint Validator. Check for conflicts between the prototype
+    and existing system constraints.
+
+    IMPORTANT: Write ALL output in {document_output_language}.
+
+    Input:
+    - specs/{feature}/reconciled/prototype-analysis.md
+    - specs/{feature}/reconciled/planning-artifacts/brownfield-context.md (Constraint Profile section)
+
+    Checks:
+    1. Enum value mismatch: prototype uses values not in CP.6 Enum/State Values
+    2. Nullable violations: prototype assumes nullable fields that CP.1 marks as nullable=false
+    3. Naming convention violations: prototype names that violate CP.2 patterns (HIGH confidence only)
+    4. API pattern conflicts: prototype API structure conflicts with CP.5 patterns
+    5. Transaction scope issues: prototype operations that span domains without matching CP.3 patterns
+
+    For each finding, classify severity:
+    - CRITICAL: Would cause runtime error or data corruption (e.g., nullable violation, wrong enum value)
+    - WARNING: Inconsistency that should be addressed but won't cause runtime failure
+    - INFO: Minor deviation from convention
+
+    Output: Write to specs/{feature}/reconciled/validation-constraint.md
+    Format:
+    # Constraint Validation Report
+    ## Summary
+    | Severity | Count |
+    ## Findings
+    | # | Severity | Category | Prototype Element | Constraint | Conflict Description |"
+  max_turns: 8
+```
+
+**Agent B: Structural Validator**
+
+```
+Task(subagent_type: "general-purpose", model: "sonnet")
+  prompt: "You are a Structural Validator. Check the prototype's internal logic
+    completeness and consistency with specs.
+
+    IMPORTANT: Write ALL output in {document_output_language}.
+
+    Input:
+    - specs/{feature}/reconciled/prototype-analysis.md
+    - specs/{feature}/planning-artifacts/prd.md
+    - specs/{feature}/design.md
+    - specs/{feature}/key-flows.md
+
+    Checks:
+    1. State transition completeness: every state has defined transitions; no orphan/dead-end states
+    2. Flow dead-ends: user flows that end without resolution or error handling
+    3. FR coverage: every PRD FR has corresponding prototype implementation
+    4. carry-forward gap: PRD items marked as in-scope but absent from prototype
+       (should be classified as carry-forward, not silently dropped)
+    5. Phase 2 deferred contradiction: items marked deferred in Phase 1 but
+       implemented in prototype (scope creep signal)
+
+    For each finding, classify severity:
+    - CRITICAL: Missing FR implementation, dead-end flow, state with no exit
+    - WARNING: Potential gap that may be intentional
+    - INFO: Minor observation
+
+    Output: Write to specs/{feature}/reconciled/validation-structural.md
+    Format:
+    # Structural Validation Report
+    ## Summary
+    | Severity | Count |
+    ## Findings
+    | # | Severity | Category | Element | Description | Recommendation |"
+  max_turns: 8
+```
+
+**Run Agent A and Agent B in parallel** (two Task calls in the same message). Wall-clock time: 5-8 turns.
+
+**Post-validation gate**:
+1. Read both validation reports
+2. Merge CRITICAL findings: count from Agent A + count from Agent B
+3. If CRITICAL count = 0 → proceed to S4
+4. If CRITICAL count > 0 → present to user:
+
+```
+## Validation Findings
+
+{N} CRITICAL issues found before translation:
+
+Constraint issues (Agent A):
+- {finding 1}
+- {finding 2}
+
+Structural issues (Agent B):
+- {finding 3}
+
+Select:
+[R] Return to JP2 — address issues in prototype
+[F] Acknowledge and proceed — constraints noted in reconciled artifacts
+[X] Exit
+```
+
+- **[R]**: Clean up partial reconciled/, return to JP2 menu
+- **[F]**: Proceed to S4. Attach CRITICAL findings as `[CONSTRAINT-WARN: {description}]` tags in the relevant S4 artifacts
+- **[X]**: Exit Sprint
+
+### Step S4: Constraint-Aware Translation (Reconcile Planning Artifacts)
+
+Reconcile PRD, Architecture, and Epics using the prototype analysis as primary input, existing documents as context, and **Constraint Profile as brownfield parameters for translation rules**.
 
 **Product Brief is excluded** — it defines the problem space, which the prototype cannot supply.
 
-**Progress**: `"[S2/8] Reconciling PRD..."` → `"...Architecture..."` → `"...Epics..."` → `"...Cross-artifact validation..."`
+**Progress**: `"[S4/11] Reconciling PRD..."` → `"...Architecture..."` → `"...Epics..."` → `"...Cross-artifact validation..."`
 
 #### Reconciliation Principles
 
@@ -168,7 +339,7 @@ Reconcile PRD, Architecture, and Epics using the prototype analysis as primary i
 | `(source: carry-forward, origin: BRIEF-N)` | Not in prototype, carried from existing doc, originally from brief |
 | `(source: carry-forward)` | Not in prototype, carried from existing doc (NFR, security, etc.) |
 
-#### S2a: PRD Reconciliation (John)
+#### S4a: PRD Reconciliation (John)
 
 ```
 Task(subagent_type: "general-purpose", model: "opus")
@@ -189,6 +360,19 @@ Task(subagent_type: "general-purpose", model: "opus")
       specs/{feature}/planning-artifacts/prd.md
       specs/{feature}/inputs/sprint-input.md (for brief_sentences, if exists)
 
+    Brownfield constraints (for translation accuracy):
+      specs/{feature}/reconciled/planning-artifacts/brownfield-context.md — read '## Constraint Profile' section
+      Use CP.6 Enum/State Values for entity status FRs (use existing DB values, not prototype display labels)
+      Use CP.1 Entity Constraints for data model FRs (respect nullable, column types)
+      Use CP.5 API Patterns for API-related FRs (follow existing versioning, envelope patterns)
+      For HIGH confidence patterns: apply as translation rule parameters
+      For MEDIUM confidence: tag as [CP-MEDIUM: {pattern}] for Worker decision
+      If no Constraint Profile section exists: proceed without constraint parameters
+
+    Constraint validation findings (if S3 found issues):
+      specs/{feature}/reconciled/validation-constraint.md (if exists)
+      Attach [CONSTRAINT-WARN: {description}] to affected FRs
+
     Output: Write to specs/{feature}/reconciled/planning-artifacts/prd.md
 
     Reconciliation rules:
@@ -198,11 +382,12 @@ Task(subagent_type: "general-purpose", model: "opus")
     - NFRs, success criteria, constraints → carry forward: (source: carry-forward)
     - Classify carry-forward items: [carry-forward:defined] for confirmed applicable items, [carry-forward:deferred] for explicitly post-MVP items, [carry-forward:new] for gap-filling additions
     - User journeys: reconstruct from prototype User Flows section
+    - When prototype uses enum/status values, cross-reference CP.6: use existing DB-stored values when possible. If new value needed, tag as [NEW-ENUM: {value}]
     - Detail level: MAXIMUM — this is the definitive PRD
     - Follow PRD format guide strictly (YAML frontmatter, section structure, FR quality criteria)"
 ```
 
-#### S2b: Architecture Reconciliation (Winston)
+#### S4b: Architecture Reconciliation (Winston)
 
 ```
 Task(subagent_type: "general-purpose", model: "opus")
@@ -214,7 +399,7 @@ Task(subagent_type: "general-purpose", model: "opus")
 
     Primary input:
       specs/{feature}/reconciled/prototype-analysis.md
-      specs/{feature}/reconciled/planning-artifacts/prd.md (just written by S2a)
+      specs/{feature}/reconciled/planning-artifacts/prd.md (just written by S4a)
 
     Decision context (understand WHY design decisions were made):
       specs/{feature}/reconciled/decision-context.md (if exists)
@@ -224,18 +409,35 @@ Task(subagent_type: "general-purpose", model: "opus")
       specs/{feature}/planning-artifacts/brownfield-context.md
       specs/{feature}/decision-log.md (if exists)
 
+    Brownfield constraints (for translation accuracy):
+      specs/{feature}/reconciled/planning-artifacts/brownfield-context.md — read '## Constraint Profile' section
+      Use CP.2 Naming Conventions for component/service naming (follow existing patterns)
+      Use CP.3 Transaction Patterns for transaction boundaries
+      Use CP.4 Lock Patterns for concurrency design
+      Use CP.7 Domain Boundaries for service dependency design
+      For HIGH confidence patterns: apply as design constraints
+      For MEDIUM confidence: note as [CP-MEDIUM: {pattern}]
+      If no Constraint Profile section exists: proceed without constraint parameters
+
+    Constraint validation findings (if S3 found issues):
+      specs/{feature}/reconciled/validation-constraint.md (if exists)
+      Attach [CONSTRAINT-WARN: {description}] to affected architecture decisions (e.g., transaction scope, lock pattern, domain boundary issues)
+
     Output: Write to specs/{feature}/reconciled/planning-artifacts/architecture.md
 
     Reconciliation rules:
     - Component architecture: derive from actual prototype component structure
     - API design: derive from actual MSW handlers in prototype analysis
     - Data model: derive from actual store/types in prototype analysis
+    - Naming: follow CP.2 patterns (e.g., table prefix, controller naming, DTO suffix)
+    - Transaction design: match CP.3 transaction manager assignments for affected domains
+    - Concurrency: use CP.4 lock patterns for resources requiring mutual exclusion
     - Security, deployment, scaling, monitoring, infrastructure → classify as [carry-forward:defined], [carry-forward:deferred], or [carry-forward:new]
     - ADRs: preserve still-applicable originals, mark superseded ones, add new decisions from prototype
     - Detail level: MAXIMUM"
 ```
 
-#### S2c: Epics Reconciliation (John)
+#### S4c: Epics Reconciliation (John)
 
 ```
 Task(subagent_type: "general-purpose", model: "opus")
@@ -264,7 +466,7 @@ Task(subagent_type: "general-purpose", model: "opus")
     - Detail level: MAXIMUM"
 ```
 
-#### S2-G: Cross-Artifact Consistency Gate
+#### S4-G: Cross-Artifact Consistency Gate
 
 ```
 Task(subagent_type: "general-purpose", model: "sonnet")
@@ -286,13 +488,13 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     Output: PASS with summary, or FAIL with gap list."
 ```
 
-**On S2-G FAIL**: Include gap report in retry prompt → re-invoke the agent responsible for the gap ("Fix these specific inconsistencies: {gap_list}") → retry once → 2nd failure: notify user with gap list + recommend manual review.
+**On S4-G FAIL**: Include gap report in retry prompt → re-invoke the agent responsible for the gap ("Fix these specific inconsistencies: {gap_list}") → retry once → 2nd failure: notify user with gap list + recommend manual review.
 
-### Step S3: Generate Execution Specs
+### Step S5: Generate Execution Specs
 
 Generate Specs 4-file from reconciled planning artifacts.
 
-**Progress**: `"[S3/8] Generating execution specs (requirements + design + tasks)..."`
+**Progress**: `"[S5/11] Generating execution specs (requirements + design + tasks)..."`
 
 ```
 Task(subagent_type: "general-purpose", model: "sonnet")
@@ -311,7 +513,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     so output files will be written to specs/{feature}/reconciled/ directory."
 ```
 
-**Post-S3: Entropy/File Ownership Re-annotation**
+**Post-S5: Entropy/File Ownership Re-annotation**
 
 After specs generation:
 1. Read existing `specs/{feature}/tasks.md` for Entropy Tolerance + File Ownership patterns
@@ -323,11 +525,11 @@ After specs generation:
 
 **Scope Gate**: Invoke @scope-gate with `stage=spec` on reconciled/ specs.
 
-### Step S4: Reconcile Deliverables
+### Step S6: Reconcile Deliverables
 
 Verify existing deliverables against prototype. Regenerate where needed.
 
-**Progress**: `"[S4/8] Verifying API spec..."` → `"...Regenerating BDD scenarios..."` → ...
+**Progress**: `"[S6/11] Verifying API spec..."` → `"...Regenerating BDD scenarios..."` → ...
 
 Invoke deliverable reconciler:
 
@@ -372,11 +574,11 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 **Scope Gate**: Invoke @scope-gate with `stage=deliverables` on reconciled/ deliverables.
 
-### Step S5: Cross-Artifact Consistency Check
+### Step S7: Cross-Artifact Consistency Check
 
 Verify mutual consistency across the entire reconciled/ artifact set.
 
-**Progress**: `"[S5/8] Cross-artifact consistency check..."`
+**Progress**: `"[S7/11] Cross-artifact consistency check..."`
 
 ```
 Task(subagent_type: "general-purpose", model: "sonnet")
@@ -394,6 +596,13 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     4. traceability-matrix.md has 0 gaps
     5. api-spec.yaml endpoints match MSW handler endpoints (count + paths)
     6. bdd-scenarios/ cover all prd.md acceptance criteria
+    7. Every FR in reconciled prd.md has a valid source tag: (source: PROTO) or (source: carry-forward).
+       FRs without source tags → CRITICAL (may be agent-hallucinated during translation)
+    8. Constraint Profile compliance (when ## Constraint Profile exists in brownfield-context.md):
+       - Enum values in reconciled prd.md/design.md match CP.6 DB-stored values (not prototype display labels)
+       - Naming in reconciled architecture.md follows CP.2 HIGH confidence patterns
+       - [NEW-ENUM] tags are used for genuinely new values (not misspellings of existing values)
+       - [CONSTRAINT-WARN] tags from S3 are preserved in the reconciled artifacts (not silently dropped)
 
     Output: PASS (gap=0) or FAIL with gap list and count."
 ```
@@ -402,13 +611,13 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 - Gap <= 3: auto-fix (Edit affected files) → re-verify
 - Gap > 3: present gap list to user → user selects: fix / skip / abort
 
-### Step S5b: Delta Manifest Generation
+### Step S8: Precise Delta Computation
 
-Compare reconciled/ artifacts against brownfield baseline to classify every change.
+Compare reconciled/ artifacts against brownfield baseline + Constraint Profile to classify every change with constraint references.
 
-**Progress**: `"[S5b/8] Generating delta manifest..."`
+**Progress**: `"[S8/11] Computing precise delta with constraint mapping..."`
 
-**Precondition**: S5 completed (PASS or user-skip). If S5 was user-skipped, include `consistency_verified: false` in manifest header.
+**Precondition**: S7 completed (PASS or user-skip). If S7 was user-skipped, include `consistency_verified: false` in manifest header.
 
 ```
 Task(subagent_type: "general-purpose", model: "sonnet")
@@ -422,25 +631,34 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     - specs/{feature}/reconciled/api-spec.yaml
     - specs/{feature}/reconciled/schema.dbml
     - specs/{feature}/reconciled/tasks.md
-    - specs/{feature}/planning-artifacts/brownfield-context.md (baseline)
+    - specs/{feature}/reconciled/planning-artifacts/brownfield-context.md (baseline + Constraint Profile)
 
     For each element (API endpoint, DB table/column, FR, state transition, scheduler):
     Compare target (reconciled/) vs baseline (brownfield). Classify:
 
-    | delta_id | type | origin | source_fr | scope | resource | task_id |
-    |----------|------|--------|-----------|-------|----------|---------|
-    | DM-001 | positive | proto | FR-3 | api_endpoint | POST /api/v2/blocks | T-2 |
-    | DM-002 | modification | proto | FR-1 | api_endpoint | GET /api/tutors (+block_count) | T-1 |
-    | DM-003 | zero | — | — | api_endpoint | GET /api/lessons | — |
-    | DM-004 | negative | proto | — | api_endpoint | DELETE /api/v1/block | T-8 |
-    | DM-005 | positive | carry-forward:defined | NFR-1 | config | p95 < 500ms monitoring | — |
+    | delta_id | type | origin | source_fr | scope | resource | task_id | constraint_ref | migration_needed |
+    |----------|------|--------|-----------|-------|----------|---------|---------------|-----------------|
+    | DM-001 | positive | proto | FR-3 | api_endpoint | POST /api/v2/blocks | T-2 | CP.5: /api/v{N}/ pattern | No |
+    | DM-002 | modification | proto | FR-1 | db_column | Ticket.block_count | T-1 | CP.1: Ticket nullable constraints | Yes: ALTER TABLE ADD COLUMN |
+    | DM-003 | zero | — | — | api_endpoint | GET /api/lessons | — | — | No |
+    | DM-004 | positive | proto | FR-5 | enum | BlockType.TEMPORARY | T-3 | CP.6: BlockType values [PERMANENT] | Yes: ADD ENUM VALUE |
+    | DM-005 | positive | carry-forward:defined | NFR-1 | config | p95 < 500ms monitoring | — | — | No |
 
     Fields:
     - type: positive (new) | modification (changed) | zero (unchanged) | negative (removed)
     - origin: proto | carry-forward:defined | carry-forward:deferred | carry-forward:new
     - task_id: tasks.md reference (NULL for zero/carry-forward items)
+    - constraint_ref: Reference to Constraint Profile entry that applies. Use scope→CP mapping:
+      scope=db_column → CP.1 Entity Constraints (match by entity name)
+      scope=api_endpoint → CP.5 API Patterns
+      scope=enum → CP.6 Enum/State Values (match by enum name)
+      scope=service → CP.3 Transaction + CP.4 Lock Patterns
+      scope=scheduler → CP.3 Transaction Patterns (cron/trigger patterns)
+      scope=domain → CP.7 Domain Boundaries
+      If no CP exists or no match: '—'
+    - migration_needed: Yes (with type: ALTER TABLE, ADD COLUMN, ADD ENUM VALUE, etc.) | No
 
-    Greenfield (no brownfield data): classify all items as positive.
+    Greenfield (no brownfield data): classify all items as positive. constraint_ref = '—' for all.
 
     Also scan brownfield-context.md for items NOT in reconciled/ → classify as zero delta.
 
@@ -452,22 +670,64 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     | Negative | {N} |
     | Zero | {N} |
     | Carry-Forward ratio | {carry-forward count}/{total} ({%}) |
+    | Migration items | {N} |
+    | Constraint-referenced | {N}/{total non-zero} |
 
     Verify delta completeness before writing:
     - Every positive/modification item must have a non-null task_id referencing tasks.md
     - Every negative item must have task_id or explicit justification in resource column
     - Zero delta items must NOT have task_id (no unintended work on unchanged items)
     - carry-forward:deferred items must NOT have task_id (deferred = not this Sprint)
+    - Every db_column/enum scope item with constraint_ref should have migration_needed assessed
     If violations found, append WARN section to delta-manifest.md with violation list.
 
     Output: Write to specs/{feature}/reconciled/delta-manifest.md"
 ```
 
-### Step S6: Summary + Confirmation
+### Step S9: Constraint Report Attachment
+
+Attach constraint references from delta-manifest.md and Constraint Profile to each task in reconciled/tasks.md.
+
+**Progress**: `"[S9/11] Attaching constraint references to tasks..."`
+
+**Skip conditions**: If no Constraint Profile exists or complexity=simple → skip S9.
+
+**Logic** (Conductor inline — lightweight text operation):
+1. Read `specs/{feature}/reconciled/delta-manifest.md` — collect constraint_ref and migration_needed per task_id
+2. Read `specs/{feature}/reconciled/tasks.md`
+3. For each task that has constraint_ref entries in delta-manifest.md, append a `### Constraints` subsection:
+
+```markdown
+### Constraints (from Constraint Profile)
+- CP.1: Ticket.TICKET_STATUS nullable=false — do not insert NULL
+- CP.6: EventType values [UNLIMIT, COUNT, PODO_TRIAL] — use existing values
+- CP.2 [CP-MEDIUM]: Table prefix le_ — 8 examples found, apply unless justified
+- Migration: ALTER TABLE le_ticket ADD COLUMN block_count INT DEFAULT 0
+```
+
+4. Write updated reconciled/tasks.md
+5. Generate `specs/{feature}/reconciled/constraint-report.md` — consolidated view:
+
+```markdown
+# Constraint Report: {feature_name}
+
+## Coverage
+| CP Category | Entries | Referenced in Delta | Tasks Affected |
+|-------------|---------|-------------------|---------------|
+
+## Per-Task Constraints
+| Task | Constraints | Migration |
+|------|------------|-----------|
+
+## Unmatched Constraints
+(CP entries not referenced by any delta item — either zero delta or outside scope)
+```
+
+### Step S10: Summary + Confirmation
 
 Present reconciliation results to user (in {communication_language}).
 
-**Progress**: `"[S6/8] Generating summary..."`
+**Progress**: `"[S10/11] Generating summary..."`
 
 **Output format**:
 
@@ -497,6 +757,15 @@ Present reconciliation results to user (in {communication_language}).
 | Negative (removed) | {N} |
 | Zero (unchanged) | {N} |
 | Carry-Forward ratio | {carry-forward}/{total} ({%}) |
+| Migration items | {N} |
+| Constraint-referenced | {N}/{total non-zero} |
+
+### Validation Summary (from S3)
+{if S3 ran}
+- Constraint validation: {N} CRITICAL / {N} WARNING / {N} INFO
+- Structural validation: {N} CRITICAL / {N} WARNING / {N} INFO
+{if S3 skipped}
+- Validation skipped ({reason})
 
 ### Verification
 - Cross-artifact consistency: PASS (gap 0)
@@ -513,20 +782,24 @@ Select: [C] Continue to /parallel | [R] Review reconciled/ | [X] Exit
 
 ## Budget
 
-~90-133 turns across 10 Task invocations. S0 runs inline (no Task invocation).
+~108-174 turns across 13 Task invocations. S0, S2, S9 run inline (no Task invocation).
 
 | Step | Model | Est. Turns |
 |------|-------|------------|
 | S0 Decision Context | Conductor (inline) | 0 (no Task) |
 | S1 Prototype Analysis | Sonnet | 5-8 |
-| S2a PRD | Opus | 15-20 |
-| S2b Architecture | Opus | 15-20 |
-| S2c Epics | Opus | 10-15 |
-| S2-G Cross-artifact | Sonnet | 5-8 |
-| S3 Specs + S3-G | Sonnet | 18-25 |
-| S4 Deliverables | Sonnet | 10-15 |
-| S5 Consistency | Sonnet | 5-8 |
-| S5b Delta Manifest | Sonnet | 5-8 |
+| S2 Incremental CP | Sonnet | 0-10 (skip when delta=0) |
+| S3a Constraint Validator | Sonnet | 5-8 (parallel) |
+| S3b Structural Validator | Sonnet | 5-8 (parallel) |
+| S4a PRD | Opus | 15-20 |
+| S4b Architecture | Opus | 15-20 |
+| S4c Epics | Opus | 10-15 |
+| S4-G Cross-artifact | Sonnet | 5-8 |
+| S5 Specs + S5-G | Sonnet | 18-25 |
+| S6 Deliverables | Sonnet | 10-15 |
+| S7 Consistency | Sonnet | 5-8 |
+| S8 Precise Delta | Sonnet | 8-12 |
+| S9 Constraint Report | Conductor (inline) | 0 (no Task) |
 
 ## Outputs
 
@@ -534,22 +807,26 @@ Select: [C] Continue to /parallel | [R] Review reconciled/ | [X] Exit
 specs/{feature}/reconciled/
 ├── decision-context.md             # S0 (if decision records exist)
 ├── prototype-analysis.md           # S1
+├── validation-constraint.md        # S3 Agent A (if ran)
+├── validation-structural.md        # S3 Agent B (if ran)
 ├── planning-artifacts/
 │   ├── prd.md
 │   ├── architecture.md
 │   ├── epics-and-stories.md
-│   └── brownfield-context.md
-├── entity-dictionary.md            # S3
+│   └── brownfield-context.md       # Updated by S2 if incremental CP ran
+├── entity-dictionary.md            # S5
 ├── requirements.md
 ├── design.md
-├── tasks.md
-├── api-spec.yaml                   # S4
+├── tasks.md                        # Updated by S9 with per-task Constraints
+├── api-spec.yaml                   # S6
 ├── api-sequences.md
 ├── schema.dbml
 ├── bdd-scenarios/
 ├── key-flows.md
 ├── traceability-matrix.md
 ├── decision-log.md
+├── delta-manifest.md               # S8 (with constraint_ref + migration_needed)
+├── constraint-report.md            # S9 (if CP exists)
 └── decision-diary.md               # (if exists in parent)
 ```
 
@@ -558,4 +835,4 @@ specs/{feature}/reconciled/
 1. **Prototype is immutable**: preview/ is never modified during Crystallize
 2. **Original artifacts are immutable**: specs/{feature}/ files (outside reconciled/) are never modified
 3. **Product Brief excluded**: Product Brief defines problem space — not reconcilable from prototype
-4. **Brownfield not re-scanned**: brownfield-context.md is copied as-is (JP2 iteration changes product design, not existing system landscape)
+4. **Brownfield incrementally updated**: brownfield-context.md L1-L4 layers are copied as-is. Constraint Profile may be incrementally extended by S2 (domain concepts found in prototype but absent from CP). Full re-scan is never performed — only delta concepts are scanned.

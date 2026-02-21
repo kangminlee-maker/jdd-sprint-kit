@@ -30,11 +30,11 @@ flowchart TD
     C --> D["4. Deep-dive Existing System\n(Brownfield Targeted Scan)"]
     D --> E["5. Generate Specs"]
     E --> JP1{{"JP1\nIs this the right\nproduct for customers?"}}
-    JP1 -->|Confirm| F["6. Generate Prototype\n(Deliverables)"]
+    JP1 -->|Start Prototyping| F["6. Generate Prototype\n(Deliverables)"]
     JP1 -->|Comment| JP1_FB["Revise or Regenerate\n(Impact Analysis)"]
     JP1_FB --> JP1
     F --> JP2{{"JP2\nIs this the experience\ncustomers want?"}}
-    JP2 -->|Approve & Build| CR["6b. Translate & Compute Delta\n(Crystallize)"]
+    JP2 -->|Start Crystallize| CR["6b. Translate & Compute Delta\n(Crystallize)"]
     JP2 -->|Comment| JP2_FB["Revise or Regenerate\n(Impact Analysis)"]
     JP2_FB --> JP2
     CR --> G["7. Build\n(Parallel Implementation)"]
@@ -336,7 +336,11 @@ brownfield-context.md organizes existing system context in L1~L4 layers. Sprint 
 
 1. Phase 0 determines topology — detects document-project availability, external data sources (`--add-dir` paths, GitHub repo URLs, Figma MCP), and build tools to determine project type (`standalone` / `co-located` / `msa` / `monorepo`).
 2. Pass 1 (Broad Scan) collects domain concepts (L1) and behavior patterns (L2) based on Brief keywords.
-3. Pass 2 (Targeted Scan) collects integration points (L3) and code-level details (L4) after Architecture/Epics completion.
+3. Pass 2 (Targeted Scan) collects integration points (L3), code-level details (L4), and **Constraint Profile** (CP.1-CP.7) after Architecture/Epics completion.
+
+The Constraint Profile captures implementation-level rules from the existing codebase: entity column constraints (nullable, types), naming conventions, transaction managers, lock patterns, API patterns, enum DB-stored values, and domain boundaries. These are extracted during the same file traversal as L3/L4 (no additional pass). The Constraint Profile is used by Crystallize to parameterize translation rules — ensuring that translated specs respect existing code patterns rather than conflicting with them.
+
+**Constraint Profile is skipped** when `complexity=simple` (cost exceeds benefit for simple changes) or when the topology is `standalone`/`msa` (no local codebase to scan).
 
 Results are written to `specs/{feature}/planning-artifacts/brownfield-context.md`. Detailed per-pass behavior is described in S4.2 Pipeline below.
 
@@ -486,9 +490,9 @@ specs/{feature}/planning-artifacts/
 
 **User perspective**: Automatic. No user intervention.
 
-**System internals**: @brownfield-scanner runs in targeted mode. L3 (Component): affected components, services, modules. L4 (Code): specific code locations, interfaces, dependencies.
+**System internals**: @brownfield-scanner runs in targeted mode. L3 (Component): affected components, services, modules. L4 (Code): specific code locations, interfaces, dependencies. **Constraint Profile** (CP.1-CP.7): entity constraints, naming conventions, transaction/lock patterns, API patterns, enum DB values, domain boundaries — extracted during the same Stage 3 traversal as L3/L4 (no additional file reads). Skipped when `complexity=simple`.
 
-**Artifact**: `specs/{feature}/planning-artifacts/brownfield-context.md` (L1 + L2 + L3 + L4 append)
+**Artifact**: `specs/{feature}/planning-artifacts/brownfield-context.md` (L1 + L2 + L3 + L4 + Constraint Profile append)
 
 ---
 
@@ -570,7 +574,7 @@ JP2 presentation format and Comment handling flow details in S5.3.
 
 **Rationale**: In the delta-driven model, Crystallize translates the JP2-approved prototype into development grammar and computes the delta between target state and brownfield baseline. Without this translation, Workers would implement pre-JP2 specs instead of the approved prototype's delta.
 
-**User perspective**: When you select **[A] Approve & Build** at JP2, the system automatically runs Crystallize (~15-20 min). It analyzes the prototype code, translates it into development specifications, and computes exactly what needs to change from the current system. Original documents are preserved untouched — translated versions are written to a separate `reconciled/` directory with a delta manifest.
+**User perspective**: When you select **[S] Start Crystallize** at JP2, the system runs Crystallize (~20-25 min). It analyzes the prototype code, translates it into development specifications, and computes exactly what needs to change from the current system. Original documents are preserved untouched — translated versions are written to a separate `reconciled/` directory with a delta manifest. After Crystallize completes, you choose whether to proceed to Build (/parallel).
 
 **Mandatory**: Crystallize runs automatically on all routes after JP2 approval. If Crystallize encounters an unresolvable issue, you can return to JP2, skip Crystallize (proceed with original specs), or exit.
 
@@ -580,11 +584,17 @@ JP2 presentation format and Comment handling flow details in S5.3.
 |------|--------|--------|
 | S0 | Analyze JP2 decision records (intent and context) | `reconciled/decision-context.md` |
 | S1 | Analyze prototype code (pages, components, API handlers, data model) | `reconciled/prototype-analysis.md` |
-| S2 | Reconcile PRD + Architecture + Epics with prototype | `reconciled/planning-artifacts/` |
-| S3 | Generate Specs from reconciled planning artifacts | `reconciled/requirements.md`, `design.md`, `tasks.md` |
-| S4 | Verify/regenerate Deliverables (API spec, BDD, key flows) | `reconciled/api-spec.yaml`, `bdd-scenarios/`, etc. |
-| S5 | Cross-artifact consistency check (gap=0 required) | PASS/FAIL |
-| S6 | Summary + proceed to Parallel with reconciled artifacts | — |
+| S2 | Incremental Constraint Profile — scan prototype concepts not yet covered in CP | brownfield-context.md CP updated |
+| S3 | Validate prototype against constraints + structural completeness (2 parallel agents) | `validation-constraint.md`, `validation-structural.md` |
+| S4 | Constraint-aware translation: reconcile PRD + Architecture + Epics with CP as parameters | `reconciled/planning-artifacts/` |
+| S5 | Generate Specs from reconciled planning artifacts | `reconciled/requirements.md`, `design.md`, `tasks.md` |
+| S6 | Verify/regenerate Deliverables (API spec, BDD, key flows) | `reconciled/api-spec.yaml`, `bdd-scenarios/`, etc. |
+| S7 | Cross-artifact consistency check (gap=0 required) | PASS/FAIL |
+| S8 | Precise delta computation with constraint references and migration assessment | `reconciled/delta-manifest.md` |
+| S9 | Attach per-task constraints from CP + delta manifest | `reconciled/constraint-report.md`, tasks.md updated |
+| S10 | Summary + proceed to Parallel with reconciled artifacts | — |
+
+S2 and S3 are skipped for `complexity=simple` projects. S2 is also skipped when the Constraint Profile already covers all prototype concepts (delta=0). S3 runs only Agent B (Structural) when no Constraint Profile exists (standalone/msa topology).
 
 **Reconciliation principles**: The prototype provides what the product **does** (screens, features, API endpoints, data model, user flows). Items that the prototype cannot supply — NFRs (Non-Functional Requirements), security architecture, deployment strategy, scaling — are carried forward from the original documents and marked with `[carry-forward]`. Product Brief is excluded from reconciliation because it defines the problem space, not the solution.
 
@@ -596,11 +606,11 @@ JP2 presentation format and Comment handling flow details in S5.3.
 
 This preserves traceability from the original Brief through JP2 iteration to the final reconciled artifacts.
 
-**Budget**: ~85-125 turns (separate from JP2 iteration budget). Does not count against the 5-round JP2 iteration limit.
+**Budget**: ~108-174 turns (separate from JP2 iteration budget). Does not count against the 5-round JP2 iteration limit. Budget varies depending on Constraint Profile availability and whether S2/S3 are skipped.
 
 **Artifact**: `specs/{feature}/reconciled/` — mirrors the existing `specs/{feature}/` structure, minus excluded items (Product Brief, sprint-log, readiness, inputs/, preview/).
 
-**Availability**: All routes. Triggered automatically by [A] Approve & Build at JP2 (Sprint route) or at `/preview` Step 3 (Guided/Direct routes). Also available standalone via `/crystallize feature-name`. Decision records (decision-diary.md, sprint-log.md JP Interactions) are optional — they enrich the translation when present.
+**Availability**: All routes. Triggered by [S] Start Crystallize at JP2 (Sprint route) or at `/preview` Step 3 (Guided/Direct routes). Also available standalone via `/crystallize feature-name`. Decision records (decision-diary.md, sprint-log.md JP Interactions) are optional — they enrich the translation when present.
 
 ---
 
@@ -835,7 +845,7 @@ Any changes made after JP1 approval (e.g., from the Deliverables generation proc
 
 | Response | Action |
 |----------|--------|
-| **Approve & Build** | Crystallize (translate prototype → compute delta) → Parallel (implementation) with reconciled/ documents |
+| **Start Crystallize** | Crystallize (translate prototype → compute delta). After completion, choose to proceed to Parallel or review |
 | **Comment** | Execute Comment handling flow (S5.4) |
 
 ## 5.4 Comment Handling Flow
@@ -930,7 +940,7 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 
 Key changes since v0.4.1:
 - **`/crystallize` command**: After JP2 prototype iteration, reconcile all upstream artifacts to match the finalized prototype. Creates `reconciled/` directory with the definitive artifact set — original artifacts preserved untouched. Product Brief excluded (defines problem space, not derivable from UI code). Available on all routes.
-- **Crystallize mandatory**: Crystallize now runs automatically on [A] Approve & Build at JP2 (all routes). Translates prototype into development grammar and computes delta. Budget (~90-133 turns) included in Approve & Build.
+- **Crystallize mandatory**: Crystallize runs on [S] Start Crystallize at JP2 (all routes). Translates prototype into development grammar and computes delta. After completion, user chooses to proceed to Build or review.
 - **decision-diary.md**: Structured JP decision summary table replacing feedback-log.md. Records each decision with JP, Type, Content, Processing method, and Result.
 - **sprint-log.md JP Interactions**: Full text of each JP exchange (Visual Summary, user input, impact analysis, processing choice, result) recorded in real-time.
 - **Source attribution tags**: `(source: PROTO, origin: BRIEF-N)`, `(source: PROTO, origin: DD-N)`, `(source: carry-forward)` — preserves traceability from original Brief through JP2 iteration to reconciled artifacts.
@@ -951,7 +961,7 @@ Key changes in v0.4.0:
 |---------|--------|-------|
 | Phase 0 → JP1 (planning) | Implemented, partially verified | Developer simulation confirmed |
 | JP1 → JP2 (Deliverables + prototype) | Implemented, partially verified | Developer simulation confirmed |
-| JP2 → Crystallize | **Implemented, verified** | Tested on `duplicate-ticket-purchase` (14 JP2 revisions, 39 FRs reconciled, 21 files generated, S5 8 gaps found and fixed) |
+| JP2 → Crystallize | **Implemented, verified** | Tested on `duplicate-ticket-purchase` (14 JP2 revisions, 39 FRs reconciled, 21 files generated, S7 8 gaps found and fixed) |
 | Post-JP2 (Parallel + Validate + Circuit Breaker) | **Implemented, unverified** | No actual execution test performed |
 
 ## 8.3 Unvalidated Hypotheses
@@ -962,6 +972,8 @@ Key changes in v0.4.0:
 - **Cost formula coefficients are uncalibrated** — relative magnitudes of upfront input cost, generation cost, and judgment cost unmeasured
 - **Post-JP2 pipeline (Parallel, Validate, Circuit Breaker) is unverified in practice** — agent definitions are complete but no end-to-end execution test
 - **Crystallize quality at scale is unverified** — tested on 1 feature (14 JP2 revisions). Behavior with larger features (50+ FRs) or minimal JP2 revisions (1-2 changes) is untested
+- **Constraint Profile extraction accuracy is unverified** — CP extraction rules (enum constructor parsing, @MappedSuperclass inheritance, naming pattern confidence) have not been tested on a real brownfield codebase
+- **S3 catch rate is unverified** — expected 70-80% CRITICAL catch rate (Constraint + Structural validators combined) is a design target, not measured
 
 ## 8.4 Known Gaps
 
@@ -1056,19 +1068,26 @@ specs/{feature}/
 │   └── src/mocks/                   # MSW handlers (browser.ts, handlers.ts, store.ts, seed.ts)
 │
 └── reconciled/                      # Crystallize output (prototype-reconciled artifact set)
+    ├── decision-context.md          # S0: JP2 decision context (if decision records exist)
     ├── prototype-analysis.md        # Prototype structure analysis
-    ├── planning-artifacts/          # Reconciled PRD, Architecture, Epics, brownfield-context
+    ├── validation-constraint.md     # S3: Constraint validation report (if ran)
+    ├── validation-structural.md     # S3: Structural validation report (if ran)
+    ├── planning-artifacts/          # Reconciled PRD, Architecture, Epics, brownfield-context (with CP)
     ├── entity-dictionary.md         # Reconciled entity dictionary
     ├── requirements.md              # Reconciled requirements
     ├── design.md                    # Reconciled design
-    ├── tasks.md                     # Reconciled tasks (with Entropy + File Ownership)
+    ├── tasks.md                     # Reconciled tasks (with Entropy + File Ownership + Constraints)
     ├── api-spec.yaml                # Verified/regenerated API contract
     ├── api-sequences.md             # Verified/regenerated sequence diagrams
     ├── schema.dbml                  # Verified/regenerated DB schema
     ├── bdd-scenarios/               # Regenerated acceptance tests
+    ├── adversarial-scenarios.md     # Adversarial analysis (copied from base, if exists)
     ├── key-flows.md                 # Regenerated key flows
     ├── traceability-matrix.md       # Rebuilt traceability
-    └── decision-log.md              # Merged decision history (original ADR + JP + Crystallize)
+    ├── delta-manifest.md            # S8: Precise delta (constraint refs + migration)
+    ├── constraint-report.md         # S9: Consolidated constraint report
+    ├── decision-log.md              # Merged decision history (original ADR + JP + Crystallize)
+    └── decision-diary.md            # Copy of JP decision summary (if exists)
 ```
 
 ---
@@ -1113,9 +1132,10 @@ specs/{feature}/
 | **readiness.md** | JP1/JP2 Readiness data. YAML frontmatter includes jp1_to_jp2_changes field for tracking post-JP1 changes |
 | **/summarize-prd** | PRD summary/analysis + feedback application command. Used for quickly understanding existing PRDs |
 | **Scope Gate** | 3-stage verification performed by @scope-gate agent: Structured Probe + Checklist + Holistic Review. Runs after each BMad step and after Deliverables |
-| **Crystallize** | Mandatory translation step. After JP2 approval, translates prototype into development grammar and computes delta against brownfield baseline. Creates `reconciled/` directory with delta manifest. Triggered automatically by [A] Approve & Build (all routes), or standalone via `/crystallize` command |
+| **Crystallize** | Mandatory translation step. After JP2 approval, translates prototype into development grammar and computes delta against brownfield baseline. Creates `reconciled/` directory with delta manifest. Triggered by [S] Start Crystallize (all routes), or standalone via `/crystallize` command |
 | **reconciled/** | Directory created by Crystallize. Contains the definitive artifact set reconciled with the finalized prototype. Mirrors `specs/{feature}/` structure minus excluded items. Original artifacts are preserved untouched |
 | **carry-forward** | Items in reconciled artifacts that are not derivable from the prototype (NFRs, security, deployment, scaling) and are carried from the original documents. Marked with `[carry-forward]` tag |
+| **Constraint Profile** (CP) | Implementation-level constraints extracted from the existing codebase during Pass 2 Brownfield scan: entity column constraints (CP.1), naming conventions (CP.2), transaction patterns (CP.3), lock patterns (CP.4), API patterns (CP.5), enum DB values (CP.6), domain boundaries (CP.7). Used by Crystallize S4 as translation parameters. Skipped for `complexity=simple` or `standalone`/`msa` topologies |
 | **DD-N** | Decision Diary entry ID (DD-1, DD-2, ...). Used in Crystallize source attribution to trace prototype features back to specific JP2 decisions |
 | **specs_root** | Parameter added to `/parallel` and `/validate` to specify the base directory for specs files. Default: `specs/{feature}/`. After Crystallize: `specs/{feature}/reconciled/` |
 | **Amelia** (Dev) | BMad agent. Handles Story implementation. Used in Guided route |

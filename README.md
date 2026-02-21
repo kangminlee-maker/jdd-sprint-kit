@@ -21,7 +21,7 @@ flowchart TD
     JP1 -->|Approve| E["5. Generate Prototype\n(Deliverables)"]
     JP1 -->|Revise| C
     E --> JP2{{"JP2\nIs this the right\nexperience?"}}
-    JP2 -->|Approve & Build| CR["6b. Translate & Compute Delta\n(Crystallize)"]
+    JP2 -->|Start Crystallize| CR["6b. Translate & Compute Delta\n(Crystallize)"]
     JP2 -->|Revise| E
     JP2 -.->|Re-examine requirements| JP1
     CR --> F["7. Build\n(Parallel Implementation)"]
@@ -36,7 +36,7 @@ flowchart TD
     style CB fill:#FF6B6B,stroke:#333
 ```
 
-Human involvement happens at exactly **2 points** (JP1, JP2) — everything else runs autonomously. If JP2 reveals issues with the requirements themselves, it loops back to JP1 — this is not a failure, but a normal discovery prompted by concrete deliverables. After JP2 approval, **Crystallize** automatically translates the prototype into development specs and computes the delta before implementation begins.
+Human involvement happens at exactly **2 points** (JP1, JP2) — everything else runs autonomously. If JP2 reveals issues with the requirements themselves, it loops back to JP1 — this is not a failure, but a normal discovery prompted by concrete deliverables. After JP2 approval, selecting **[S] Start Crystallize** translates the prototype into development specs and computes the delta. After Crystallize completes, you choose whether to proceed to Build.
 
 ---
 
@@ -130,7 +130,7 @@ Direct:                        |←── Auto ───────────
 | **Guided** | BMad 12-step → `/specs` → `/preview` | Exploration needed — discover and define with AI |
 | **Direct** | `/specs` → `/preview` | Planning is complete — execute immediately |
 
-After JP2 approval, Crystallize automatically translates the prototype into development specs and computes the delta. Also available standalone via `/crystallize feature-name`.
+After JP2 approval, Crystallize translates the prototype into development specs and computes the delta. Also available standalone via `/crystallize feature-name`.
 
 > For small tasks, use BMad Quick Flow: `/quick-spec` → `/dev-story` → `/code-review`
 

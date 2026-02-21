@@ -43,11 +43,12 @@ All notable changes to JDD Sprint Kit will be documented in this file.
 - **Crystallize is now mandatory** — Runs automatically after JP2 approval on all routes
   - Purpose rewritten: mandatory translation + delta extraction (not optional reconciliation)
   - Pipeline: S0-S6 + new S5b (Delta Manifest). Progress counters updated to /8
-  - Failure recovery: [R] Return to JP2 / [S] Skip Crystallize / [X] Exit
+  - Failure recovery: [R] Return to JP2 / [K] Skip Crystallize / [X] Exit
   - S0 skip expanded: also skips when Decisions table has 0 rows
-- **JP menu restructure** — Consistent across Sprint and Guided/Direct routes
-  - [A] Advanced Elicitation → [E] Elicitation (both JP1 and JP2)
-  - [C] Continue / [S] Crystallize → [A] Approve & Build (Crystallize auto-included)
+- **JP menu restructure** — Consistent keys across JP1 and JP2
+  - [A] Advanced Elicitation, [P] Party Mode, [C] Comment — shared across both JPs
+  - [S] Start Prototyping (JP1) / [S] Start Crystallize (JP2) — proceed to next step
+  - [X] Exit — shared across both JPs
   - Iteration limit messages updated to reference new keys
 - **validate.md Judge paths parameterized** — `{specs_root}` replaces hardcoded `specs/{feature}/` in all 3 Judge invocations. Brownfield path has planning-artifacts/ fallback.
 - **worker.md brownfield path** — Dynamic with `{specs_root}` + fallback + greenfield skip

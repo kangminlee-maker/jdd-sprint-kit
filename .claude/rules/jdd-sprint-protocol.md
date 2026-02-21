@@ -1,5 +1,26 @@
 # Sprint Execution Protocol
 
+## Terminology Boundaries (Crystallize / Translate / Reconcile)
+
+Three terms are used in the Crystallize pipeline. Each has a defined scope — do not interchange them.
+
+| Term | Scope | Usage Examples | Never Use For |
+|------|-------|----------------|---------------|
+| **Crystallize** | Process name, command name, pipeline step name | `/crystallize`, "Crystallize Pipeline", "Step 7: Crystallize", `crystallize.md` | As a verb on artifacts ("crystallize the PRD" ❌) |
+| **Translate** | Verb describing the operation type (rule-based grammar conversion per FP6) | "translate user grammar into development grammar", "translation is rule-based" | Directory names, artifact names, step names |
+| **Reconcile** | Internal step verb, directory name, artifact-alignment actions | S4 "Reconcile Planning", S6 "Reconcile Deliverables", `reconciled/` directory | Referring to the whole Crystallize process |
+
+**Rationale**: Crystallize is the brand name for the process. Translation describes what the process does (FP6: rule-based conversion between two grammars). Reconciliation is what happens inside each step (aligning individual artifacts with the prototype).
+
+### Preview vs Prototype
+
+| Term | Scope | Meaning |
+|------|-------|---------|
+| **Preview** | Directory name (`preview/`), generated deliverable state | The draft deliverable shown at JP2 for review and iteration |
+| **Prototype** | Conceptual status, Crystallize input | The JP2-approved preview. Becomes "prototype" at the moment of [S] Start Crystallize. The target state expressed in user grammar |
+
+`preview/` directory is NOT renamed to `prototype/`. The directory holds a preview that becomes a prototype upon approval. Crystallize reads `preview/` as its prototype input.
+
 ## BMad Artifact Writing Rules
 
 - **When writing a PRD, always read `_bmad/docs/prd-format-guide.md` first and follow its format.** Comply with all rules: YAML frontmatter, section structure, FR/NFR quality criteria, Brownfield notation, etc.
@@ -13,11 +34,13 @@ Brownfield data is used at every Sprint phase. Sources are cumulatively collecte
 | **Phase 0 Step 0f** (pre-Sprint) | Detect document-project + MCP + build tools → determine topology + `brownfield_status` |
 | **Pass 1: Broad Scan** (Sprint start) | Stage 0: consume document-project → Stage 1~4: MCP + local scan → brownfield-context.md **L1 + L2** |
 | **BMad Phase 1-3** | Reference brownfield-context.md L1+L2 |
-| **Pass 2: Targeted Scan** (post-Epics) | Reference Stage 0 data + backend-docs/client-docs MCP + local scan → brownfield-context.md **L3 + L4** |
+| **Pass 2: Targeted Scan** (post-Epics) | Reference Stage 0 data + backend-docs/client-docs MCP + local scan → brownfield-context.md **L3 + L4 + Constraint Profile** (CP.1-CP.7, co-located/monorepo only, skip when complexity=simple) |
 | **Specs generation** (`/specs`) | Copy frozen snapshot (@deliverable-generator Stage 2) |
 | **Parallel** (`/parallel`) | Workers read frozen snapshot |
 | **Validate** (`/validate`) | Judges verify against brownfield-context.md |
-| **Crystallize** (`/crystallize`) | Copy brownfield-context.md to reconciled/planning-artifacts/ (unchanged) |
+| **Crystallize S2** (`/crystallize`) | Incremental CP: scan prototype concepts not covered by existing CP → append to brownfield-context.md → copy to reconciled/ |
+| **Crystallize S3** (`/crystallize`) | Constraint + Structural validation (2 agents parallel) before translation |
+| **Crystallize S4** (`/crystallize`) | Constraint-aware translation: CP data injected as brownfield parameters into translation rules |
 
 ## Causal Chain Propagation Flow (Optional)
 
@@ -92,16 +115,19 @@ specs/{feature}/
 ├── preview/                    # React + MSW prototype (npm run dev)
 │
 └── reconciled/                 # Crystallize output (prototype-reconciled artifact set)
+    ├── decision-context.md     # S0: JP2 decision context (if decision records exist)
     ├── prototype-analysis.md   # Prototype structure analysis
+    ├── validation-constraint.md # S3 Agent A: Constraint validation report (if ran)
+    ├── validation-structural.md # S3 Agent B: Structural validation report (if ran)
     ├── planning-artifacts/     # Reconciled planning artifacts
     │   ├── prd.md              # PRD final (reconciled with prototype)
     │   ├── architecture.md     # Architecture final (reconciled)
     │   ├── epics-and-stories.md # Epics final (reconciled)
-    │   └── brownfield-context.md # Copy (unchanged)
+    │   └── brownfield-context.md # Copy (with Constraint Profile, updated by S2 if applicable)
     ├── entity-dictionary.md    # Reconciled entity dictionary
     ├── requirements.md         # Reconciled requirements
     ├── design.md               # Reconciled design
-    ├── tasks.md                # Reconciled tasks (with Entropy + File Ownership)
+    ├── tasks.md                # Reconciled tasks (with Entropy + File Ownership + per-task Constraints)
     ├── api-spec.yaml           # Verified/regenerated API contract
     ├── api-sequences.md        # Verified/regenerated sequence diagrams
     ├── schema.dbml             # Verified/regenerated DB schema
@@ -109,6 +135,8 @@ specs/{feature}/
     ├── adversarial-scenarios.md # Adversarial analysis (copied from base)
     ├── key-flows.md            # Regenerated key flows
     ├── traceability-matrix.md  # Rebuilt traceability
+    ├── delta-manifest.md       # S8: Precise delta (with constraint_ref + migration_needed)
+    ├── constraint-report.md    # S9: Consolidated constraint report (if CP exists)
     ├── decision-log.md         # Merged decision history
     └── decision-diary.md       # Copy of JP decision summary
 ```
@@ -160,13 +188,13 @@ See `docs/judgment-driven-development.md` Customer-Lens Judgment Points.
 
 - **Judgment target**: requirements, user scenarios, feature scope, priorities
 - **Presentation format**: customer journey narrative + original intent ↔ FR mapping + structural checklist
-- **Response**: Confirm / Comment
+- **Response**: [A] Advanced Elicitation / [P] Party Mode / [C] Comment / [S] Start Prototyping / [X] Exit
 
 ### JP2: "Is this the experience the customer wants?"
 
 - **Judgment target**: prototype, screen flows, interactions
 - **Presentation format**: working prototype + key scenario walkthrough guide
-- **Response**: Confirm / Comment
+- **Response**: [A] Advanced Elicitation / [P] Party Mode / [C] Comment / [S] Start Crystallize / [X] Exit
 
 ### Comment Handling Flow
 
@@ -212,20 +240,34 @@ Decision records (decision-diary.md, jp2-review-log.md, sprint-log.md JP Interac
 ### Crystallize Pipeline
 
 ```
-JP2 [A] Approve & Build (Sprint) / [A] Approve & Build (Guided/Direct)
-  S0: Decision Context Analysis  → reconciled/decision-context.md (JP2 modification intent)
-  S1: Prototype Analysis         → reconciled/prototype-analysis.md (informed by S0)
-  S2: Reconcile Planning         → reconciled/planning-artifacts/ (PRD, Architecture, Epics)
-  S2-G: Cross-Artifact Gate      → PASS/FAIL
-  S3: Generate Execution Specs   → reconciled/ (entity-dict, requirements, design, tasks)
-  S3-G: Scope Gate (spec)        → PASS/FAIL
-  S4: Reconcile Deliverables     → reconciled/ (api-spec, bdd, key-flows, traceability, etc.)
-  S5: Cross-Artifact Consistency  → PASS/FAIL (gap=0 required; ≤3 auto-fix, >3 user choice)
-  S5b: Delta Manifest            → reconciled/delta-manifest.md
-  S6: Summary → /parallel with specs_root=reconciled/
+JP2 [S] Start Crystallize (Sprint) / [S] Start Crystallize (Guided/Direct)
+  S0:    Decision Context Analysis     → reconciled/decision-context.md (JP2 modification intent)
+  S1:    Prototype Analysis            → reconciled/prototype-analysis.md (informed by S0)
+  S2:  Incremental Constraint Profile → brownfield-context.md CP updated (delta concepts only)
+  S3:  Constraint-Aware Validation   → validation-constraint.md + validation-structural.md (2 agents parallel)
+  S4:    Constraint-Aware Translation  → reconciled/planning-artifacts/ (PRD, Architecture, Epics)
+  S4-G:  Cross-Artifact Gate           → PASS/FAIL
+  S5:    Generate Execution Specs      → reconciled/ (entity-dict, requirements, design, tasks)
+  S5-G:  Scope Gate (spec)             → PASS/FAIL
+  S6:    Reconcile Deliverables        → reconciled/ (api-spec, bdd, key-flows, traceability, etc.)
+  S7:    Cross-Artifact Consistency    → PASS/FAIL (gap=0 required; ≤3 auto-fix, >3 user choice)
+  S8:    Precise Delta Computation     → reconciled/delta-manifest.md (with constraint_ref + migration_needed)
+  S9:    Constraint Report Attachment  → reconciled/constraint-report.md + tasks.md Constraints inline
+  S10:    Summary → /parallel with specs_root=reconciled/
 ```
 
-On gate failure (S2-G, S3-G, or S5 unresolvable): [R] Return to JP2 / [S] Skip Crystallize (original specs) / [X] Exit.
+On S3 CRITICAL findings: [R] Return to JP2 / [F] Acknowledge and proceed / [X] Exit.
+On gate failure (S4-G, S5-G, or S7 unresolvable): [R] Return to JP2 / [K] Skip Crystallize (original specs) / [X] Exit.
+
+### Graceful Degradation (Crystallize)
+
+| Condition | Behavior |
+|-----------|----------|
+| co-located/monorepo + JP2 Comment=0 | Phase 1 CP sufficient. S2 skip (delta=0). S3 both agents |
+| co-located/monorepo + JP2 Comment>0 | S2 incremental scan. S3 both agents |
+| standalone/msa | No CP available. S2 skip. S3 Agent B (Structural) only + warning |
+| Greenfield (any topology) | No CP. S2 skip. S3 Agent B only (no CP data for Agent A). Delta = all positive |
+| complexity=simple | Phase 1 CP skip. S2 skip. S3 skip. S9 skip. Current pipeline behavior |
 
 ### Reconciliation Principles
 
@@ -267,7 +309,7 @@ sprint-log.md is extended with a **JP Interactions** section that records the fu
 **[System] Visual Summary**
 {Visual Summary full text}
 
-**[User] Selection: [F] Comment**
+**[User] Selection: [C] Comment**
 {user feedback text}
 
 **[System] Impact Analysis**
