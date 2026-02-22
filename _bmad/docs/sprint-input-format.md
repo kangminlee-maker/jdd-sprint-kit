@@ -132,7 +132,7 @@ flags:
 | `external_resources.external_repos[].snapshot_branch` | N | Branch name extracted from URL, or `"HEAD"` if default (tarball-snapshot only) |
 | `external_resources.external_repos[].snapshot_at` | N | Commit timestamp ISO 8601 (tarball-snapshot only) |
 | `external_resources.github_repos[].notes` | N | 탐색 힌트 (brief.md 참고 소스 섹션에서 전달). Scanner가 참조 |
-| `external_resources.policy_docs` | N | Scanner 우선 탐색 대상 문서명 목록 (brief.md 참고 소스 섹션에서 전달) |
+| `external_resources.policy_docs` | N | Policy document filenames for priority scanning. Sprint auto-detects policy documents from all accessible sources (inputs/, --add-dir, tarball) at Step 1.5. Documents listed here are additionally scanned with highest priority. Policy Constraint Profile (PCP.1-PCP.5) is generated from all detected policy documents and cross-validated against PRD FRs. |
 | `external_resources.scan_notes` | N | 전체 탐색 자유 형식 메모 (brief.md 참고 소스 섹션에서 전달) |
 | `external_resources.figma` | N | Figma design file references |
 | `external_resources.figma[].file_key` | (Y if figma exists) | Figma fileKey extracted from URL |

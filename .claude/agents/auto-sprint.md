@@ -96,6 +96,7 @@ Re-estimate remaining time at each major Step completion:
 
 Default per-step estimates (medium baseline):
 - Brownfield Broad Scan: 5~10 min
+- PCP Extraction: 2~5 min (with policy docs) / <1 min (without)
 - Product Brief + Scope Gate: 5~10 min
 - PRD + Scope Gate: 10~15 min
 - Architecture + Scope Gate: 8~12 min
@@ -134,6 +135,47 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 ```
 
 Report progress (in {communication_language}): "Brownfield Broad Scan complete"
+Update adaptive time estimation.
+
+### Step 1.5: Policy Constraint Profile Extraction
+
+Report progress (in {communication_language}): "Policy Constraint Profile extraction starting"
+
+This step is executed by the Conductor directly (no sub-agent invocation). It auto-detects policy documents and extracts PCP.1-PCP.5 clauses.
+
+**Protocol:**
+
+1. **Source collection** (scan 3 sources):
+   - **inputs/ files**: Scan filenames first with priority patterns: `terms-*`, `policy-*`, `약관*`, `이용약관*`, `tos.*`, `privacy-*`. For non-matching files, read first 50 lines to check for policy document indicators (clause numbering systems like "제N조", "Article N", "Section N"; legal terms like "약관", "규정", "의무", "권리", "terms", "obligations", "rights"; structured article format).
+   - **policy_docs declared files**: Check sprint-input.md `external_resources.policy_docs` for explicitly declared document names. Search for these in inputs/, --add-dir directories, and tarball cache.
+   - **--add-dir / tarball sources**: Apply the same filename pattern matching to external repositories.
+
+2. **False positive control**:
+   - Auto-detection confidence: "Clause numbering system exists (제N조, Article N, etc.)" AND "rights/obligations language present" → policy document. A "system" requires multiple sequentially-numbered clauses forming a document body, not isolated references.
+   - **Exclusions** (even if filename pattern matches): Simple policy mentions in meeting notes (e.g., "we discussed the policy"). Changelog/amendment documents (e.g., `policy-updates.md`, `policy-changelog.md`) — detected by date + amendment pattern ("YYYY-MM-DD: 제N조 ... 개정") or majority of content being change records rather than operative rules. These are logged as "skipped: {filename} (changelog pattern)" in Sprint Log.
+   - Auto-detected documents tagged `(auto-detected)`. Declared documents tagged `(declared)`.
+   - Uncertain cases: judge by filename + first 50 lines. If not confident, exclude and log "skipped: {filename} (low confidence)" in Sprint Log.
+
+3. **Extraction** (when 1+ policy documents found):
+   - Read full content of each detected policy document
+   - Classify each clause into PCP.1 (Service Entitlements), PCP.2 (Prohibited Actions), PCP.3 (Regulatory Requirements), PCP.4 (Deferral Declarations), PCP.5 (State Constraints)
+   - When multiple documents contain conflicting rules for the same item: record both with source attribution + `[POLICY CONFLICT]` tag
+
+4. **PCP.4 Deferral extraction** (always runs, even if 0 policy documents):
+   - Scan Brief text (sprint-input.md Core Brief section) and Reference Materials for deferral patterns:
+     - Korean: "별도 기획", "TBD", "추후 확정", "상세는 ~팀", "Phase 2", "차기"
+     - English: "to be determined", "separate planning", "future phase", "out of scope"
+   - Record each deferral in PCP.4: deferred item, deferred_to, dependency description
+
+5. **Output**:
+   - When 0 policy documents AND 0 deferrals found: Set `policy_constraint_profile.status: not-found` in brownfield-context.md frontmatter. Log: "PCP extraction skipped: no policy documents found."
+   - When 0 policy documents BUT deferrals found (PCP.4 non-empty): Append `## Policy Constraint Profile` section with PCP.4 only (PCP.1-3, PCP.5 empty). Set `status: deferral-only`, `document_count: 0`, `clause_count: {deferral count}`. Log: "PCP: no policy documents, {N} deferrals detected from Brief."
+   - When policy documents found: Append `## Policy Constraint Profile` section to brownfield-context.md (after `## Constraint Profile` if present, or after `## Entity Index`). Update frontmatter `policy_constraint_profile` with status, counts.
+   - When declared documents not found but auto-detection produced results: Set `status: partial`. Log warning.
+
+6. **Sprint Log**: `| {timestamp} | PCP Extraction | status={status}, {N} documents scanned, {N} clauses extracted |`
+
+Report progress (in {communication_language}): "Policy Constraint Profile extraction complete (status: {status}, {N} clauses)"
 Update adaptive time estimation.
 
 ### Step 2: BMad Auto-Pipeline
@@ -204,6 +246,9 @@ Task(subagent_type: "general-purpose")
     - Sprint Input (SSOT): specs/{feature_name}/inputs/sprint-input.md
       (Refer to Discovered Requirements and Detected Contradictions sections to ensure all requirements are captured in PRD.)
     - Brownfield Context: specs/{feature_name}/planning-artifacts/brownfield-context.md
+      (Read the Policy Constraint Profile section if present — status 'collected' or 'partial'.
+       Follow prd-format-guide.md Policy Cross-Validation, Edge Case Matrix, Deferral Risk,
+       and State Machine Completeness instructions.)
 
     Output: Write the complete PRD to specs/{feature_name}/planning-artifacts/prd.md
     Follow the PRD format guide strictly: YAML frontmatter, all required sections, FR quality criteria, Brownfield Sources section.
@@ -213,7 +258,15 @@ Task(subagent_type: "general-purpose")
     - Derived directly from Brief sentence: (source: BRIEF-N)
     - Derived from Discovered Requirements: (source: DISC-N)
     - AI-inferred addition: (source: AI-inferred, reason: '{rationale}')
-    Classify FRs as core/enabling/supporting, but skip classification if causal_chain is empty."
+    Classify FRs as core/enabling/supporting, but skip classification if causal_chain is empty.
+
+    CONDITIONAL — Regulatory Awareness (always when classification.domain is not 'general'):
+    Consider applicable regulations for the domain:
+    - Personal data processing → privacy law check (GDPR, 개인정보보호법)
+    - Marketing/promotional messaging → consent law check (CAN-SPAM, 정보통신망법 §50)
+    - Payment processing → e-commerce law check (전자상거래법, PCI-DSS)
+    - Minors/education → child protection check (COPPA, FERPA)
+    Document findings in Domain-Specific Requirements section."
   max_turns: {budget}
 ```
 
@@ -422,19 +475,22 @@ Extract the following data from readiness.md to generate the banner:
 | Existing system risk | 0 HIGH side-effects | 1+ HIGH |
 | Structural verification | All Scope Gates PASS | FAIL exists |
 | Brownfield data quality | All layers have sources + no CRITICAL gaps | Layers missing sources or CRITICAL/HIGH gaps |
+| Policy compliance | 0 PCP CONFLICT + 0 undefined combinations + 0 HIGH deferrals | Conflicts, undefined cells, or HIGH-risk deferrals exist |
 
 Banner output (in {communication_language}):
 
 ```
 ## Judgment Point 1: {feature_name}
 
-{when all 5 conditions pass}
+{when all 6 conditions pass}
 Pass: Requirements tracking complete ({N}/{N}) | Pass: No AI-inferred items | Pass: No existing system risk | Pass: Structural verification passed
 Brownfield: L1~L4 collected / {N} sources OK
+Policy: N/A (no policy documents) — or — Policy: 0 conflicts, 0 undefined, 0 blocking deferrals
 
 {when some conditions have warnings}
 Warning: Requirements tracking {N}/{M} | Warning: {N} AI-inferred items | Pass: No existing system risk | Pass: Structural verification passed
 Brownfield: {brownfield quality 1-line summary}
+Policy: {N} conflicts, {N} undefined combinations, {N} blocking deferrals — or — Policy: N/A (no policy documents)
 ```
 
 **Brownfield quality 1-line summary** — generate from brownfield-context.md YAML frontmatter:
@@ -471,6 +527,12 @@ Warning: Brief Grade C — AI inference ratio may be high. Review carefully.
 {if unmapped tracking source items exist}
 Warning: **Review needed**: The following items are not reflected in the design:
 → {unmapped item list}
+
+{if PCP CONFLICT tags exist in PRD}
+Warning: **Policy conflicts detected**: {N} FRs conflict with existing service terms or regulations. Review required.
+
+{if Edge Case Matrix has undefined cells}
+Warning: **Undefined combinations**: {N} state × type combinations have no defined behavior. Review required.
 
 ### Section 2: Additional Discoveries
 

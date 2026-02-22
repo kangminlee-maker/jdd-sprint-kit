@@ -368,6 +368,117 @@ Captures package structure and gateway dependency patterns.
 | MEDIUM | 2 examples | **Reference**: Tagged `[CP-MEDIUM: {pattern}]`, Worker decides | Should follow |
 | LOW | 1 example | **Ignore**: Not used in S4. Recorded in constraint-report.md only | Informational |
 
+## Policy Constraint Profile
+
+Policy Constraint Profile (PCP) captures business policy and regulatory constraints from service terms, policies, and legal documents. It is separate from Constraint Profile (CP) — CP describes what rules the existing code enforces, while PCP describes what rules the business policies require.
+
+**When generated**: During Step 1.5 (Policy Constraint Profile Extraction) in auto-sprint. Policy documents are auto-detected from inputs/, --add-dir, and tarball sources, plus any explicitly declared in sprint-input.md `external_resources.policy_docs`.
+
+**When skipped**: When no policy documents are found in any accessible source (status: `not-found`).
+
+**Relationship to CP.6**: CP.6 (Enum/State Values) captures state values implemented in code. PCP.5 (State Constraints) captures state transition rules defined in policy documents. The PRD agent cross-references both to verify that policy state rules map to code state values.
+
+**Contradiction handling**: When multiple policy documents contain conflicting rules for the same item, record both versions with source attribution and tag `[POLICY CONFLICT]`. The PRD agent resolves conflicts during FR generation.
+
+### PCP YAML Frontmatter Extension
+
+Add to the existing `scan_metadata` section:
+
+```yaml
+scan_metadata:
+  # ... existing fields ...
+  policy_constraint_profile:
+    status: collected | not-found | partial | deferral-only
+    document_count: 0       # number of policy documents scanned
+    clause_count: 0         # total PCP clauses extracted (includes deferral items)
+    auto_detected_count: 0  # clauses from auto-detected documents
+    declared_count: 0       # clauses from policy_docs declared documents
+```
+
+Status values:
+- `collected`: 1+ policy documents found and PCP clauses extracted
+- `not-found`: No policy documents found AND no deferrals detected (all sources empty)
+- `partial`: Documents declared in policy_docs were not found, but auto-detection produced some results
+- `deferral-only`: No policy documents found, but PCP.4 deferral items detected from Brief/references. PCP.1-3, PCP.5 are empty.
+
+### PCP.1 Service Entitlements
+
+Captures per-product/type entitlement limits from service terms.
+
+```markdown
+### PCP.1 Service Entitlements
+
+| Clause Ref | Entitlement | Limit/Value | Applies To | Source Document | Detection |
+|------------|-------------|-------------|------------|-----------------|-----------|
+| 제13조 1항 | Daily lesson limit | 1 per day | All ticket types | terms-of-service.md | declared |
+| 제15조 3항 | Concurrent reservation limit | 1 at a time | Standard tickets | terms-of-service.md | auto-detected |
+```
+
+### PCP.2 Prohibited Actions
+
+Captures explicitly prohibited operations from service terms.
+
+```markdown
+### PCP.2 Prohibited Actions
+
+| Clause Ref | Prohibition | Condition | Consequence | Source Document | Detection |
+|------------|-------------|-----------|-------------|-----------------|-----------|
+| 제18조 2항 | Refund after certificate issued | Certificate already issued | Refund blocked | terms-of-service.md | declared |
+| 제20조 | Mid-term cancellation of 1-month plan | 1-month subscription active | Cancellation blocked | terms-of-service.md | declared |
+```
+
+### PCP.3 Regulatory Requirements
+
+Captures legal and regulatory compliance requirements.
+
+```markdown
+### PCP.3 Regulatory Requirements
+
+| Regulation | Requirement | Condition | Deadline/Limit | Source Document | Detection |
+|------------|-------------|-----------|----------------|-----------------|-----------|
+| 전자상거래법 제17조 | Cooling-off period withdrawal | Within 7 days of payment | 7 days | terms-of-service.md | declared |
+| 정보통신망법 §50 | Marketing opt-in consent | Before sending promotional messages | Prior to send | privacy-policy.md | auto-detected |
+```
+
+### PCP.4 Deferral Declarations
+
+Captures items deferred to other teams or phases, with dependency information.
+
+```markdown
+### PCP.4 Deferral Declarations
+
+| # | Deferred Item | Deferred To | Dependency Description | Source | Detection |
+|---|---------------|-------------|------------------------|--------|-----------|
+| 1 | Promotional benefit details | Marketing team separate planning | API schema for benefit display TBD | brief.md | auto-detected |
+| 2 | Advanced analytics dashboard | Phase 2 | Requires data pipeline not in MVP scope | meeting-notes.md | auto-detected |
+```
+
+**Detection patterns** (for auto-detection from Brief and reference materials):
+- Korean: "별도 기획", "추후 확정", "상세는 ~팀", "차기", "Phase 2"
+- English: "TBD", "to be determined", "separate planning", "future phase", "out of scope for MVP"
+
+### PCP.5 State Constraints
+
+Captures state transition rules defined in business policies (not code).
+
+```markdown
+### PCP.5 State Constraints
+
+| Clause Ref | Entity | State Rule | Trigger | Source Document | Detection |
+|------------|--------|------------|---------|-----------------|-----------|
+| 제14조 2항 | Ticket | Auto-expire on validity period end | Validity date passed | terms-of-service.md | declared |
+| 제16조 | Reservation | No-show penalty: 72h booking block | No-show detected | terms-of-service.md | declared |
+```
+
+### PCP Confidence and Usage
+
+Unlike CP (which uses HIGH/MEDIUM/LOW confidence based on example count), PCP items are either present (explicitly stated in a policy document) or absent. All extracted PCP items are authoritative — they come from official documents, not pattern inference.
+
+| Detection | Meaning | Usage |
+|-----------|---------|-------|
+| `declared` | From documents listed in policy_docs | Authoritative — PRD must address |
+| `auto-detected` | From documents found by filename/content pattern matching | Authoritative — PRD must address. May require user confirmation of document identity. |
+
 ## Key Principles
 
 1. **Progressive refinement**: L1 (where) → L2 (what) → L3 (how) → L4 (exactly where) + CP (what rules)

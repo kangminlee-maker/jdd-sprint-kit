@@ -79,6 +79,11 @@ Apply stage-specific checklist:
 - [ ] State Transition FRs (if any) include all required fields: States, Transitions, Invariants, Terminal states
 - [ ] Algorithmic Logic FRs (if any) include all required fields: Input, Rules, Output
 - [ ] No FR-NFR contradictions exist (e.g., FR requires real-time behavior but NFR allows eventual consistency; FR demands unlimited access but NFR caps rate). Check for logical impossibility, not implementation feasibility.
+- [ ] No unresolved [PCP CONFLICT] tags (when brownfield-context.md policy_constraint_profile.status in [collected, partial] AND clause_count > 0; N/A when status is deferral-only or not-found)
+- [ ] Edge Case Matrix has 0 "undefined" cells (when State Transition FRs exist AND entity has 2+ subtypes)
+- [ ] Deferred Dependencies section present with risk levels (when PCP.4 non-empty or deferral language detected in Brief)
+- [ ] State Transition completeness verified: every pair defined/prohibited/unreachable (when State Transition FRs exist)
+- [ ] PCP.3 regulatory requirements addressed: each has corresponding FR or documented exclusion rationale (when PCP.3 non-empty)
 
 #### architecture
 - [ ] Every major decision has an ADR with rationale
@@ -158,6 +163,7 @@ With Stage 1-2 results as context, identify issues that structured checks missed
 - **Domain rule violations**: Brownfield constraints not respected
 - **Customer-facing gaps**: Missing scenarios or UX continuity breaks from the customer's perspective
 - **Scope creep indicators**: Content unrelated to Sprint goals (>30% of artifact)
+- **Policy compliance gaps** (when brownfield-context.md policy_constraint_profile.status in [collected, partial] AND clause_count > 0): FRs granting entitlements exceeding PCP.1 limits, missing consent mechanisms for PCP.3 requirements
 
 **Verdict**: Only CRITICAL issues cause Stage 3 FAIL. Warnings are noted but don't block.
 

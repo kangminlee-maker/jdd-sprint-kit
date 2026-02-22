@@ -38,9 +38,14 @@ Brownfield data is used at every Sprint phase. Sources are cumulatively collecte
 | **Specs generation** (`/specs`) | Copy frozen snapshot (@deliverable-generator Stage 2) |
 | **Parallel** (`/parallel`) | Workers read frozen snapshot |
 | **Validate** (`/validate`) | Judges verify against brownfield-context.md |
-| **Crystallize S2** (`/crystallize`) | Incremental CP: scan prototype concepts not covered by existing CP → append to brownfield-context.md → copy to reconciled/ |
+| **Step 1.5** (auto-sprint) | Auto-detect + extract PCP from policy docs → brownfield-context.md PCP.1-PCP.5 |
+| **Step 2b PRD** (auto-sprint) | Cross-validate FRs against PCP. Tag [PCP CONFLICT]. Generate Edge Case Matrix + Deferral Risk + State Completeness. |
+| **Step 2b-G Scope Gate** | Verify 0 PCP CONFLICT + regulatory coverage + state completeness + deferral risk assessment |
+| **Step 5-D Devil's Advocate** | Lens 8: Policy & Regulatory Compliance adversarial verification (when PCP exists) |
+| **Crystallize S2** (`/crystallize`) | Incremental CP: scan prototype concepts not covered by existing CP → append to brownfield-context.md → copy to reconciled/. PCP section carried over via full file copy. |
 | **Crystallize S3** (`/crystallize`) | Constraint + Structural validation (2 agents parallel) before translation |
-| **Crystallize S4** (`/crystallize`) | Constraint-aware translation: CP data injected as brownfield parameters into translation rules |
+| **Crystallize S4** (`/crystallize`) | Constraint-aware translation: CP data injected as brownfield parameters into translation rules. PCP data available in brownfield-context.md for reference (not yet auto-injected into S4 prompts). |
+| **Crystallize S9** (`/crystallize`) | Per-task Constraint Attachment: CP references auto-attached. PCP clauses available in brownfield-context.md for manual reference (not yet auto-attached to per-task constraints). |
 
 ## Causal Chain Propagation Flow (Optional)
 
@@ -89,10 +94,10 @@ specs/{feature}/
 │
 ├── planning-artifacts/         # BMad Phase 1-3 artifacts (retained per project)
 │   ├── product-brief.md        # Product Brief
-│   ├── prd.md                  # PRD
+│   ├── prd.md                  # PRD (may include Deferred Dependencies + Edge Case Matrix sections)
 │   ├── architecture.md         # Architecture + ADR
 │   ├── epics-and-stories.md    # Epics & Stories
-│   └── brownfield-context.md   # L1~L4 raw collection (appended during work)
+│   └── brownfield-context.md   # L1~L4 + CP + PCP raw collection (appended during work)
 │
 ├── sprint-log.md               # Sprint execution log (timeline + decisions + issues + JP Interactions)
 ├── decision-diary.md           # JP decision summary table (replaces feedback-log.md)

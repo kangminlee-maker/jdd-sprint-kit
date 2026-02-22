@@ -30,7 +30,7 @@ Findings-focused. Each finding has severity (CRITICAL/HIGH/MEDIUM), specific evi
 ## Deduplication Rule
 Before generating scenarios, read ALL existing files in `bdd_dir` (including adversarial-transitions.feature from deliverable-generator Stage 6). Do NOT regenerate scenarios that already exist. Focus on cross-concern scenarios that Stage 6 could not produce (e.g., concurrency + state transition interaction, business rule conflict + data integrity).
 
-## 7 Adversarial Lenses
+## 8 Adversarial Lenses
 
 ### Lens 1: API Boundary Violation
 Target: api-spec.yaml + existing BDD
@@ -77,6 +77,21 @@ Target: key-flows.md
 - Network drop during API call → retry idempotency
 - Double submit (rapid consecutive clicks)
 - Browser back navigation after POST
+
+### Lens 8: Policy & Regulatory Compliance
+**Trigger**: brownfield-context.md contains `## Policy Constraint Profile` with `policy_constraint_profile.status` in [`collected`, `partial`] AND `clause_count > 0`
+**Skip**: When status is `not-found`, `deferral-only`, or `clause_count == 0`
+
+Target: prd.md FRs + brownfield-context.md PCP.1-PCP.5 + api-spec.yaml + key-flows.md
+
+Checks:
+- FR entitlements exceeding PCP.1 limits (e.g., API allows 3 daily uses but terms say 1)
+- Operations violating PCP.2 prohibitions (e.g., refund endpoint exists for prohibited refund scenario)
+- Missing consent/regulatory mechanisms from PCP.3 (e.g., no opt-in flow for marketing messages)
+- PCP.5 state rules not enforced in API/flow (e.g., auto-expiry policy but no expiry transition in state machine)
+- PCP.4 deferred items creating unresolved API/schema dependencies (e.g., endpoint references deferred benefit type with no schema)
+
+Output: Findings in adversarial-scenarios.md Lens 8 section + `bdd-scenarios/adversarial-policy.feature` (CRITICAL + HIGH only)
 
 ## Process
 For each Lens:

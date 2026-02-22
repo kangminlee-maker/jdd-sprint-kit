@@ -373,6 +373,75 @@ When an FR involves state transitions or algorithmic logic, supplement the capab
 
 These supplementary structures are consumed by design.md (LLD sections) and BDD scenarios. They remain capability-focused — no implementation choices (e.g., "use Redis" or "implement with XState").
 
+**Policy Cross-Validation** (conditional — when `## Policy Constraint Profile` exists in brownfield-context.md with status `collected` or `partial`, AND `clause_count > 0`):
+
+For each FR, cross-check against PCP.1 (entitlements), PCP.2 (prohibitions), PCP.3 (regulatory), and PCP.5 (state constraints). When a contradiction between an FR and a PCP clause is found, insert a conflict tag immediately after the FR:
+
+```markdown
+> **[PCP CONFLICT]** FR{N} contradicts {PCP.category}.{clause_ref}: "{clause text}". Resolution: {override rationale | FR modification needed | terms amendment needed}
+```
+
+Unresolved `[PCP CONFLICT]` tags block Scope Gate passage. Each conflict must be resolved with one of:
+- **Override rationale**: The FR intentionally supersedes the policy clause (document why)
+- **FR modification needed**: The FR must be adjusted to comply with the policy
+- **Terms amendment needed**: The service terms need updating (flag for legal/ops team)
+
+**Edge Case Matrix** (conditional — when State Transition FRs exist AND the transitioning entity has 2+ subtypes):
+
+Generate a cross-product matrix when the entity undergoing state transitions has a type discriminator field (e.g., PaymentType, TicketType) with 2+ values that affect behavior differently.
+
+```markdown
+### Edge Case Matrix: {Entity}
+
+| State \ Type × Operation | {Type1} × {Op1} | {Type1} × {Op2} | {Type2} × {Op1} | {Type2} × {Op2} |
+|--------------------------|------------------|------------------|------------------|------------------|
+| {State1} | FR{N} | prohibited: {reason} | FR{M} | **undefined** |
+| {State2} | N/A: {reason} | FR{K} | **undefined** | FR{J} |
+```
+
+Each cell must be one of:
+- FR reference: defined behavior (link to the covering FR)
+- `prohibited: {reason}`: explicitly not allowed
+- `N/A: {reason}`: combination cannot occur
+- **`undefined`**: gap — must be resolved before PRD finalization
+
+Cells marked `undefined` represent missing business rules and MUST be resolved.
+
+**Deferral Risk Analysis** (conditional — when PCP.4 is non-empty OR deferral language detected in Brief):
+
+Cross-reference PCP.4 deferred items against FR dependencies. Also detect deferral language patterns ("별도 기획", "TBD", "추후 확정", "to be determined", etc.) in Brief text that may not have been captured in PCP.4.
+
+Generate a `## Deferred Dependencies` section:
+
+```markdown
+## Deferred Dependencies
+
+| # | Deferred Item | Source | Dependent FRs | Blocked Artifact | Risk |
+|---|---------------|--------|---------------|------------------|------|
+| 1 | Promotional benefit details | PCP.4 (brief.md) | FR12, FR15 | api-spec.yaml (benefit endpoint schema) | HIGH |
+| 2 | Advanced reporting dashboard | Brief ("Phase 2") | FR20 | None (independent feature) | LOW |
+```
+
+Risk levels:
+- **HIGH**: API schema or state machine cannot be fully defined without the deferred item
+- **MEDIUM**: UI detail missing but API/data model are complete
+- **LOW**: Cosmetic or independent feature — no blocking dependency
+
+**State Machine Completeness** (conditional — when State Transition FRs exist):
+
+After defining state transitions in an FR, verify completeness by checking every ordered pair (A, B) where A ≠ B among the defined states:
+- **Transition defined**: Listed in the Transitions section
+- **Explicitly prohibited**: Listed in Invariants with reason ("A cannot transition to B because {reason}")
+- **Unreachable**: Noted with justification ("A → B is unreachable because {structural reason}")
+
+Any undefined pair must be flagged:
+
+```markdown
+> **[STATE GAP]** {A} → {B} is undefined.
+```
+
+All `[STATE GAP]` tags must be resolved before PRD finalization — either by defining the transition, prohibiting it, or documenting why it is unreachable.
+
 ### 4.8 Non-Functional Requirements
 
 **Purpose:** Define system quality attributes quantitatively.
@@ -575,3 +644,7 @@ Verify the following after PRD completion:
 - [ ] State Transition FRs include States/Transitions/Invariants structure (when applicable)
 - [ ] Algorithmic Logic FRs include Input/Rules/Output structure (when applicable)
 - [ ] No FR-NFR contradictions exist (logical impossibility, not feasibility)
+- [ ] 0 unresolved [PCP CONFLICT] tags — when PCP exists (status: collected or partial)
+- [ ] Edge Case Matrix has 0 "undefined" cells — when State Transition FRs exist AND entity has 2+ subtypes
+- [ ] Deferred Dependencies section present with risk assessment — when PCP.4 non-empty or deferral language detected in Brief
+- [ ] State Transition completeness: every state pair defined/prohibited/unreachable — when State Transition FRs exist
