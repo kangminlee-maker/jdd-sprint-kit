@@ -1,6 +1,6 @@
 # Judgment-Driven Development
 
-**Sprint Kit Design Philosophy — Execution Extension for the BMad Method**
+**Sprint Kit Design Philosophy**
 
 > jdd-sprint-kit aims to be a tool that enables product experts — not developers —
 > to realize their judgments as software deliverables using AI.
@@ -11,10 +11,12 @@
 > with the goal of dramatically accelerating the speed of live-service development.
 >
 > The one principle: **Human judgment is the only lasting asset. All AI artifacts are disposable and regenerable.**
+>
+> Foundational perspective and hypothesis system: [`docs/translation-ontology.md`](translation-ontology.md)
 
 ---
 
-## Background: Synthesis of Two Systems
+## Background: BMad Method and Sprint Kit
 
 ### BMad Method — "Trustworthy AI Collaboration"
 
@@ -26,31 +28,33 @@ Core value: **Gap-free requirements definition through exploration and discovery
 
 ### Sprint Kit — "Converse Through Deliverables"
 
-Sprint Kit is an execution layer that runs on top of the BMad Method.
+Sprint Kit is an execution layer that utilizes the BMad Method to generate planning artifacts.
 It automatically collects pre-existing inputs (meeting notes, references) and existing system context,
 lets AI generate planning artifacts, and has product experts judge at key moments.
 
 Core value: **Rapid realization through expert judgment on concrete deliverables**
 
-### Why the Synthesis
+### Relationship
 
-The two systems don't conflict. Depending on **the shape of existing human knowledge**,
+Sprint Kit currently utilizes the BMad Method and is dependent on BMad for agent paths and format guides. However, Sprint Kit's logical core (translation, delta, judgment) does not depend on BMad. Depending on **the shape of existing human knowledge**,
 they offer different routes, converging on the same artifact format and flowing into the same execution pipeline.
 
 ```
-BMad Method (Base Platform)
+BMad Method (Currently Utilized)
   ├─ Agent Framework (Mary, John, Winston, Sally, Bob...)
   ├─ Workflow Engine (step-file architecture)
   ├─ Facilitation Patterns (A/P/C menu, party mode)
   └─ Artifact Formats (PRD, Architecture, Epics)
 
-Sprint Kit (Execution Extension on BMad)
+Sprint Kit (Execution Layer Utilizing BMad)
   ├─ Input Layer: Pre-input processing + brownfield auto-collection
   ├─ Generation Layer: Automated BMad agent orchestration
   ├─ Judgment Layer: Customer-Lens JP1/JP2
   ├─ Execution Layer: Specs → Deliverables → Prototype
   └─ Regeneration: Apply-fix + propagation / regeneration pipeline
 ```
+
+> BMad dependency separation roadmap: [`reviews/translation-ontology-roadmap.md`](reviews/translation-ontology-roadmap.md) §1
 
 ---
 
@@ -123,6 +127,13 @@ Prerequisite: Human judgments (feedback) accumulate and feed into the next gener
 
 **Human judgment is the only lasting asset. Everything else is regenerable.**
 
+**Provenance-based regeneration scope**: Regeneration scope is precisely determined by feedback provenance:
+- Already present in user's original input → translation/generation error → regenerate that stage only
+- Not in user input but inferable → AI inference omission → regenerate that stage + downstream
+- Entirely absent from user input — new requirement → edit Brief, restart pipeline
+
+Provenance-based classification enables more precise regeneration cost estimation.
+
 How Sprint Kit realizes this:
 - Circuit Breaker: A normal regeneration trigger, not an emergency mode
 - JP Comment → Regeneration: Regeneration scope dynamically determined by feedback magnitude
@@ -146,7 +157,7 @@ Definition of a product expert:
 
 Checkpoints derive from this definition.
 
-Ideally, from Brief input one would go straight to the prototype (JP2), with the user judging only the deliverables. However, at current AI speeds, reaching JP2 in one shot takes tens of minutes, so JP1 is placed in between to confirm requirements direction first. **JP2 is the essential judgment point; JP1 is a pragmatic supplement for current technology limitations.** When AI becomes fast enough, Brief → JP2 without JP1 becomes possible.
+Ideally, from Brief input one would go straight to the prototype (JP2), with the user judging only the deliverables. However, JP1 has a unique **direction validation** function that JP2 cannot replace: detecting missing scenarios not present in the prototype, judging priorities at the requirements level, and confirming alignment with customer journeys cannot be performed at JP2. Additionally, at current AI speeds, reaching JP2 in one shot takes tens of minutes, so JP1 simultaneously serves its unique direction validation role and acts as a practical supplement. Even if AI becomes fast enough, JP1's form may change (e.g., presenting a requirements checklist alongside the prototype), but the direction validation function itself may remain.
 
 **JP1 (Judgment Point 1): "Is this the right product for the customer?"**
 ```
@@ -363,9 +374,9 @@ Discussion revealed this concept was unnecessary:
 
 1. The two systems already share the same artifact format (same prd-format-guide)
 2. Sprint Kit's `/specs` just needs to resolve the planning-artifacts path to connect
-3. A Bridge is a "translator between two systems," but in the extension-pack model no translation is needed
+3. A Bridge is a "translator between two systems," but since they share the same format, no translation is needed
 
-**Conclusion**: Sprint Kit is not a separate system from BMad but an extension pack,
+**Conclusion**: Sprint Kit is not a separate system from BMad but an execution layer that utilizes it,
 so the connection point is not a command but a file-format contract (the planning-artifacts/ directory).
 
 ### Realistic Correction of the "Regeneration Cost ≈ 0" Assumption

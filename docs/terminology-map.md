@@ -75,6 +75,21 @@ Korean-English canonical term reference for JDD Sprint Kit. All files use the **
 | 실현 가능 영역 | feasible region | mathematical framing: solution set satisfying all constraints |
 | 미적분의 기본 정리 | fundamental theorem of calculus | mathematical framing: mathematical counterpart of round-trip verification |
 
+## Translation Ontology Terms
+
+| Korean | English (Canonical) | Context |
+|--------|-------------------|---------|
+| 번역 존재론 | translation ontology | unified framing — philosophical foundation of 4 core documents |
+| 근본 관점 | foundational perspective | not an axiom — core declaration standing on explicit hypotheses |
+| 방향 검증 | direction validation | JP1's unique function — detecting missing scenarios not in prototype |
+| 목표 검증 | target validation | JP2's unique function — confirming target state in user grammar |
+| 출처 | provenance | regeneration scope criterion — where did the feedback originate |
+| 보조 전제 | auxiliary hypothesis (H1-H4) | structural hypotheses for foundational perspective to hold |
+| 경험적 전제 | empirical hypothesis (H5-H7) | technology-dependent empirical conditions |
+| 구조적 유비 | structural analogy | precise status of mathematical framing — not isomorphism |
+| QUERY-N | QUERY-N | **design proposal, not implemented** — batch query for untranslatable business decisions during Crystallize |
+| TECH-N | TECH-N | **design proposal, not implemented** — AI default technical decision inventory |
+
 ## Sprint Flow Terms
 
 | Korean | English (Canonical) | Context |
@@ -110,7 +125,7 @@ The following identifiers MUST remain in English regardless of `communication_la
 Mary (Analyst), John (PM), Winston (Architect), Amelia (Dev), Bob (SM), Sally (UX Designer), Barry (Quick Flow Solo Dev), Murat (Test Architect), Paige (Tech Writer)
 
 ### Status Values and Labels
-`PASS`, `FAIL`, `SKIP`, `DONE`, `PENDING`, `APPROVED`, `JP1`, `JP2`, `L1`, `L2`, `L3`, `L4`, `FR`, `NFR`, `ADR`, `BRIEF-N`, `DISC-N`
+`PASS`, `FAIL`, `SKIP`, `DONE`, `PENDING`, `APPROVED`, `JP1`, `JP2`, `L1`, `L2`, `L3`, `L4`, `FR`, `NFR`, `ADR`, `BRIEF-N`, `DISC-N`, `QUERY-N`, `TECH-N`
 
 ### Command Names
 `/sprint`, `/specs`, `/preview`, `/parallel`, `/validate`, `/circuit-breaker`, `/summarize-prd`

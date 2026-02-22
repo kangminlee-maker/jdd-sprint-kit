@@ -110,6 +110,7 @@ Design judgments Sprint Kit has made to realize the core principle.
 
 > Philosophical background and discussion for each judgment: [`docs/judgment-driven-development.md`](judgment-driven-development.md)
 > Delta-Driven Design (conceptual foundation): [`docs/delta-driven-design.md`](delta-driven-design.md)
+> Foundational perspective and hypothesis system: [`docs/translation-ontology.md`](translation-ontology.md)
 
 ### Artifacts as Medium
 
@@ -247,7 +248,7 @@ Real user examples:
 | Tool | Role |
 |------|------|
 | **BMad Method** | Base platform: agents, workflow engine, facilitation (`_bmad/`) |
-| **Sprint Kit** | BMad execution extension: auto-pipeline, Specs, Deliverables, Prototype |
+| **Sprint Kit** | Execution layer utilizing BMad Method: auto-pipeline, Specs, Deliverables, Prototype |
 | **Claude Code** | AI IDE — agent execution environment |
 | **Claude Code Native Teams** | Agent coordination, task dependency tracking |
 | **MCP (Figma)** | Figma design data access. MCP (Model Context Protocol) is a protocol that lets AI access external data sources via authenticated connections. Currently used for Figma only — other external data uses `--add-dir` or tarball snapshot (see Brownfield Data Sources below) |
@@ -757,6 +758,14 @@ Total cost = (upfront input cost) + (generation cost × generation count) + (jud
 
 The richer the upfront input, the lower the generation and judgment counts. Upfront input has the highest return on investment.
 
+For internal system optimization, a 5-term formula that includes carry-forward and Brownfield collection costs is used:
+
+```
+C_total = C_input + C_gen × N_gen + C_judge × N_judge + C_carry + C_brownfield
+```
+
+Here C_carry is the cost of registering/verifying non-visible requirements (NFR, security, migration), and C_brownfield is the cost of collecting/parsing existing system context. The 3-term formula above is sufficient for user-facing explanations.
+
 ### Comparison with Real Product Team Workflow
 
 ```
@@ -782,9 +791,9 @@ What humans retain: providing context, judgment, direction decisions (tasks huma
 
 ## 5.1 2-JP Model
 
-Ideally, after Brief input, the user would go straight to the prototype (JP2) and judge only the final output. However, at current AI speeds, reaching JP2 in one go takes tens of minutes, so JP1 is placed in between to confirm requirements direction first.
+Ideally, after Brief input, the user would go straight to the prototype (JP2) and judge only the final output. However, JP1 has a unique **direction validation** function that JP2 cannot replace: detecting missing scenarios not present in the prototype, judging priorities at the requirements level, and confirming alignment with customer journeys cannot be performed at JP2. Additionally, at current AI speeds, reaching JP2 in one go takes tens of minutes, so JP1 simultaneously serves its unique direction validation role and acts as a practical supplement.
 
-**JP2 is the essential judgment point; JP1 is a practical supplement for current technology limitations.** When AI becomes fast enough, Brief → JP2 direct path becomes possible. The principle isn't changed — only supplemented.
+Even if AI becomes fast enough, JP1's form may change (e.g., presenting a requirements checklist alongside the prototype), but the direction validation function itself may remain.
 
 ## 5.2 JP1: "Is this the right product for customers?"
 
@@ -898,7 +907,7 @@ This is the realization of Artifacts as Medium — the requirements error would 
 
 ## 6.1 Boundaries — What It Doesn't Do
 
-- **Sprint Kit is not a separate system** — it is an extension of BMad Method. No "bridge between two systems" concept is needed. The connection point is the file format contract (planning-artifacts/ directory).
+- **Sprint Kit is not a separate system** — it utilizes the BMad Method and is currently dependent on it. No "bridge between two systems" concept is needed. The connection point is the file format contract (planning-artifacts/ directory).
 - **Does not ask users for technical decisions** — API design, DB schema, component structure are decided by the system. Users are presented with customer-impact translations for judgment only.
 - **Does not manage the development process** — Sprint Kit does not handle code review, deployment pipelines, or monitoring. Its responsibility ends at implementation completion.
 
@@ -911,7 +920,7 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 | Regeneration default, modification as supplement | Regeneration suggested even for small changes (potential inefficiency) | Regeneration Over Modification (S2.2) | Comment handling flow (S5.4) |
 | JPs limited to 2 | Mid-stage issues only discovered at JP | Customer-Lens Judgment Points (S2.2) | JP1 (S5.2), JP2 (S5.3) |
 | Fully automatic pipeline | No mid-process intervention (Sprint route) | Input Reduces Cycles (S2.2) | Pipeline (S4.2) |
-| BMad artifact format dependency | Compatibility issues on BMad version changes | Extension model — BMad is the base platform | Tool Stack (S4.1) |
+| BMad artifact format dependency | Compatibility issues on BMad version changes | BMad dependency — separation roadmap in [`reviews/translation-ontology-roadmap.md`](reviews/translation-ontology-roadmap.md) | Tool Stack (S4.1) |
 
 ## 6.3 Left Open
 

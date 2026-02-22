@@ -3,7 +3,7 @@
 > **Document type**: Design theory — Sprint Kit's conceptual foundation and methodology positioning
 > **Version**: 1.1
 > **Date**: 2026-02-22
-> **Related**: [`judgment-driven-development.md`](judgment-driven-development.md) (design philosophy), [`reviews/lld-gap-analysis-and-implementation-plan.md`](reviews/lld-gap-analysis-and-implementation-plan.md) (implementation plan)
+> **Related**: [`judgment-driven-development.md`](judgment-driven-development.md) (design philosophy), [`translation-ontology.md`](translation-ontology.md) (unified framing), [`reviews/lld-gap-analysis-and-implementation-plan.md`](reviews/lld-gap-analysis-and-implementation-plan.md) (implementation plan)
 
 ---
 
@@ -189,7 +189,7 @@ This is why Sprint Kit's primary goal is delta definition, not code generation.
 
 ## 5. Mathematical Framing: Calculus and Projection
 
-The core concepts of Delta-Driven Design correspond precisely to concepts from calculus and projective geometry. This mathematical framing is not a metaphor but a structural isomorphism — the same operations described in a different language.
+The core concepts of Delta-Driven Design correspond precisely to concepts from calculus and projective geometry. This mathematical framing is a structural analogy — the same operations described in a different language, without claiming complete mathematical equivalence (isomorphism).
 
 ### Differentiation and Integration
 
@@ -505,6 +505,15 @@ When an artifact needs changing, regenerate it from source rather than editing i
 Crystallize's "concrete → abstract" step is translation between two known grammars, not open-ended abstraction. Translation follows a mapping table (User Grammar Element → Development Grammar Equivalent) with explicit rules.
 
 Where translation rules are insufficient (inference-required items like auto-behavior text → scheduler definition), these items are explicitly flagged for carry-forward validation rather than silently guessed.
+
+**Multi-input structure**: Translation input is not the prototype alone. Complete translation combines three inputs:
+- **Prototype**: Target state expressed in user grammar (JP2 approval)
+- **Carry-forward sources**: Non-visible requirements — NFR, security, migration (PRD, Architecture, Brownfield)
+- **Brownfield baseline**: Current system state (brownfield-context.md L1-L4)
+
+If any of the three inputs is missing, translation is incomplete. Without the prototype there is no translation target, without carry-forward the integration constant is missing (§5), and without Brownfield the delta cannot be computed.
+
+> Foundational perspective and hypothesis system: [`translation-ontology.md`](translation-ontology.md) §4.2
 
 ### Design Judgments
 
