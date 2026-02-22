@@ -16,7 +16,7 @@ export const BMAD_COMPAT = {
 export const SPRINT_KIT_FILES = {
   agents: [
     'auto-sprint.md', 'brownfield-scanner.md', 'scope-gate.md',
-    'deliverable-generator.md', 'worker.md',
+    'deliverable-generator.md', 'devils-advocate.md', 'worker.md',
     'judge-quality.md', 'judge-security.md', 'judge-business.md',
   ],
   commands: [

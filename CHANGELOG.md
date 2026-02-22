@@ -4,7 +4,7 @@ All notable changes to JDD Sprint Kit will be documented in this file.
 
 ---
 
-## [Unreleased]
+## [0.7.0] - 2026-02-22
 
 ### Removed
 - `complexity` field — every project gets full treatment (no simple/medium/complex tiers)
