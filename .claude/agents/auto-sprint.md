@@ -852,7 +852,7 @@ Crystallize is mandatory — it translates the approved prototype into developme
 2. Append to sprint-log.md JP Interactions: `**[User] Selection: [S] Start Crystallize**`
 3. Execute the full Crystallize pipeline (S0-S10) as defined in crystallize.md, passing `feature_name`
 4. On Crystallize completion (S10): user selects [C] proceed to /parallel with `specs_root=reconciled/`, or [R] review reconciled/, or [X] exit
-5. On Crystallize failure (S3 CRITICAL/S4-G/S5-G/S7 unresolvable): present recovery options:
+5. On Crystallize failure (S3 Resolution [R] at Party Mode/S4-G/S5-G/S7 unresolvable): present recovery options:
    - [R] Return to JP2 menu (partial reconciled/ cleaned up)
    - [K] Skip Crystallize → proceed to /parallel with `specs_root=specs/{feature_name}/` (warning: delta manifest not available)
    - [X] Exit Sprint

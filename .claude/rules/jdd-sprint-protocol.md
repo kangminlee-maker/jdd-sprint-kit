@@ -43,7 +43,7 @@ Brownfield data is used at every Sprint phase. Sources are cumulatively collecte
 | **Step 2b-G Scope Gate** | Verify 0 PCP CONFLICT + regulatory coverage + state completeness + deferral risk assessment |
 | **Step 5-D Devil's Advocate** | Lens 8: Policy & Regulatory Compliance adversarial verification (when PCP exists) |
 | **Crystallize S2** (`/crystallize`) | Incremental CP: scan prototype concepts not covered by existing CP → append to brownfield-context.md → copy to reconciled/. PCP section carried over via full file copy. |
-| **Crystallize S3** (`/crystallize`) | Constraint + Structural validation (2 agents parallel) before translation |
+| **Crystallize S3** (`/crystallize`) | Constraint + Structural validation (2 agents parallel) → Resolution Phase (AUTO/USER_DECISION/PROTOTYPE_FIX) → validation-resolutions.md as S4 translation directives |
 | **Crystallize S4** (`/crystallize`) | Constraint-aware translation: CP data injected as brownfield parameters into translation rules. PCP data available in brownfield-context.md for reference (not yet auto-injected into S4 prompts). |
 | **Crystallize S9** (`/crystallize`) | Per-task Constraint Attachment: CP references auto-attached. PCP clauses available in brownfield-context.md for manual reference (not yet auto-attached to per-task constraints). |
 
@@ -124,6 +124,7 @@ specs/{feature}/
     ├── prototype-analysis.md   # Prototype structure analysis
     ├── validation-constraint.md # S3 Agent A: Constraint validation report (if ran)
     ├── validation-structural.md # S3 Agent B: Structural validation report (if ran)
+    ├── validation-resolutions.md  # S3: Resolved findings with S4 translation directives
     ├── planning-artifacts/     # Reconciled planning artifacts
     │   ├── prd.md              # PRD final (reconciled with prototype)
     │   ├── architecture.md     # Architecture final (reconciled)
@@ -250,6 +251,7 @@ JP2 [S] Start Crystallize (Sprint) / [S] Start Crystallize (Guided/Direct)
   S1:    Prototype Analysis            → reconciled/prototype-analysis.md (informed by S0)
   S2:  Incremental Constraint Profile → brownfield-context.md CP updated (delta concepts only)
   S3:  Constraint-Aware Validation   → validation-constraint.md + validation-structural.md (2 agents parallel)
+  S3-R:  Resolution Phase              → validation-resolutions.md (AUTO + USER_DECISION + PROTOTYPE_FIX)
   S4:    Constraint-Aware Translation  → reconciled/planning-artifacts/ (PRD, Architecture, Epics)
   S4-G:  Cross-Artifact Gate           → PASS/FAIL
   S5:    Generate Execution Specs      → reconciled/ (entity-dict, requirements, design, tasks)
@@ -261,7 +263,7 @@ JP2 [S] Start Crystallize (Sprint) / [S] Start Crystallize (Guided/Direct)
   S10:    Summary → /parallel with specs_root=reconciled/
 ```
 
-On S3 CRITICAL findings: [R] Return to JP2 / [F] Acknowledge and proceed / [X] Exit.
+On S3 findings (CRITICAL+WARNING): AUTO auto-resolved → USER_DECISION/PROTOTYPE_FIX presented with options (carry-forward taxonomy) → Party Mode verification ([P]/[S]/[R]/[X]) → validation-resolutions.md as S4 translation supplement.
 On gate failure (S4-G, S5-G, or S7 unresolvable): [R] Return to JP2 / [K] Skip Crystallize (original specs) / [X] Exit.
 
 ### Expected Behavior by Data Condition (Crystallize)

@@ -589,6 +589,7 @@ JP2 presentation format and Comment handling flow details in S5.3.
 | S1 | Analyze prototype code (pages, components, API handlers, data model) | `reconciled/prototype-analysis.md` |
 | S2 | Incremental Constraint Profile — scan prototype concepts not yet covered in CP | brownfield-context.md CP updated |
 | S3 | Validate prototype against constraints + structural completeness (2 parallel agents) | `validation-constraint.md`, `validation-structural.md` |
+| S3-R | Resolution Phase: auto-resolve, user decisions, prototype fix options → Party Mode verification | `validation-resolutions.md` |
 | S4 | Constraint-aware translation: reconcile PRD + Architecture + Epics with CP as parameters | `reconciled/planning-artifacts/` |
 | S5 | Generate Specs from reconciled planning artifacts | `reconciled/requirements.md`, `design.md`, `tasks.md` |
 | S6 | Verify/regenerate Deliverables (API spec, BDD, key flows) | `reconciled/api-spec.yaml`, `bdd-scenarios/`, etc. |
@@ -597,7 +598,7 @@ JP2 presentation format and Comment handling flow details in S5.3.
 | S9 | Attach per-task constraints from CP + delta manifest | `reconciled/constraint-report.md`, tasks.md updated |
 | S10 | Summary + proceed to Parallel with reconciled artifacts | — |
 
-S2 is skipped when brownfield-context.md has no Constraint Profile section, or when all prototype concepts are already covered (delta=0). S3 Agent A is skipped when no HIGH confidence CP items exist; Agent B always runs. S9 is skipped when no Constraint Profile exists.
+S2 is skipped when brownfield-context.md has no Constraint Profile section, or when all prototype concepts are already covered (delta=0). S3 Agent A is skipped when no HIGH confidence CP items exist; Agent B always runs. S3-R (Resolution Phase) runs when S3 produces CRITICAL or WARNING findings — it auto-resolves items where CP data determines the answer, presents options for ambiguous items (USER_DECISION) and prototype gaps (PROTOTYPE_FIX using carry-forward taxonomy), then offers Party Mode verification before proceeding. When S3 produces no actionable findings, S3-R is skipped entirely. S9 is skipped when no Constraint Profile exists.
 
 **Reconciliation principles**: The prototype provides what the product **does** (screens, features, API endpoints, data model, user flows). Items that the prototype cannot supply — NFRs (Non-Functional Requirements), security architecture, deployment strategy, scaling — are carried forward from the original documents and marked with `[carry-forward]`. Product Brief is excluded from reconciliation because it defines the problem space, not the solution.
 
@@ -1083,6 +1084,7 @@ specs/{feature}/
     ├── prototype-analysis.md        # Prototype structure analysis
     ├── validation-constraint.md     # S3: Constraint validation report (if ran)
     ├── validation-structural.md     # S3: Structural validation report (if ran)
+    ├── validation-resolutions.md    # S3-R: Resolved findings with S4 translation directives
     ├── planning-artifacts/          # Reconciled PRD, Architecture, Epics, brownfield-context (with CP)
     ├── entity-dictionary.md         # Reconciled entity dictionary
     ├── requirements.md              # Reconciled requirements

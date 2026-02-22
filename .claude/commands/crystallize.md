@@ -229,13 +229,20 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     - WARNING: Inconsistency that should be addressed but won't cause runtime failure
     - INFO: Minor deviation from convention
 
+    For each CRITICAL and WARNING finding, classify Resolution Type:
+    - AUTO: CP data alone determines the correct resolution (e.g., CP.6 has DB value 'N' but prototype uses 'Normal' → use 'N'). Write concrete resolution in Resolution Detail.
+    - USER_DECISION: 2+ valid approaches exist (e.g., naming convention for a new enum value). Write 'Option A: ... | Option B: ... [| Option C: ...]' with rationale for each in Resolution Detail.
+    - PROTOTYPE_FIX: Prototype has a structural gap that cannot be resolved by direct reference alone, but spec-level workarounds exist. Write options using carry-forward taxonomy in Resolution Detail:
+      e.g., 'Option A: Add as [carry-forward:new] requirement — Workers implement | Option B: Defer [carry-forward:deferred] to next sprint | Option C: Return to JP2 to fix in prototype'
+    - INFO findings: Resolution Type = NONE, Resolution Detail = '—'
+
     Output: Write to specs/{feature}/reconciled/validation-constraint.md
     Format:
     # Constraint Validation Report
     ## Summary
     | Severity | Count |
     ## Findings
-    | # | Severity | Category | Prototype Element | Constraint | Conflict Description |"
+    | # | Severity | Category | Prototype Element | Constraint | Conflict Description | Resolution Type | Resolution Detail |"
   max_turns: 8
 ```
 
@@ -268,45 +275,124 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     - WARNING: Potential gap that may be intentional
     - INFO: Minor observation
 
+    For each CRITICAL and WARNING finding, classify Resolution Type:
+    - AUTO: carry-forward gap classification is unambiguous (e.g., item exists in original doc, absent from prototype, still applicable → [carry-forward:defined]). Write concrete classification in Resolution Detail.
+    - USER_DECISION: Intent is ambiguous (e.g., item deferred in Phase 1 but implemented in prototype → keep or remove?). Write 'Option A: ... | Option B: ...' with rationale in Resolution Detail.
+    - PROTOTYPE_FIX: FR not implemented, dead-end flow, state with no exit, etc. Write spec-level workaround options using carry-forward taxonomy in Resolution Detail:
+      e.g., 'Option A: Add as [carry-forward:new] requirement — Workers implement | Option B: Defer [carry-forward:deferred] to next sprint | Option C: Return to JP2 to fix in prototype'
+    - INFO findings: Resolution Type = NONE, Resolution Detail = '—'
+
     Output: Write to specs/{feature}/reconciled/validation-structural.md
     Format:
     # Structural Validation Report
     ## Summary
     | Severity | Count |
     ## Findings
-    | # | Severity | Category | Element | Description | Recommendation |"
+    | # | Severity | Category | Element | Description | Recommendation | Resolution Type | Resolution Detail |"
   max_turns: 8
 ```
 
 **Run Agent A and Agent B in parallel** (two Task calls in the same message). Wall-clock time: 5-8 turns.
 
-**Post-validation gate**:
+**Post-validation Resolution Phase**:
+
 1. Read both validation reports
-2. Merge CRITICAL findings: count from Agent A + count from Agent B
-3. If CRITICAL count = 0 → proceed to S4
-4. If CRITICAL count > 0 → present to user:
+2. Parse all CRITICAL + WARNING findings into unified list (VR-001, VR-002, ...)
+   - INFO findings: exclude from resolution processing
+3. Categorize by Resolution Type:
+   - auto_items (AUTO), user_items (USER_DECISION), proto_items (PROTOTYPE_FIX)
 
+4. If 0 actionable findings → skip resolution, proceed to S4 (no validation-resolutions.md)
+
+4.5. **Overlap Detection**:
+   When the same prototype element appears in both Agent A and Agent B findings:
+   - Both AUTO with identical resolution → merge into single item
+   - Different resolutions → escalate to USER_DECISION (present both resolutions as options)
+   - One is PROTOTYPE_FIX → PROTOTYPE_FIX takes precedence
+
+5. **Phase A: Auto-Resolve** (no user interaction)
+   Display summary table (in {communication_language}):
+   ```
+   ## S3 Validation: Auto-Resolved ({N} items)
+   | VR ID | Source | Severity | Issue | Resolution |
+   ```
+
+6. **Phase B: User Decisions** (interactive, only when user_items > 0)
+   Display context per item, then AskUserQuestion:
+   - Group by domain (up to 4 questions per AskUserQuestion call)
+   - Each question: 2-3 concrete options from Agent's Resolution Detail
+   - Multiple rounds if > 4 items
+
+7. **Phase C: Prototype Fix Items** (interactive, only when proto_items > 0)
+   Each PROTOTYPE_FIX item has spec-level workaround options. Present via AskUserQuestion:
+   - Example: "VR-007: Dead-end flow — block creation has no error handling"
+     [1] Add as [carry-forward:new] requirement — Workers implement (Recommended)
+     [2] Defer as [carry-forward:deferred] — next sprint
+     [3] Acknowledge as [KNOWN-GAP] — proceed with gap recorded
+   - All options use existing carry-forward taxonomy (no new tags)
+   - [3] Acknowledge: records `[KNOWN-GAP: {description}]` tag
+     → S4 attaches [KNOWN-GAP] tag to affected FR, S7 verifies its presence
+   - "Return to JP2" is not an individual item option; it is offered in Phase D as a holistic decision
+   - Same AskUserQuestion pattern as Phase B (up to 4 items per call, multiple rounds)
+
+8. **Phase D: Party Mode Verification** (interactive)
+   Display full resolution summary (in {communication_language}):
+   ```
+   ## S3 Resolution Set: Final Review
+   | VR ID | Severity | Issue | Resolution Type | Resolution |
+   ...
+   AUTO: {N} / USER_DECISION: {N} / PROTOTYPE_FIX: {N} / Total: {N}
+   ```
+
+   Then AskUserQuestion:
+   [P] Party Mode — structured discussion on resolution set, then finalize
+   [S] Proceed to S4 — resolution set confirmed, continue
+   [R] Return to JP2
+   [X] Exit
+
+   - **[P] Party Mode**:
+     (1) Invoke Party Mode workflow with resolution context
+         (pass validation-constraint.md + validation-structural.md + resolution set summary)
+     (2) **Scope limit**: Resolution set internal consistency only. Product direction or feature changes are out of scope → guide to [R] Return to JP2
+     (3) If Party Mode discovers resolution-internal contradictions or gaps → update resolution set
+     (4) Re-enter Phase D with updated resolution set (max 2 Party Mode rounds)
+   - **[S]**: Write validation-resolutions.md, proceed to S4
+   - **[R]**: Clean up partial reconciled/, return to JP2 menu
+   - **[X]**: Exit Sprint
+
+9. Write `specs/{feature}/reconciled/validation-resolutions.md`
+10. Proceed to S4
+
+**validation-resolutions.md format**:
+
+```markdown
+# Validation Resolutions: {feature_name}
+
+## Summary
+| Category | Count |
+|----------|-------|
+| AUTO | {N} |
+| USER_DECISION | {N} |
+| PROTOTYPE_FIX (carry-forward:new) | {N} |
+| PROTOTYPE_FIX (carry-forward:deferred) | {N} |
+| PROTOTYPE_FIX (KNOWN-GAP) | {N} |
+| Total resolved | {N} |
+| INFO (excluded) | {N} |
+| Party Mode verified | Yes/No |
+
+## Resolutions
+| VR ID | Source | Severity | Category | Issue | Resolution Type | Resolution | S4 Directive |
+
+Resolution type → S4 Directive patterns:
+- AUTO: Concrete mapping/rule (e.g., "TicketType: map Inactive → 0")
+- USER_DECISION: User's chosen option as concrete instruction
+- PROTOTYPE_FIX (spec-resolved): `[carry-forward:new, origin: VR-NNN]` — gap identified at S3, added as new requirement for Workers to implement
+- PROTOTYPE_FIX (deferred): `[carry-forward:deferred, origin: VR-NNN]` — deferred to next sprint, reuses existing deferred taxonomy
+- PROTOTYPE_FIX (acknowledged): `[KNOWN-GAP: {description}]` — unresolved gap, proceed with awareness. S4 attaches tag to affected FR
+
+## S4 Translation Directives (consolidated)
+{Domain-grouped directive list — directly referenced by S4 agents}
 ```
-## Validation Findings
-
-{N} CRITICAL issues found before translation:
-
-Constraint issues (Agent A):
-- {finding 1}
-- {finding 2}
-
-Structural issues (Agent B):
-- {finding 3}
-
-Select:
-[R] Return to JP2 — address issues in prototype
-[F] Acknowledge and proceed — constraints noted in reconciled artifacts
-[X] Exit
-```
-
-- **[R]**: Clean up partial reconciled/, return to JP2 menu
-- **[F]**: Proceed to S4. Attach CRITICAL findings as `[CONSTRAINT-WARN: {description}]` tags in the relevant S4 artifacts
-- **[X]**: Exit Sprint
 
 ### Step S4: Constraint-Aware Translation (Reconcile Planning Artifacts)
 
@@ -365,9 +451,19 @@ Task(subagent_type: "general-purpose", model: "opus")
       For MEDIUM confidence: tag as [CP-MEDIUM: {pattern}] for Worker decision
       If no Constraint Profile section exists: proceed without constraint parameters
 
-    Constraint validation findings (if S3 found issues):
-      specs/{feature}/reconciled/validation-constraint.md (if exists)
-      Attach [CONSTRAINT-WARN: {description}] to affected FRs
+    Validation resolutions (supplement prototype translation with constraint-aware context):
+      specs/{feature}/reconciled/validation-resolutions.md (if exists)
+      Read '## S4 Translation Directives' section.
+      For each directive:
+      - Prototype element conflict resolution: directive provides exact mapping/rule (e.g., enum value mapping)
+      - Prototype gap (carry-forward:new): add as FR with [carry-forward:new, origin: VR-NNN] and (source: carry-forward, origin: VR-NNN)
+      - Deferred item: mark as [carry-forward:deferred, origin: VR-NNN]
+      - Acknowledged gap: attach [KNOWN-GAP: {description}] tag to affected FR
+      Mark applied directives with (resolved: VR-NNN) tag.
+
+      If validation-resolutions.md does not exist:
+        Read specs/{feature}/reconciled/validation-constraint.md (if exists)
+        Attach [CONSTRAINT-WARN: {description}] to affected FRs (legacy fallback)
 
     Output: Write to specs/{feature}/reconciled/planning-artifacts/prd.md
 
@@ -415,9 +511,19 @@ Task(subagent_type: "general-purpose", model: "opus")
       For MEDIUM confidence: note as [CP-MEDIUM: {pattern}]
       If no Constraint Profile section exists: proceed without constraint parameters
 
-    Constraint validation findings (if S3 found issues):
-      specs/{feature}/reconciled/validation-constraint.md (if exists)
-      Attach [CONSTRAINT-WARN: {description}] to affected architecture decisions (e.g., transaction scope, lock pattern, domain boundary issues)
+    Validation resolutions (supplement prototype translation with constraint-aware context):
+      specs/{feature}/reconciled/validation-resolutions.md (if exists)
+      Read '## S4 Translation Directives' section.
+      For each directive:
+      - Prototype element conflict resolution: directive provides exact mapping/rule (e.g., transaction scope, lock pattern)
+      - Prototype gap (carry-forward:new): add as architecture component with [carry-forward:new, origin: VR-NNN]
+      - Deferred item: mark as [carry-forward:deferred, origin: VR-NNN]
+      - Acknowledged gap: attach [KNOWN-GAP: {description}] tag to affected decisions
+      Mark applied directives with (resolved: VR-NNN) tag.
+
+      If validation-resolutions.md does not exist:
+        Read specs/{feature}/reconciled/validation-constraint.md (if exists)
+        Attach [CONSTRAINT-WARN: {description}] to affected architecture decisions (legacy fallback)
 
     Output: Write to specs/{feature}/reconciled/planning-artifacts/architecture.md
 
@@ -450,6 +556,18 @@ Task(subagent_type: "general-purpose", model: "opus")
 
     Context reference:
       specs/{feature}/planning-artifacts/epics-and-stories.md
+
+    Validation resolutions (supplement prototype translation with constraint-aware context):
+      specs/{feature}/reconciled/validation-resolutions.md (if exists)
+      Read '## S4 Translation Directives' section.
+      For each directive:
+      - carry-forward:new items → ensure corresponding stories exist
+      - carry-forward:deferred items → ensure marked as deferred in epics
+      - [KNOWN-GAP] items → note in relevant story AC
+      Mark applied directives with (resolved: VR-NNN) tag.
+
+      If validation-resolutions.md does not exist:
+        No action needed for Epics (legacy fallback handles at PRD/Architecture level)
 
     Output: Write to specs/{feature}/reconciled/planning-artifacts/epics-and-stories.md
 
@@ -594,11 +712,18 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     6. bdd-scenarios/ cover all prd.md acceptance criteria
     7. Every FR in reconciled prd.md has a valid source tag: (source: PROTO) or (source: carry-forward).
        FRs without source tags → CRITICAL (may be agent-hallucinated during translation)
-    8. Constraint Profile compliance (when ## Constraint Profile exists in brownfield-context.md):
+    8. Validation resolution compliance (when validation-resolutions.md exists):
+       - S4 Translation Directives are reflected in reconciled artifacts
+       - (resolved: VR-NNN) tags exist on affected FRs/components
+       - [carry-forward:new, origin: VR-NNN] items exist as PRD FRs with valid source tags
+       - [carry-forward:deferred, origin: VR-NNN] items are classified as deferred
+       - [KNOWN-GAP] tags are attached to acknowledged items
+       When validation-resolutions.md does NOT exist (legacy):
+       - [CONSTRAINT-WARN] tags from S3 are preserved in the reconciled artifacts (not silently dropped)
+    9. Constraint Profile compliance (when ## Constraint Profile exists in brownfield-context.md):
        - Enum values in reconciled prd.md/design.md match CP.6 DB-stored values (not prototype display labels)
        - Naming in reconciled architecture.md follows CP.2 HIGH confidence patterns
        - [NEW-ENUM] tags are used for genuinely new values (not misspellings of existing values)
-       - [CONSTRAINT-WARN] tags from S3 are preserved in the reconciled artifacts (not silently dropped)
 
     Output: PASS (gap=0) or FAIL with gap list and count."
 ```
@@ -760,6 +885,8 @@ Present reconciliation results to user (in {communication_language}).
 {if S3 ran}
 - Constraint validation: {N} CRITICAL / {N} WARNING / {N} INFO
 - Structural validation: {N} CRITICAL / {N} WARNING / {N} INFO
+- Resolutions: {N} auto-resolved / {N} user-decided / {N} carry-forward:new / {N} carry-forward:deferred / {N} known-gap
+- Party Mode verified: Yes/No
 {if S3 skipped}
 - Validation skipped ({reason})
 
@@ -778,7 +905,7 @@ Select: [C] Continue to /parallel | [R] Review reconciled/ | [X] Exit
 
 ## Budget
 
-~108-174 turns across 13 Task invocations. S0, S2, S9 run inline (no Task invocation).
+~108-193 turns across 13 Task invocations. S0, S2, S3-R, S9 run inline (no Task invocation).
 
 | Step | Model | Est. Turns |
 |------|-------|------------|
@@ -787,6 +914,7 @@ Select: [C] Continue to /parallel | [R] Review reconciled/ | [X] Exit
 | S2 Incremental CP | Sonnet | 0-10 (skip when delta=0) |
 | S3a Constraint Validator | Sonnet | 5-8 (parallel) |
 | S3b Structural Validator | Sonnet | 5-8 (parallel) |
+| S3-R Resolution Phase | Conductor (inline) | 0-19 (0: no findings; 3-8: decisions; +5-8: Party Mode; worst: 15+ items) |
 | S4a PRD | Opus | 15-20 |
 | S4b Architecture | Opus | 15-20 |
 | S4c Epics | Opus | 10-15 |
@@ -805,6 +933,7 @@ specs/{feature}/reconciled/
 ├── prototype-analysis.md           # S1
 ├── validation-constraint.md        # S3 Agent A (if ran)
 ├── validation-structural.md        # S3 Agent B (if ran)
+├── validation-resolutions.md       # S3 Resolution Phase (if findings exist)
 ├── planning-artifacts/
 │   ├── prd.md
 │   ├── architecture.md
