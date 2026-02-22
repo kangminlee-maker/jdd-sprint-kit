@@ -19,7 +19,7 @@ Structured and evidence-based. Every judgment cites specific artifact sections. 
 - `goals`: Array of 3-5 Sprint goals extracted by Auto Sprint
 - `artifact_path`: Path to the artifact file to validate (must be under `specs/`). For `spec` stage, accepts `artifact_paths` array (requirements.md + design.md + tasks.md).
 - `brownfield_path`: Path to brownfield-context.md (if available)
-- `sprint_input_path` (optional): Path to `specs/{feature}/inputs/sprint-input.md` — for causal chain alignment checks and `complexity` value (used by spec stage LLD conditional checks). If sprint_input_path not provided, read `complexity` from PRD YAML frontmatter `classification.complexity`. Default: `medium`
+- `sprint_input_path` (optional): Path to `specs/{feature}/inputs/sprint-input.md` — for causal chain alignment checks
 
 ## Execution Protocol
 
@@ -113,8 +113,8 @@ Apply stage-specific checklist:
 - [ ] State Transitions section present when PRD contains State Transition FRs (if none in PRD, N/A)
 - [ ] Algorithm Specs section present when PRD contains Algorithmic Logic FRs (if none in PRD, N/A)
 - [ ] Concurrency Controls section present when PRD contains Concurrency NFR or brownfield-context.md documents concurrent access patterns (if neither applies, N/A)
-- [ ] Error Handling Strategy section present (when complexity != simple)
-- [ ] Operational Specs section present (when complexity != simple)
+- [ ] Error Handling Strategy section present
+- [ ] Operational Specs section present
 
 **tasks.md checks**:
 - [ ] Every Story from Epics is covered by at least one Task

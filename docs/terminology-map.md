@@ -10,7 +10,7 @@ Korean-English canonical term reference for JDD Sprint Kit. All files use the **
 | 기획 산출물 | planning artifacts | BMad outputs (Product Brief, PRD, Architecture, Epics) |
 | 인과 사슬 | causal chain | sprint-input causal analysis |
 | 참고 자료 | reference materials | sprint-input user-provided docs |
-| 복잡도 분류 | complexity classification | sprint-input `complexity` field |
+| 복잡도 분류 | complexity classification | (removed in v0.7.0 — no longer a sprint-input field) |
 | 수용 기준 | acceptance criteria | PRD / BDD scenarios |
 | 방어 제한 | defense limits | sprint-input validation bounds |
 | 품질 등급 | brief grade | Phase 0 brief grading (A/B/C) |
@@ -95,7 +95,7 @@ Korean-English canonical term reference for JDD Sprint Kit. All files use the **
 The following identifiers MUST remain in English regardless of `communication_language`:
 
 ### YAML Field Names
-`brownfield_status`, `brownfield_topology`, `tracking_source`, `feature_only`, `brief_grade`, `causal_chain`, `chain_status`, `brief_sentences`, `complexity`, `time_estimate`, `input_files`, `pre_existing_brownfield`, `fallback_tier`, `validation`, `flags`, `force_jp1_review`, `document_project_path`, `document_project_status`, `communication_language`, `document_output_language`
+`brownfield_status`, `brownfield_topology`, `tracking_source`, `feature_only`, `brief_grade`, `causal_chain`, `chain_status`, `brief_sentences`, `time_estimate`, `input_files`, `pre_existing_brownfield`, `fallback_tier`, `validation`, `flags`, `force_jp1_review`, `document_project_path`, `document_project_status`, `communication_language`, `document_output_language`
 
 ### Enum Values
 `greenfield`, `co-located`, `standalone`, `msa`, `monorepo`, `configured`, `partial-failure`, `local-only`, `complete`, `pending`, `in_progress`, `completed`, `core`, `enabling`, `supporting`, `new`, `existing-extension`, `A`, `B`, `C`

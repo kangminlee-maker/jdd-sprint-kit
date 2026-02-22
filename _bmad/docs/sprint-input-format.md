@@ -29,7 +29,6 @@ goals:
   - {goal_1}
   - {goal_2}
   - {goal_3}
-complexity: simple | medium | complex
 brief_sentences:
   - id: BRIEF-1
     text: "{Brief sentence 1}"
@@ -106,10 +105,9 @@ flags:
 | `generated_by` | Y | `sprint-onboarding-phase-0` (Sprint route) or `specs-direct` (Direct route) |
 | `brief_grade` | Y | Brief quality grade (A/B/C) |
 | `goals` | Y | 3-5 extracted goals |
-| `complexity` | Y | Complexity classification (simple/medium/complex) |
 | `input_files` | Y | List of processed input files |
 | `brownfield_status` | Y | Brownfield source status (`local-only`: co-located code only, no MCP/document-project) |
-| `brownfield_topology` | Y | Detected deployment topology (`standalone`/`co-located`/`msa`/`monorepo`) |
+| `brownfield_topology` | Y | Detected deployment topology (`standalone`/`co-located`/`msa`/`monorepo`). Descriptive metadata only. Not used as pipeline decision driver. |
 | `document_project_path` | N | Path to document-project output (null if absent) |
 | `document_project_status` | N | document-project freshness (`fresh`/`stale`/`expired`/`null`) |
 | `fallback_tier` | Y | Analysis success level (1=rich, 2=minimal, 3=Brief only) |
@@ -117,7 +115,7 @@ flags:
 | `brief_sentences` | Y | Brief sentence decomposition (id: BRIEF-N, text: original sentence). Used for PRD FR source tagging |
 | `causal_chain` | N | Causal chain 4 layers + source/evidence + chain_status. Optional — may be empty when feature_only and user did not opt in |
 | `causal_chain.chain_status` | (Y if causal_chain exists) | `complete` (all confirmed), `partial` (some inferred), `feature_only` (user chose not to add) |
-| `time_estimate` | Y | Complexity-based initial time range |
+| `time_estimate` | Y | Goal count + brownfield_status based initial time range |
 | `tracking_source` | Y | Brief tracking source. `brief`: BRIEF-N based (Sprint route), `success-criteria`: PRD Success Criteria based (Guided/Direct route) |
 | `flags.force_jp1_review` | Y | Whether to force JP1 review |
 | `external_resources` | N | External resource references auto-detected from inputs and environment |
@@ -274,7 +272,6 @@ goals:
   - "Implement post-lesson tutor exclusion feature"
   - "Filter excluded tutors from matching pool"
   - "Provide exclusion management UI"
-complexity: medium
 causal_chain:
   phenomenon: "Persistent complaints about tutors after lessons with no resolution mechanism"
   phenomenon_source: "cs-report.md"
@@ -378,7 +375,6 @@ generated_by: sprint-onboarding-phase-0
 brief_grade: B
 goals:
   - "Implement tutor exclusion feature"
-complexity: simple
 causal_chain:
   phenomenon: ""
   phenomenon_source: ""
@@ -431,7 +427,6 @@ generated_by: sprint-onboarding-phase-0
 brief_grade: C
 goals:
   - "Implement lesson feedback system"
-complexity: simple
 causal_chain:
   phenomenon: "No post-lesson feedback collection channel, insufficient data for service improvement"
   phenomenon_source: "inferred_from_brief"

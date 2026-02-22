@@ -7,8 +7,8 @@
 feature: {feature_name}
 scan_metadata:
   topology: co-located | monorepo | msa | standalone
-  merge_priority: local | external   # local for co-located/monorepo, external for msa/standalone
-  local_stages_executed: [1, 2, 3, 4]  # which local stages ran (empty for standalone)
+  merge_strategy: collect-all  # all accessible sources collected; conflicts recorded with both source tags
+  local_stages_executed: [1, 2, 3, 4]  # which local stages ran (empty when no local code files exist)
   external_sources:
     attempted: ["backend-docs", "client-docs"]
     succeeded: ["backend-docs"]
@@ -40,9 +40,9 @@ layers:
       # L2b (refinement) - Scoping/FR 키워드
       - fr_keyword1
     sources:
-      - type: mcp
+      - type: external
         name: backend-docs
-      - type: mcp
+      - type: external
         name: client-docs
     discovered:
       existing_apis: 8
@@ -57,9 +57,9 @@ layers:
       - ServiceName
       - ComponentName
     sources:
-      - type: mcp
+      - type: external
         name: backend-docs
-      - type: mcp
+      - type: external
         name: client-docs
     discovered:
       service_integrations: 6
@@ -73,9 +73,9 @@ layers:
       - exact/file/path.java
       - FunctionName
     sources:
-      - type: mcp
+      - type: external
         name: backend-docs
-      - type: mcp
+      - type: external
         name: client-docs
     discovered:
       file_paths: 12
@@ -201,7 +201,7 @@ Pass 2 완료 후 brownfield-context.md 본문 말미에 생성한다. Pass 1 �
 | Entity | L1 | L2 | L3 | L4 | Primary Source |
 |--------|----|----|----|----|----------------|
 | User   | domain concept | GET /api/users | UserService | src/services/user.ts | local-codebase |
-| Lesson | flow: lesson-booking | POST /api/lessons | LessonController | src/controllers/lesson.ts | mcp:backend-docs |
+| Lesson | flow: lesson-booking | POST /api/lessons | LessonController | src/controllers/lesson.ts | external:backend-docs |
 | Tutor  | domain concept | - | - | - | document-project |
 ```
 
@@ -216,7 +216,7 @@ Constraint Profile (CP) captures implementation-level constraints from the exist
 
 **When generated**: During Pass 2 Stage 3 (3-hop Structural Traversal). Constraints are extracted simultaneously while reading files for L3/L4 data. No additional pass is needed.
 
-**When skipped**: `complexity=simple` projects skip CP extraction entirely (cost > benefit for simple changes).
+**When skipped**: When no readable backend code files exist in any accessible source.
 
 **Crystallize integration**: Crystallize S2 performs incremental CP — scanning files referenced by the prototype but missing from the existing CP. Crystallize S4 uses CP data as brownfield parameters for translation rules.
 
@@ -232,7 +232,7 @@ scan_metadata:
     collected_at: {date}
     file_count: {N}           # number of files scanned for constraints
     concept_coverage: [{list}] # domain concepts covered
-    skip_reason: "complexity=simple" | null
+    skip_reason: "no-backend-code" | null
 ```
 
 ### CP.1 Entity Constraints

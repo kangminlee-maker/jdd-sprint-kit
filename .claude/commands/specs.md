@@ -126,7 +126,7 @@ specs-direct: Specs generated directly from BMad planning artifacts (Sprint Phas
 
 > `goals: []` is handled by Scope Gate's Goals Fallback (extracts from PRD Success Criteria).
 > `brief_grade: A` assumes BMad/manual artifacts have been user-verified.
-> `complexity` field omitted — not consumed by downstream agents in specs-direct route.
+> `complexity` field removed — no longer used by any agent.
 
 ### Step 1: Brownfield L4 Append
 
@@ -137,13 +137,14 @@ Task(subagent_type: "general-purpose", model: "sonnet")
   prompt: "You are @brownfield-scanner. Read and follow your agent definition at .claude/agents/brownfield-scanner.md.
     Execute Targeted Scan (mode='targeted').
     Input files:
+    - sprint_input_path: specs/{feature}/inputs/sprint-input.md
     - Architecture: specs/{feature}/planning-artifacts/architecture.md
     - Epics: specs/{feature}/planning-artifacts/epics-and-stories.md
-    - sprint_input_path: specs/{feature}/inputs/sprint-input.md
-    - topology: {brownfield_topology from sprint-input.md frontmatter, default: 'standalone'}
+    - document_project_path: {document_project_path from sprint-input.md, or null}
+    - local_codebase_root: {if project root has src/ or app/ or build tool files then '.' else null}
     brownfield_path: specs/{feature}/planning-artifacts/brownfield-context.md
     Append L3 + L4 layers to existing file. After L3+L4 complete, populate the Entity Index table.
-    Note: Scanner reads external_resources.external_repos from sprint-input.md to discover external data sources."
+    Additionally: extract Constraint Profile (CP.1-CP.7) when readable backend code files exist in any accessible source."
 ```
 
 > Frozen snapshot copy is handled by `@deliverable-generator` Stage 2.
@@ -172,9 +173,8 @@ First, perform quick topology detection (same logic as sprint.md Step 0f-3):
 2. Detect `--add-dir` external repo paths using sprint.md Step 0f-2A logic → record in sprint-input.md `external_resources.external_repos`
 3. Run @brownfield-scanner broad mode → generate L1+L2
    - `sprint_input_path: specs/{feature}/inputs/sprint-input.md` (created in Step 0d, with external_repos recorded)
-   - `topology: {detected topology}`
-   - `local_codebase_root: {if topology is co-located/msa/monorepo then '.' else null}`
-4. Follow with Targeted Scan (L3+L4, passing same topology) → append to brownfield-context.md
+   - `local_codebase_root: {if project root has src/ or app/ or build tool files then '.' else null}`
+4. Follow with Targeted Scan (L3+L4) → append to brownfield-context.md
 5. **Update sprint-input.md frontmatter**:
    - `brownfield_status` → `configured` / `local-only` based on scan results
    - `brownfield_topology` → detection result (`standalone` / `co-located` / `msa` / `monorepo`)

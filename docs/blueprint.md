@@ -1,5 +1,5 @@
 ---
-synced_to: "5698416"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
+synced_to: "0d9167b"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
 audience: "non-developer product expert"
 product: "JDD Sprint Kit"
 version: "0.6.0"
@@ -317,14 +317,16 @@ Four sources for collecting existing system context. Each source has a different
 | **Figma** | Live design data (wireframes, components, design tokens) | MCP protocol (OAuth authentication) | Unlike code repos, Figma data is not downloadable as files — it exists only as live data on Figma's servers. MCP is the only way to query it. |
 | **Local codebase** | Source code in the current project | Glob, Grep, Read | Already part of the project — no special access needed |
 
-**Topology** — the Scanner auto-detects the project's deployment structure and adjusts its scan strategy:
+**Topology** — the Scanner auto-detects the project's deployment structure and records it as descriptive metadata:
 
-| Topology | What It Means | External Sources | Local Code | Scan Strategy |
-|----------|---------------|------------------|------------|---------------|
-| **standalone** | Greenfield or external-only system | Available | N/A | External sources are the sole data source |
-| **co-located** | Monolithic — all code is in this repository | Available | Full scan | Local code is primary; external sources supplement |
-| **msa** | Microservices — only some services are local | Available | Partial | External sources are primary (cross-service visibility); local scan limited to L1-L2 |
-| **monorepo** | Multiple packages in one repository | Available | Full scan (relevant packages) | Local code is primary; scoped to relevant packages only |
+| Topology | What It Means | External Sources | Local Code |
+|----------|---------------|------------------|------------|
+| **standalone** | Greenfield or external-only system | Available | N/A |
+| **co-located** | Monolithic — all code is in this repository | Available | Full scan |
+| **msa** | Microservices — only some services are local | Available | Full scan |
+| **monorepo** | Multiple packages in one repository | Available | Full scan (relevant packages) |
+
+The Scanner collects ALL accessible brownfield data regardless of topology. Topology is recorded as metadata for reference but does not control what gets scanned or skipped.
 
 Greenfield projects work without any Brownfield sources.
 
@@ -340,7 +342,7 @@ brownfield-context.md organizes existing system context in L1~L4 layers. Sprint 
 
 The Constraint Profile captures implementation-level rules from the existing codebase: entity column constraints (nullable, types), naming conventions, transaction managers, lock patterns, API patterns, enum DB-stored values, and domain boundaries. These are extracted during the same file traversal as L3/L4 (no additional pass). The Constraint Profile is used by Crystallize to parameterize translation rules — ensuring that translated specs respect existing code patterns rather than conflicting with them.
 
-**Constraint Profile is skipped** when `complexity=simple` (cost exceeds benefit for simple changes) or when the topology is `standalone`/`msa` (no local codebase to scan).
+**Constraint Profile is skipped** when no readable backend code files exist in any accessible source (local, --add-dir, tarball).
 
 Results are written to `specs/{feature}/planning-artifacts/brownfield-context.md`. Detailed per-pass behavior is described in S4.2 Pipeline below.
 
@@ -421,7 +423,7 @@ Brief grade assessment:
 | **B** (moderate) | 1-2 features, no scenarios | Show warning at confirmation |
 | **C** (insufficient) | 0 features, keywords only | Sprint not recommended + `force_jp1_review: true` (forces mandatory manual review at JP1 because Brief quality is low) |
 
-**User perspective — Confirmation screen**: Presents scan result summary (inputs/ file list, brownfield status, planning-artifacts status) + Sprint start confirmation (extracted goals, complexity, estimated time, contradiction warnings).
+**User perspective — Confirmation screen**: Presents scan result summary (inputs/ file list, brownfield status, planning-artifacts status) + Sprint start confirmation (extracted goals, estimated time, contradiction warnings).
 
 **Artifact**: `specs/{feature}/inputs/sprint-input.md` — Phase 0's SSOT (Single Source of Truth). All downstream agents reference this file instead of re-reading the original inputs.
 
@@ -490,7 +492,7 @@ specs/{feature}/planning-artifacts/
 
 **User perspective**: Automatic. No user intervention.
 
-**System internals**: @brownfield-scanner runs in targeted mode. L3 (Component): affected components, services, modules. L4 (Code): specific code locations, interfaces, dependencies. **Constraint Profile** (CP.1-CP.7): entity constraints, naming conventions, transaction/lock patterns, API patterns, enum DB values, domain boundaries — extracted during the same Stage 3 traversal as L3/L4 (no additional file reads). Skipped when `complexity=simple`.
+**System internals**: @brownfield-scanner runs in targeted mode. L3 (Component): affected components, services, modules. L4 (Code): specific code locations, interfaces, dependencies. **Constraint Profile** (CP.1-CP.7): entity constraints, naming conventions, transaction/lock patterns, API patterns, enum DB values, domain boundaries — extracted during the same Stage 3 traversal as L3/L4 (no additional file reads). Skipped when no readable backend code files exist.
 
 **Artifact**: `specs/{feature}/planning-artifacts/brownfield-context.md` (L1 + L2 + L3 + L4 + Constraint Profile append)
 
@@ -594,7 +596,7 @@ JP2 presentation format and Comment handling flow details in S5.3.
 | S9 | Attach per-task constraints from CP + delta manifest | `reconciled/constraint-report.md`, tasks.md updated |
 | S10 | Summary + proceed to Parallel with reconciled artifacts | — |
 
-S2 and S3 are skipped for `complexity=simple` projects. S2 is also skipped when the Constraint Profile already covers all prototype concepts (delta=0). S3 runs only Agent B (Structural) when no Constraint Profile exists (standalone/msa topology).
+S2 is skipped when brownfield-context.md has no Constraint Profile section, or when all prototype concepts are already covered (delta=0). S3 Agent A is skipped when no HIGH confidence CP items exist; Agent B always runs. S9 is skipped when no Constraint Profile exists.
 
 **Reconciliation principles**: The prototype provides what the product **does** (screens, features, API endpoints, data model, user flows). Items that the prototype cannot supply — NFRs (Non-Functional Requirements), security architecture, deployment strategy, scaling — are carried forward from the original documents and marked with `[carry-forward]`. Product Brief is excluded from reconciliation because it defines the problem space, not the solution.
 
@@ -927,7 +929,7 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 | Regeneration cost is manageable (5-15 min/cycle) | "Consumable treatment" impossible → regression to patch-based modification | Single cycle duration > 30 min |
 | Upfront input improves first-generation quality | Same quality regardless of input → inputs/ becomes meaningless | No difference in JP1 Comment rate between Grade A vs Grade C Briefs |
 | Product expert knows customers well | Judgments diverge from customer reality → right product doesn't emerge | Low usage rate post-launch |
-| External data sources are accessible (repos via `--add-dir`/tarball, Figma via MCP) | Brownfield scan gaps → existing system context missing from planning. For co-located projects, local codebase scan provides a fallback. | `brownfield_status: partial-failure` frequency |
+| External data sources are accessible (repos via `--add-dir`/tarball, Figma via MCP) | Brownfield scan gaps → existing system context missing from planning. When local code exists, it serves as a fallback. | `brownfield_status: partial-failure` frequency |
 | Prototype fidelity is sufficient for judgment | JP2 judgment impossible → "it'll probably be different in reality" | JP2 Comment "can't judge from prototype" |
 
 ---
@@ -936,7 +938,7 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 
 ## 8.1 Current Version
 
-**v0.5.3** (2026-02-20)
+**v0.6.0** (2026-02-21)
 
 Key changes since v0.4.1:
 - **`/crystallize` command**: After JP2 prototype iteration, reconcile all upstream artifacts to match the finalized prototype. Creates `reconciled/` directory with the definitive artifact set — original artifacts preserved untouched. Product Brief excluded (defines problem space, not derivable from UI code). Available on all routes.
@@ -947,7 +949,7 @@ Key changes since v0.4.1:
 - **`specs_root` parameter**: Added to `/parallel` and `/validate` so Workers and Judges read from `reconciled/` after Crystallize.
 
 Key changes in v0.4.0:
-- **Brownfield Scanner improvement**: topology-aware scanning
+- **Brownfield Scanner improvement**: multi-source scanning (topology now descriptive metadata only)
 - **External data access expansion**: `--add-dir` for local clones, tarball snapshot for GitHub repos, MCP for Figma
 - **brief.md Reference Sources section**: declare GitHub repos, Figma URLs, policy docs, scan notes
 - **Language support**: `communication_language` + `document_output_language` via config.yaml
@@ -972,8 +974,8 @@ Key changes in v0.4.0:
 - **Cost formula coefficients are uncalibrated** — relative magnitudes of upfront input cost, generation cost, and judgment cost unmeasured
 - **Post-JP2 pipeline (Parallel, Validate, Circuit Breaker) is unverified in practice** — agent definitions are complete but no end-to-end execution test
 - **Crystallize quality at scale is unverified** — tested on 1 feature (14 JP2 revisions). Behavior with larger features (50+ FRs) or minimal JP2 revisions (1-2 changes) is untested
-- **Constraint Profile extraction accuracy is unverified** — CP extraction rules (enum constructor parsing, @MappedSuperclass inheritance, naming pattern confidence) have not been tested on a real brownfield codebase
-- **S3 catch rate is unverified** — expected 70-80% CRITICAL catch rate (Constraint + Structural validators combined) is a design target, not measured
+- **Constraint Profile extraction accuracy is partially validated** — tested on podo-backend tarball (47 files, 10 entities, 25 enums, CP.1-CP.7 all categories covered). Untested on `--add-dir` real path and co-located topology with live codebase
+- **S3 catch rate is partially validated** — test run found CRITICAL 3 + HIGH 8 findings. 70-80% design target remains unconfirmed but mechanism is demonstrated
 
 ## 8.4 Known Gaps
 
@@ -1124,7 +1126,7 @@ specs/{feature}/
 | **MCP** | Model Context Protocol. Protocol for AI to access external data sources via authenticated connections. Currently used for Figma design data. Other external data (code repos) uses `--add-dir` or tarball snapshot |
 | **`--add-dir`** | Claude Code launch option that adds an external directory to the AI's accessible file scope. Used for accessing local clones of external service repos. Example: `claude --add-dir /path/to/backend-repo` |
 | **tarball snapshot** | A read-only copy of a GitHub repository's current files, downloaded via `gh api tarball/HEAD`. Not a git clone — contains no git history. Used when you have a GitHub URL but no local clone |
-| **topology** | The project's deployment structure, auto-detected by the Brownfield Scanner: `standalone` (no local code), `co-located` (all code in one repo), `msa` (microservices across multiple repos), `monorepo` (multiple packages in one repo). Determines scan strategy |
+| **topology** | The project's deployment structure, auto-detected by the Brownfield Scanner: `standalone` (no local code), `co-located` (all code in one repo), `msa` (microservices across multiple repos), `monorepo` (multiple packages in one repo). Descriptive metadata only — not used as a pipeline decision driver |
 | **Reference Sources section** | A structured section in brief.md (`## Reference Sources`) where the user declares GitHub repos, Figma URLs, policy docs, and scan notes. Declared repos are automatically downloaded and analyzed |
 | **PRD** | Product Requirements Document. A structured document defining what to build — features, scenarios, constraints, success criteria |
 | **FR** | Functional Requirement. A specific function or capability the system must provide (e.g., "users can block a tutor") |
@@ -1135,7 +1137,7 @@ specs/{feature}/
 | **Crystallize** | Mandatory translation step. After JP2 approval, translates prototype into development grammar and computes delta against brownfield baseline. Creates `reconciled/` directory with delta manifest. Triggered by [S] Start Crystallize (all routes), or standalone via `/crystallize` command |
 | **reconciled/** | Directory created by Crystallize. Contains the definitive artifact set reconciled with the finalized prototype. Mirrors `specs/{feature}/` structure minus excluded items. Original artifacts are preserved untouched |
 | **carry-forward** | Items in reconciled artifacts that are not derivable from the prototype (NFRs, security, deployment, scaling) and are carried from the original documents. Marked with `[carry-forward]` tag |
-| **Constraint Profile** (CP) | Implementation-level constraints extracted from the existing codebase during Pass 2 Brownfield scan: entity column constraints (CP.1), naming conventions (CP.2), transaction patterns (CP.3), lock patterns (CP.4), API patterns (CP.5), enum DB values (CP.6), domain boundaries (CP.7). Used by Crystallize S4 as translation parameters. Skipped for `complexity=simple` or `standalone`/`msa` topologies |
+| **Constraint Profile** (CP) | Implementation-level constraints extracted from the existing codebase during Pass 2 Brownfield scan: entity column constraints (CP.1), naming conventions (CP.2), transaction patterns (CP.3), lock patterns (CP.4), API patterns (CP.5), enum DB values (CP.6), domain boundaries (CP.7). Used by Crystallize S4 as translation parameters. Skipped when no readable backend code files exist in any accessible source |
 | **DD-N** | Decision Diary entry ID (DD-1, DD-2, ...). Used in Crystallize source attribution to trace prototype features back to specific JP2 decisions |
 | **specs_root** | Parameter added to `/parallel` and `/validate` to specify the base directory for specs files. Default: `specs/{feature}/`. After Crystallize: `specs/{feature}/reconciled/` |
 | **Amelia** (Dev) | BMad agent. Handles Story implementation. Used in Guided route |

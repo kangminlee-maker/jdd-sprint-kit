@@ -115,9 +115,9 @@ All local paths — project codebase and `--add-dir` directories — use the sam
 | MCP search     | **Grep**         | Code keyword and pattern search    |
 | MCP file read  | **Read**         | Full file content reading          |
 
-### Search Priority (co-located)
+### Search Priority
 
-When the same information is found in multiple sources within a co-located topology:
+When the same information is found in multiple sources:
 
 1. **Local codebase** (most accurate — actual code)
 2. **`--add-dir` external repos** (local clones of external services)

@@ -372,22 +372,19 @@ See `_bmad/docs/sprint-input-format.md` for reference analysis format.
 
    Record results in sprint-input.md frontmatter `causal_chain`.
 
-#### Step 0e: Goals Extraction + Complexity Classification
+#### Step 0e: Goals Extraction
 
 From sprint-input.md Core Brief + Discovered Requirements:
 - **Extract 3~5 Goals** (specific, verifiable objectives)
-- **Classify complexity**:
-  - `simple`: single domain, 3 or fewer APIs
-  - `medium`: 2~3 domains, 4~10 APIs
-  - `complex`: multiple domains, 10+ APIs or complex state management
 
-Record Goals and complexity in sprint-input.md frontmatter.
+Record Goals in sprint-input.md frontmatter.
 
 **Time estimate generation**:
-Record initial time range in sprint-input.md frontmatter based on complexity:
-- simple: 30~60 min
-- medium: 60~120 min
-- complex: 120~240 min
+Record initial time range in sprint-input.md frontmatter based on goal count + brownfield_status:
+- 1-2 goals + greenfield: 40~80 min
+- 1-2 goals + brownfield: 60~120 min
+- 3-5 goals + greenfield: 60~120 min
+- 3-5 goals + brownfield: 90~180 min
 
 > These are initial estimates and will auto-calibrate as Sprint execution data accumulates.
 
@@ -722,7 +719,6 @@ First display analysis results as text (in {communication_language}):
 3. {goal_3}
 
 ### Analysis Results
-- Complexity: {simple/medium/complex}
 - Brief grade: {A/B/C}
 - References: {N} analyzed
 - Brownfield: {greenfield / configured / local-only / N sources, M operational}
@@ -753,10 +749,10 @@ Then AskUserQuestion (in {communication_language}):
 | Option | Description |
 |--------|-------------|
 | **Continue** | Start Sprint |
-| **Adjust** | Modify goals/complexity/Discovered Requirements (free input → update sprint-input.md → re-confirm) |
+| **Adjust** | Modify goals/Discovered Requirements (free input → update sprint-input.md → re-confirm) |
 | **Exit** | Abort (inputs/ preserved; edit brief.md then `/sprint {feature_name}` to restart) |
 
-**Adjust handling**: User free input → update goals, complexity, discovered_requirements in memory → delete existing sprint-input.md → re-Write sprint-input.md with updated data (hook allows Write when file does not exist) → re-display Step 0h confirmation.
+**Adjust handling**: User free input → update goals, discovered_requirements in memory → delete existing sprint-input.md → re-Write sprint-input.md with updated data (hook allows Write when file does not exist) → re-display Step 0h confirmation.
 
 **Exit handling message** (in {communication_language}):
 ```
@@ -780,10 +776,8 @@ Task(subagent_type: "general-purpose")
       feature_name: {feature_name}
       sprint_input_path: specs/{feature_name}/inputs/sprint-input.md
       goals: {goals array from sprint-input.md}
-      complexity: {complexity from sprint-input.md}
       flags: { force_jp1_review: {true/false} }
       document_project_path: {document_project_path from sprint-input.md, or null}
-      brownfield_topology: {brownfield_topology from sprint-input.md}
       pre_existing_brownfield_path: {pre_existing_brownfield.path from sprint-input.md, or null}"
 ```
 

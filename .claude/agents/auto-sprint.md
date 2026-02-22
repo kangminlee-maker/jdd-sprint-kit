@@ -21,12 +21,9 @@ From `/sprint` command (Phase 0 Smart Launcher):
 - `feature_name`: Feature directory name (kebab-case)
 - `sprint_input_path`: Path to `specs/{feature_name}/inputs/sprint-input.md` (SSOT)
 - `goals`: Array of 3-5 extracted goals
-- `complexity`: `simple` / `medium` / `complex`
 - `flags`: `{ force_jp1_review: bool }` (Grade C Brief warning banner at JP1)
 - `document_project_path`: (Optional) Path to document-project output directory (null if not available)
-- `brownfield_topology`: Detected topology (`standalone` / `co-located` / `msa` / `monorepo`)
 - `pre_existing_brownfield_path`: (Optional) Path to pre-existing brownfield-context.md (null if not available). If provided, Brownfield Broad Scan uses this file as base and supplements missing levels only.
-- (Optional) Previous Sprint feedback for re-execution
 
 ## Agent Invocation Convention
 
@@ -63,15 +60,14 @@ Specify `model: "sonnet"` parameter on Task invocation. When unspecified, parent
    - `feature_name`: Feature directory name
    - `sprint_input_path`: `specs/{feature_name}/inputs/sprint-input.md`
    - `goals`: Array of 3-5 extracted goals
-   - `complexity`: `simple` / `medium` / `complex`
    - `flags`: `{ force_jp1_review: bool }`
-2. Set budget: simple=20, medium=40, complex=60 max_turns per sub-agent
+2. Set budget: 40 max_turns per sub-agent (default)
 3. Ensure `specs/{feature_name}/planning-artifacts/` directory exists
 4. If `force_jp1_review` flag → show Grade C Brief warning banner at JP1
 5. Initialize Sprint Log: Create `specs/{feature_name}/sprint-log.md` with Timeline table header + JP Interactions + Decisions Made + Issues Encountered sections
-6. Initialize Decision Diary: Create `specs/{feature_name}/decision-diary.md` with Sprint Context (complexity, topology, goals) + Decisions table header
+6. Initialize Decision Diary: Create `specs/{feature_name}/decision-diary.md` with Sprint Context (Goals: {N}, Brownfield: {status}, Topology: {topology}, Crystallize: Yes/No) + Decisions table header
 7. Record Sprint start time for adaptive time estimation
-8. Display initial progress with complexity-based time estimate from sprint-input.md
+8. Display initial progress with goal-count-based time estimate from sprint-input.md
 
 ## Progress Reporting Protocol
 
@@ -131,8 +127,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
       (Read this file to extract keywords for Brownfield scanning from Core Brief + Reference Materials + Discovered Requirements.
        Also read external_resources for Figma fileKeys.)
     - document_project_path: {document_project_path or null}
-    - local_codebase_root: {if brownfield_topology is co-located/msa/monorepo then '.' else null}
-    - topology: {brownfield_topology}
+    - local_codebase_root: {if project root has src/ or app/ or build tool files (see sprint.md Sub-step 0f-3 for full list) then '.' else null}
     brownfield_path: specs/{feature_name}/planning-artifacts/brownfield-context.md
     Produce L1 + L2 layers."
   max_turns: {budget}
@@ -200,7 +195,7 @@ Task(subagent_type: "general-purpose")
     KEEP internal quality checks: self-validation steps, completeness checks, coherence verification.
     Produce the FINAL artifact directly without interactive pauses.
     Read the PRD format guide at _bmad/docs/prd-format-guide.md.
-    Read the PRD workflow at _bmad/bmm/workflows/2-plan-workflows/prd/ for process reference.
+    Read the PRD workflow at _bmad/bmm/workflows/2-plan-workflows/create-prd/ for process reference.
     Read ALL step files to understand the full process.
     Produce the FINAL PRD artifact directly in one pass.
 
@@ -348,16 +343,14 @@ Task(subagent_type: "general-purpose", model: "sonnet")
   prompt: "You are @brownfield-scanner. Read and follow your agent definition at .claude/agents/brownfield-scanner.md.
     Execute Targeted Scan (mode='targeted').
     Input files:
+    - sprint_input_path: specs/{feature_name}/inputs/sprint-input.md
     - Architecture: specs/{feature_name}/planning-artifacts/architecture.md
     - Epics: specs/{feature_name}/planning-artifacts/epics-and-stories.md
     - document_project_path: {document_project_path or null}
-    - local_codebase_root: {if brownfield_topology is co-located/msa/monorepo then '.' else null}
-    - topology: {brownfield_topology}
-    - complexity: {complexity}
+    - local_codebase_root: {if project root has src/ or app/ or build tool files (see sprint.md Sub-step 0f-3 for full list) then '.' else null}
     brownfield_path: specs/{feature_name}/planning-artifacts/brownfield-context.md
     Append L3 + L4 layers to existing file. After L3+L4 complete, populate the Entity Index table.
-    Additionally: extract Constraint Profile (CP.1-CP.7) during Stage 3 traversal
-    UNLESS complexity=simple (skip CP for simple projects)."
+    Additionally: extract Constraint Profile (CP.1-CP.7) when readable backend code files exist in any accessible source."
   max_turns: {budget}
 ```
 
@@ -450,7 +443,7 @@ Brownfield: {brownfield quality 1-line summary}
 - Examples:
   - `"L1~L4 collected / 3 sources OK"` — all good
   - `"L1~L2 collected / L3 partial (MCP timeout)"` — gap present
-  - `"L1~L4 collected / L3 partial (cross-service gap, MCP required)"` — MSA topology gap
+  - `"L1~L4 collected / L3 partial (cross-service gap, MCP required)"` — cross-service source gap
   - `"greenfield — no existing system data"` — greenfield project
 - If brownfield-context.md doesn't exist: `"greenfield — no existing system data"`
 
@@ -627,10 +620,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 **On FAIL**: Apply Redirect — regenerate deliverables (`mode: deliverables-only`).
 
-### Step 5-D: Devil's Advocate Pass (conditional)
-
-Read `endpoint_count` from readiness.md JP2 Data. Read `complexity` from sprint-input.md.
-**Skip** when complexity = simple AND endpoint_count <= 3. Log "Devil's Advocate skipped: simple project with {N} endpoints" in progress.
+### Step 5-D: Devil's Advocate Pass
 
 Report progress (in {communication_language}): "Devil's Advocate Pass starting — adversarial edge case detection"
 
@@ -747,7 +737,7 @@ Warning: Items exceeding auto-reinforcement scope:
 | TypeScript compilation | tsc PASS/FAIL |
 | BDD → FR coverage | {N}/{M} covered |
 | Traceability Gap | {N} gaps |
-| Devil's Advocate | {N} scenarios ({C} critical, {H} high) — or "Skipped (simple project)" |
+| Devil's Advocate | {N} scenarios ({C} critical, {H} high) |
 
 {when adversarial CRITICAL findings exist}
 **Warning**: {C} CRITICAL adversarial scenarios detected. Review `adversarial-scenarios.md` before approving.
@@ -821,10 +811,7 @@ Crystallize is mandatory — it translates the approved prototype into developme
 - FAIL → execute Redirect protocol
 
 ### Role 3: Budget Control
-- Set soft gate via Task tool's max_turns parameter:
-  - simple: 20 turns
-  - medium: 40 turns
-  - complex: 60 turns
+- Set soft gate via Task tool's max_turns parameter: 40 turns (default)
 - When agent reaches max_turns:
   - Artifact nearly complete → attempt Scope Gate → proceed if pass
   - Artifact incomplete → grant additional budget (+50%) and retry

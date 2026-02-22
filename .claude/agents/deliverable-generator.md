@@ -55,13 +55,12 @@ This dictionary ensures naming consistency across ALL subsequent outputs. Every 
 
 Sprint Input path resolution:
 1. Check if `{planning_artifacts}/../inputs/sprint-input.md` exists
-2. If exists, read `tracking_source` and `complexity` fields
+2. If exists, read `tracking_source` field
 3. If not found, assume `tracking_source: success-criteria`
-4. If `complexity` not found in sprint-input.md, read from PRD YAML frontmatter `classification.complexity`. If still not found, default to `medium`
 
 | tracking_source | requirements.md Source column | BRIEF-N mapping | Entropy assignment basis |
 |----------------|--------------------------|-------------|------------------|
-| `brief` | `(source: BRIEF-N / DISC-N / AI-inferred)` tagging | Performed | sprint-input.md complexity + Brief analysis |
+| `brief` | `(source: BRIEF-N / DISC-N / AI-inferred)` tagging | Performed | Architecture + brownfield context |
 | `success-criteria` | Use FR# directly (Source column optional) | Skipped | Architecture tech decisions + brownfield-context |
 
 **success-criteria route Entropy assignment basis**:
@@ -97,8 +96,8 @@ Create `{output_base}/{feature_name}/`:
    | PRD has Concurrency NFR OR brownfield-context.md has concurrent access patterns | `### Concurrency Controls` | Lock strategy per resource + conflict resolution + idempotency mechanism |
    | PRD FR has scheduled/periodic/cron/trigger/batch keywords | `### Scheduler Specs` | Trigger inventory table (schedule, type, failure handling, FR linkage) |
    | Brownfield project AND existing tables are modified | `### Migration Strategy` | Migration step table (order, type, rollback, risk) |
-   | complexity != simple | `### Error Handling Strategy` | Error classification (business/system/infra) + retry policy + fallback strategy |
-   | complexity != simple | `### Operational Specs` | Logging strategy + monitoring/alerting (from NFR Observability) + environment variables |
+   | Always | `### Error Handling Strategy` | Error classification (business/system/infra) + retry policy + fallback strategy |
+   | Always | `### Operational Specs` | Logging strategy + monitoring/alerting (from NFR Observability) + environment variables |
 
    **Carry-Forward Registry** (generate when 1+ carry-forward items detected):
 

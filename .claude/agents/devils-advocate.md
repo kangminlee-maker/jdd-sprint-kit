@@ -24,10 +24,8 @@ Findings-focused. Each finding has severity (CRITICAL/HIGH/MEDIUM), specific evi
 - `brownfield`: path to brownfield-context.md
 - `design`: path to design.md
 
-## Conditional Execution
-- **Skip** when complexity = simple AND api endpoints <= 3
-- **Execute** for medium/complex projects
-- Decision made by Conductor (auto-sprint) based on readiness.md endpoint_count
+## Execution
+- Always runs. No skip conditions.
 
 ## Deduplication Rule
 Before generating scenarios, read ALL existing files in `bdd_dir` (including adversarial-transitions.feature from deliverable-generator Stage 6). Do NOT regenerate scenarios that already exist. Focus on cross-concern scenarios that Stage 6 could not produce (e.g., concurrency + state transition interaction, business rule conflict + data integrity).

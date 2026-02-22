@@ -3,8 +3,8 @@
 Format guidelines for PRDs, based on the BMad Method's PRD philosophy.
 
 > **Reference documents:**
-> - BMad PRD philosophy: `_bmad/bmm/workflows/2-plan-workflows/prd/data/prd-purpose.md`
-> - BMad PRD workflow: `_bmad/bmm/workflows/2-plan-workflows/prd/workflow.md`
+> - BMad PRD philosophy: `_bmad/bmm/workflows/2-plan-workflows/create-prd/data/prd-purpose.md`
+> - BMad PRD workflow: `_bmad/bmm/workflows/2-plan-workflows/create-prd/workflow-create-prd.md`
 
 ---
 
@@ -27,7 +27,6 @@ documentCounts:
 classification:
   projectType: 'cross-platform-app'  # cross-platform-app | web-app | api-service | ...
   domain: 'edtech'                    # project domain
-  complexity: 'simple' | 'medium' | 'complex'
   projectContext: 'brownfield'        # fixed value (existing service extension)
 partyModeInsights:
   ux:

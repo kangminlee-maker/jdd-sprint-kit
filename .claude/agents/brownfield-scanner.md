@@ -21,35 +21,34 @@ Systematic and exhaustive. Reports what was found, what was searched, and what g
 - `brownfield_path`: Output path for brownfield-context.md
 - `external_sources`: (Discovered from sprint-input.md) External data sources detected by Sprint Phase 0. Read `external_resources.external_repos` from sprint-input.md — each entry has `name`, `path`, and `access_method`. For MCP-only sources (e.g., Figma), read `external_resources.figma`. Scanner self-serves from sprint-input.md; callers do not need to pass this explicitly.
 - `document_project_path`: (Optional) Path to document-project output directory. When non-null, Stage 0 runs first to consume these artifacts as seed data.
-- `local_codebase_root`: (Optional) Root path for local codebase scanning. When non-null, local scan runs **in parallel with** external source scanning (not as replacement). Typically `"."` for co-located topologies.
-- `topology`: Project topology — `"co-located"` | `"monorepo"` | `"msa"` | `"standalone"`. Default: `"standalone"`. Determines scan strategy (see Topology Strategy below).
+- `local_codebase_root`: (Optional) Root path for local codebase scanning. When non-null, local scan runs **in parallel with** external source scanning (not as replacement). Typically `"."` when local codebase is present.
+- `topology` (optional): Project topology — descriptive metadata only (`"co-located"` | `"monorepo"` | `"msa"` | `"standalone"`). Recorded in scan_metadata for reference. Not used as pipeline decision driver.
 
-## Topology Strategy
+## Scan Strategy (Data Availability Based)
 
-Read `topology` parameter first and select strategy **before** starting any Stage.
+### Principle
+Collect ALL accessible brownfield data. The scanner does not judge what to skip — it scans everything it can access. Downstream consumers (scope-gate, deliverable-generator) evaluate data quality.
 
-### co-located
-- **Local**: Full 4-stage scan (primary source)
-- **External**: Attempt all configured sources as supplementary
-- **Merge priority**: Local > External (local takes precedence on conflict)
+### Code Source Detection
+Two independent decisions:
+- **Local 4-stage scan**: runs when `local_codebase_root` is set (project root has src/, app/, or build tool files)
+- **CP extraction**: runs when backend code files exist in ANY accessible source (local, --add-dir, tarball)
+  These are independent — CP extraction can run on tarball code even when local scan does not run.
 
-### monorepo
-- **Local**: Full 4-stage scan on **relevant packages only** (primary source)
-  - If `monorepo_packages` is provided in sprint-input.md: scan only those packages
-  - If not provided: scan all packages (full monorepo scan)
-  - Package paths are relative to workspace root (e.g., `packages/auth`, `apps/web`)
-- **External**: Attempt all configured sources as supplementary
-- **Merge priority**: Local > External (local takes precedence on conflict)
+- Backend code patterns: .java, .kt, .py, .go, .rs, .rb, .cs
+  (Frontend-only files .tsx/.jsx/.vue are NOT CP extraction targets)
+- preview/ directory is excluded from CP extraction (prototype code)
 
-### msa
-- **Local**: Stage 1-2 only (directory structure + core file reading). Skip Stage 3-4 (cross-service tracing is unreliable without full service context)
-- **External**: Attempt all configured sources (primary source). Tag cross-service gaps as `cross-service (external source required)`
-- **Merge priority**: External > Local (external sources have cross-service visibility)
+### Monorepo Package Scoping
+- If `monorepo_packages` is provided in sprint-input.md: scan only those packages
+- If not provided: scan all packages (full monorepo scan)
+- Package paths are relative to workspace root (e.g., `packages/auth`, `apps/web`)
 
-### standalone
-- **Local**: Skip entirely (no local codebase to scan)
-- **External**: Attempt all configured sources (sole source)
-- **Merge priority**: External only
+### Merge Strategy
+- Collect from ALL accessible sources (local + external + document-project)
+- On conflict: record both with source tags, flag in Self-Validation
+- No source is silently discarded — downstream consumers decide what to use
+- When import tracing references files not found in any accessible source, tag the result with `(partial: referenced file not in accessible sources)`
 
 ## Execution Protocol
 
@@ -158,9 +157,7 @@ Same 4 stages but with Architecture decisions and Epic module names as input ins
 
 #### Constraint Profile Extraction (during Pass 2 Stage 3)
 
-**Skip condition**: When `complexity=simple`, skip CP extraction entirely. Log: "Constraint Profile skipped: complexity=simple". Set `constraint_profile.status: skipped` in frontmatter.
-
-**Topology condition**: CP extraction runs only for `co-located` and `monorepo` topologies. For `standalone` and `msa`, skip CP (no local codebase or insufficient local context). Set `constraint_profile.status: skipped` with `skip_reason: "topology={topology}"`.
+**Skip condition**: When no readable backend code files exist in any accessible source (local, --add-dir, tarball), skip CP extraction entirely. Log: "Constraint Profile skipped: no backend code files found". Set `constraint_profile.status: skipped` with `skip_reason: "no-backend-code"` in frontmatter.
 
 During Stage 3 (Structural Traversal / Import Tracing), extract constraints **simultaneously** while reading each file for L3/L4 data. Do not re-read files — extract constraints in the same pass.
 
@@ -196,11 +193,6 @@ During Stage 3 (Structural Traversal / Import Tracing), extract constraints **si
 
 Runs **in parallel with** external source scanning (not as replacement). Both sources are collected and merged.
 
-**Topology-aware execution**:
-- **co-located / monorepo**: Run all 4 stages
-- **msa**: Run Stage 1-2 only (directory structure + core files). Skip Stage 3-4 — cross-service import tracing is unreliable. Tag gaps as `cross-service (external source required)`.
-- **standalone**: Do not run local scan
-
 **Excluded paths** (always skip):
 `node_modules/`, `.git/`, `dist/`, `build/`, `vendor/`, `target/`, `__pycache__/`, `coverage/`, `.next/`, `.nuxt/`, `out/`
 
@@ -218,14 +210,12 @@ Use Read to read key files identified in Stage 1:
 - Main entry points (e.g., `main.ts`, `app.ts`, `index.ts`)
 
 #### Stage 3 Local: Import/Dependency Tracing
-**(Skip for msa topology)**
 
 Use Grep to trace `import`/`require`/`from` chains from key files discovered in Stage 2:
 - Follow max **3 hops** from each entry point
 - Map service dependencies and shared modules
 
 #### Stage 4 Local: Keyword Search
-**(Skip for msa topology)**
 
 Use Grep for remaining Brief keywords not covered by Stages 1-3:
 - Search across all non-excluded source files
@@ -233,12 +223,7 @@ Use Grep for remaining Brief keywords not covered by Stages 1-3:
 
 #### Local + External Source Merge Rules
 
-Merge priority is determined by `topology` (see Topology Strategy above):
-- **co-located / monorepo**: Local > External — local source takes precedence (more accurate for co-located code)
-- **msa**: External > Local — external sources have cross-service visibility
-- **standalone**: External only
-
-For all topologies:
+Collect from all accessible sources. Apply Merge Strategy (see Scan Strategy above):
 - **Conflicting data**: record both with source tags, flag in Self-Validation
 - **Source tagging**: all local scan data tagged as `(source: local-codebase/{relative_path})`
 
@@ -251,10 +236,10 @@ After collection, perform self-check:
 
 | Check | Result |
 |-------|--------|
-| Topology Compliance | topology={topology}, local_stages={N}, external_attempted={N}, merge_priority={local/external} — COMPLIANT / NON-COMPLIANT |
+| Data Availability | local_code={found/not-found}, local_stages={N}, external_attempted={N}, merge_strategy=collect-all — COMPLIANT / NON-COMPLIANT |
 | Source Coverage | L1: {sources}, L2: {sources} — per-layer source existence check |
 | Keyword Coverage | {N}/{M} Brief keywords have ≥1 result from any source (weighted: goal-related keywords count 2x) |
-| Constraint Profile | CP status: {collected/skipped/partial}, {N} files scanned, {N} entities in CP.1, confidence distribution: {H}/{M}/{L} — or "skipped: {reason}" |
+| Constraint Profile | CP status: {collected/skipped/partial}, {N} files scanned, {N} entities in CP.1, confidence distribution: {H}/{M}/{L} — or "skipped: {reason}" (skip when no readable backend code files exist) |
 | Ontology Coverage | {N}/{M} document-project entities found in scan results (or "N/A" if document_project_path is null) |
 | Document-Project Coverage | {N}/{M} expected files found and parsed (or "N/A" if document_project_path is null) |
 | Cross-Validation | {description of source consistency across document-project, external sources, local} |
@@ -262,10 +247,10 @@ After collection, perform self-check:
 | Gap Classification | {list of gaps with severity} |
 ```
 
-**Topology Compliance check**:
-- Verify local stages match topology strategy (e.g., msa should have stages 1-2 only)
-- Verify merge priority was applied correctly
-- Verify external sources were attempted per topology rules
+**Data Availability check**:
+- Verify local stages ran when local code was found
+- Verify all accessible sources were collected and conflicts recorded with both source tags
+- Verify external sources were attempted
 
 **Source Coverage check**:
 - Each layer (L1~L4) must have at least 1 data source
@@ -284,8 +269,8 @@ After collection, perform self-check:
 **Gap Classification**:
 - `new-feature` — No existing system equivalent expected
 - `data-absent` — Should exist but no source returned it
-- `mcp-failure` — Server timeout or error
-- `cross-service` — Data exists in another service (external source required for msa topology)
+- `external-failure` — External source timeout or error
+- `cross-service` — Referenced code not found in any accessible source (may exist in a service not included in scan scope)
 - `ontology-gap` — Entity exists in document-project but not found in scan
 
 ## External Source Fallback Strategy
@@ -303,17 +288,17 @@ Classify each external data source result into one of these categories:
 | `error` | Connection refused, auth failed, or other error | `mcp` sources | Configuration or access issue |
 | `not-configured` | Source not listed in sprint-input.md external_resources | All sources | Not set up for this project |
 
-### Severity Assessment (topology-aware)
+### Severity Assessment
 
 For each failed/empty source, assess severity based on whether that source is the **sole source** for any data the scan needs:
 
 | Condition | Severity | Action |
 |-----------|----------|--------|
-| Failed source has local alternative (co-located/monorepo topology) | **LOW** | Record gap, continue — local data covers |
+| Failed source has local alternative (local code exists) | **LOW** | Record gap, continue — local data covers |
 | Failed source has another source covering same domain | **LOW** | Record gap, continue — alternative source covers |
 | Failed source is the **sole source** for some data | **HIGH** | Record gap with warning. Scope Gate must verify brownfield coverage |
-| All external sources failed (msa/standalone topology) | **CRITICAL** | **STOP Sprint**. Report to caller. No alternative data sources |
-| All external sources failed (co-located/monorepo topology) | **MEDIUM** | Continue with local-only data. Record major coverage gap |
+| All sources failed + no local code exists | **CRITICAL** | **STOP Sprint**. Report to caller. No alternative data sources |
+| All sources failed + local code exists | **MEDIUM** | Continue with local-only data. Record major coverage gap |
 
 ### Document-Project Freshness
 
@@ -337,8 +322,8 @@ Write to `brownfield_path` following `_bmad/docs/brownfield-context-format.md`:
 ---
 feature: {extracted from input}
 scan_metadata:
-  topology: {topology parameter value}
-  merge_priority: {local or mcp, per topology strategy}
+  topology: {read from sprint-input.md brownfield_topology, or "unknown"}
+  merge_strategy: collect-all
   local_stages_executed: {list of stages that ran, e.g., [1, 2, 3, 4] or [1, 2] or []}
   external_sources:
     attempted: [{list of source names attempted}]
@@ -379,11 +364,11 @@ data_sources:
   local-codebase: ok | not-configured | scan-error
   # Dynamic — list actual source names from external_resources
   # For local-path sources (--add-dir): ok | not-configured | scan-error
-  # For MCP sources: ok | timeout | error | empty-result
+  # For external sources: ok | timeout | error | empty-result
   {source_name}: ok | timeout | error | empty-result | not-configured | scan-error
   figma: ok | timeout | error | not-configured
 gaps:
-  - type: data-absent | mcp-failure | new-feature | cross-service | ontology-gap
+  - type: data-absent | external-failure | new-feature | cross-service | ontology-gap
     keyword: "{keyword or entity name}"
     severity: LOW | MEDIUM | HIGH | CRITICAL
     note: "{description}"
@@ -428,6 +413,6 @@ After Pass 2 completes, scan all L1~L4 content and build the Entity Index:
 4. **No silent gaps** — every source failure or empty result is explicitly recorded
 5. **Existing keywords check** — before searching, read existing brownfield-context.md layers to avoid duplicate searches
 6. **Max 3 hops** in Structural Traversal (external sources) and Import Tracing (Local) to prevent unbounded exploration
-7. **Topology determines merge priority** — co-located/monorepo: local > external. msa/standalone: external > local. Record conflicts with both sources.
+7. **Collect all, discard none** — scan all accessible sources. On conflict, record both with source tags. No source is silently discarded.
 8. **Entity Index** — Pass 1: reserve empty table. Pass 2: populate after all layers complete.
-9. **Constraint Profile** — Pass 2 only. Skip when `complexity=simple` or `topology=standalone/msa`. Extract during Stage 3 traversal (no separate pass). Follow `_bmad/docs/brownfield-context-format.md` Constraint Profile format.
+9. **Constraint Profile** — Pass 2 only. Skip when no readable backend code files exist in any accessible source. Extract during Stage 3 traversal (no separate pass). Follow `_bmad/docs/brownfield-context-format.md` Constraint Profile format.

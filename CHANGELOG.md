@@ -4,6 +4,26 @@ All notable changes to JDD Sprint Kit will be documented in this file.
 
 ---
 
+## [Unreleased]
+
+### Removed
+- `complexity` field — every project gets full treatment (no simple/medium/complex tiers)
+- Topology-based pipeline skip conditions — topology is descriptive metadata only
+
+### Changed
+- All skip conditions → data-sufficiency based
+- CP extraction: "backend code files exist" (was: complexity!=simple AND topology=co-located)
+- S3 Agent A: "HIGH confidence CP items exist" (was: topology!=standalone)
+- Graceful Degradation table → "Expected Behavior by Data Condition"
+- Time estimate: goal count + brownfield_status (was: complexity tiers)
+- Error Handling + Operational Specs: always generated (was: complexity!=simple)
+- Devil's Advocate: always runs (was: skip when simple AND api<=3)
+- Budget: single default 40 turns (was: simple=20/medium=40/complex=60)
+- local_codebase_root detection: file-based (src/, app/, build tools) instead of topology-based. Projects with build tool files now get local scan regardless of topology label.
+- Brownfield Scanner merge strategy: collect-all (was: topology-based priority). All accessible sources collected; conflicts recorded with both source tags.
+
+---
+
 ## [0.6.0] - 2026-02-21
 
 ### Added

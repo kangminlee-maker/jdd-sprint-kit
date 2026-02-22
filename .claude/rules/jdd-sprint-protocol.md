@@ -34,7 +34,7 @@ Brownfield data is used at every Sprint phase. Sources are cumulatively collecte
 | **Phase 0 Step 0f** (pre-Sprint) | Detect document-project + MCP + build tools → determine topology + `brownfield_status` |
 | **Pass 1: Broad Scan** (Sprint start) | Stage 0: consume document-project → Stage 1~4: MCP + local scan → brownfield-context.md **L1 + L2** |
 | **BMad Phase 1-3** | Reference brownfield-context.md L1+L2 |
-| **Pass 2: Targeted Scan** (post-Epics) | Reference Stage 0 data + backend-docs/client-docs MCP + local scan → brownfield-context.md **L3 + L4 + Constraint Profile** (CP.1-CP.7, co-located/monorepo only, skip when complexity=simple) |
+| **Pass 2: Targeted Scan** (post-Epics) | Reference Stage 0 data + backend-docs/client-docs MCP + local scan → brownfield-context.md **L3 + L4 + Constraint Profile** (CP.1-CP.7, when readable backend code files exist) |
 | **Specs generation** (`/specs`) | Copy frozen snapshot (@deliverable-generator Stage 2) |
 | **Parallel** (`/parallel`) | Workers read frozen snapshot |
 | **Validate** (`/validate`) | Judges verify against brownfield-context.md |
@@ -169,7 +169,7 @@ When a Worker completes a task:
 
 - 3 consecutive or 5 cumulative VALIDATE failures in the same category → `/circuit-breaker` auto-triggers
 - Minor → fix specs → re-execute
-- Major → re-run Auto Sprint Phase 1 (non-Auto Sprint: BMad `/bmad/bmm/workflows/correct-course`)
+- Major → re-run Auto Sprint Phase 1 (non-Auto Sprint: BMad `_bmad/bmm/workflows/4-implementation/correct-course`)
 
 ## File Ownership Rules
 
@@ -259,15 +259,22 @@ JP2 [S] Start Crystallize (Sprint) / [S] Start Crystallize (Guided/Direct)
 On S3 CRITICAL findings: [R] Return to JP2 / [F] Acknowledge and proceed / [X] Exit.
 On gate failure (S4-G, S5-G, or S7 unresolvable): [R] Return to JP2 / [K] Skip Crystallize (original specs) / [X] Exit.
 
-### Graceful Degradation (Crystallize)
+### Expected Behavior by Data Condition (Crystallize)
 
-| Condition | Behavior |
-|-----------|----------|
-| co-located/monorepo + JP2 Comment=0 | Phase 1 CP sufficient. S2 skip (delta=0). S3 both agents |
-| co-located/monorepo + JP2 Comment>0 | S2 incremental scan. S3 both agents |
-| standalone/msa | No CP available. S2 skip. S3 Agent B (Structural) only + warning |
-| Greenfield (any topology) | No CP. S2 skip. S3 Agent B only (no CP data for Agent A). Delta = all positive |
-| complexity=simple | Phase 1 CP skip. S2 skip. S3 skip. S9 skip. Current pipeline behavior |
+| Data Condition | CP Extraction | S2 | S3 | S9 | DA |
+|---------------|-------------|----|----|----|----|
+| Backend code accessible + HIGH CP items exist | Extracted | Per JP2 Comment | Agent A+B | Runs | Runs |
+| Backend code accessible + LOW/MEDIUM CP only | Extracted (result: LOW/MEDIUM only) | Per JP2 Comment | Agent B only | Runs | Runs |
+| Code not accessible | None | skip | Agent B only | skip | Runs |
+| No brownfield data (Greenfield) | None | skip | Agent B only (delta=all positive) | skip | Runs |
+
+Notes:
+- "Backend code accessible" = .java/.kt/.py/.go/.rs etc. exist in any source (local, --add-dir, tarball)
+- preview/ directory .tsx files are NOT CP extraction targets
+- S2 = CP section exists AND JP2 Comment > 0
+- S3 Agent A = HIGH confidence CP items 1+ exist
+- S9 = CP section exists
+- DA = always runs
 
 ### Reconciliation Principles
 
@@ -337,9 +344,8 @@ decision-diary.md is a structured table of JP decisions and feedback. Replaces f
 # Decision Diary: {feature_name}
 
 ## Sprint Context
-- Complexity: {simple/medium/complex}
+- Goals: {N}, Brownfield: {status}
 - Topology: {co-located/msa/monorepo/standalone}
-- Goals: {goals list}
 - Crystallize: {Yes/No}
 
 ## Decisions

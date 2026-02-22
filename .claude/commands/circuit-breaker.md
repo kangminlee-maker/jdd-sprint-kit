@@ -4,7 +4,7 @@ description: "Systematic course correction on repeated VALIDATE failures"
 
 # /circuit-breaker — Course Correction
 
-> **Dispatch Target**: Conditional — Auto Sprint → Phase 1 re-run / Non-Auto → `/bmad/bmm/workflows/correct-course`
+> **Dispatch Target**: Conditional — Auto Sprint → Phase 1 re-run / Non-Auto → `_bmad/bmm/workflows/4-implementation/correct-course`
 
 ## Purpose
 
@@ -64,7 +64,7 @@ Assess severity by referencing `failure_source` from Judge or Scope Gate results
 - Tech stack change needed (`upstream:architecture`)
 
 → Auto Sprint: re-run from cause stage ({stage}) with failure learnings
-→ Non-Auto Sprint: run BMad `/bmad/bmm/workflows/correct-course`
+→ Non-Auto Sprint: run BMad `_bmad/bmm/workflows/4-implementation/correct-course`
 
 **When failure_source is absent**: Use existing classification (implementation difficulty = minor, design flaw = major)
 
@@ -95,7 +95,7 @@ Auto Sprint mode:
 Non-Auto Sprint mode:
 1. Present failure context summary to user (Step 1 result, in {communication_language})
 2. Offer choices (in {communication_language}):
-   a) `/bmad/bmm/workflows/correct-course` (BMad interactive correction)
+   a) `_bmad/bmm/workflows/4-implementation/correct-course` (BMad interactive correction)
       → Pass failure context (`circuit-breaker-log.md`) as workflow input
       → Change scope analysis → PRD/Architecture impact assessment → BMad artifact update
    b) Manually edit Planning Artifacts → re-run `/specs`

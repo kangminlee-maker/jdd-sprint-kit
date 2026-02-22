@@ -43,7 +43,7 @@ Before starting the pipeline, verify:
 1. `specs/{feature}/preview/` exists AND `src/` contains at least one `.tsx` file (Glob: `specs/{feature}/preview/src/**/*.tsx`)
 2. `specs/{feature}/planning-artifacts/` exists with `prd.md`, `architecture.md`, `epics-and-stories.md` (all 3 required)
 3. Decision records available (optional — enriches S0 context when present):
-   - `specs/{feature}/decision-diary.md` OR `specs/{feature}/jp2-review-log.md` OR `specs/{feature}/sprint-log.md`
+   - `specs/{feature}/decision-diary.md` OR `specs/{feature}/sprint-log.md`
    - If none exist, S0 is skipped and S1 runs without decision context
    - If records exist but Decisions table has 0 rows (JP2 approved with no Comments), S0 is also skipped
 4. If `specs/{feature}/reconciled/` already exists: prompt user — overwrite or abort
@@ -64,10 +64,8 @@ Analyze JP2 decision records to understand the intent and context behind prototy
 2. (brownfield-context.md copy deferred to S2 — may be incrementally updated first)
 3. Copy decision records to reconciled/ (if exists):
    - `specs/{feature}/decision-diary.md` → `reconciled/decision-diary.md`
-   - OR `specs/{feature}/jp2-review-log.md` → `reconciled/jp2-review-log.md` (fallback, serves equivalent role)
 4. Read JP2 decision records:
    - Primary: `specs/{feature}/decision-diary.md` (if exists)
-   - Fallback: `specs/{feature}/jp2-review-log.md` (if exists, serves equivalent role)
    - Also: `specs/{feature}/sprint-log.md` "JP Interactions" section (if exists)
 5. Produce decision context summary (Conductor writes directly — lightweight synthesis, not a Task):
 
@@ -147,9 +145,8 @@ Compare S1 prototype analysis domain concepts against existing Constraint Profil
 **Progress**: `"[S2/11] Checking Constraint Profile coverage..."`
 
 **Skip conditions** (any one triggers skip):
-- `complexity=simple` → skip ("Constraint Profile not applicable for simple projects")
-- `topology=standalone` or `topology=msa` → skip ("Constraint Profile requires co-located or monorepo topology")
 - brownfield-context.md has no `## Constraint Profile` section → skip ("No base Constraint Profile from Phase 1")
+- JP2 Comment count = 0 (decision-diary.md Decisions table has 0 data rows, or does not exist) → skip ("No prototype changes to scan")
 
 **Pre-S2: brownfield-context.md copy** (always executes before S2, regardless of whether S2 scan will run):
 - If `specs/{feature}/planning-artifacts/brownfield-context.md` exists:
@@ -204,9 +201,8 @@ Cross-validate Constraint Profile + prototype analysis before translation. Two a
 **Progress**: `"[S3/11] Validating prototype against constraints (2 parallel agents)..."`
 
 **Skip conditions**:
-- `complexity=simple` → skip entire S3
-- `topology=standalone` or `topology=msa` → run Agent B (Structural) only, skip Agent A (Constraint). Log: "Agent A (Constraint Validator) skipped: no Constraint Profile available for {topology} topology"
-- No `## Constraint Profile` section in brownfield-context.md (including greenfield) → run Agent B (Structural) only, skip Agent A (Constraint). Log: "Agent A (Constraint Validator) skipped: no Constraint Profile data"
+- Agent A skip: brownfield-context.md's Constraint Profile has 0 HIGH confidence items (CP section absent, or all items are MEDIUM/LOW). Crystallize Conductor reads brownfield-context.md before S3 to count HIGH items. Log: "Agent A (Constraint Validator) skipped: no HIGH confidence CP items"
+- Agent B: always runs (no skip conditions)
 
 **Agent A: Constraint Validator**
 
@@ -690,7 +686,7 @@ Attach constraint references from delta-manifest.md and Constraint Profile to ea
 
 **Progress**: `"[S9/11] Attaching constraint references to tasks..."`
 
-**Skip conditions**: If no Constraint Profile exists or complexity=simple → skip S9.
+**Skip conditions**: If no Constraint Profile exists → skip S9.
 
 **Logic** (Conductor inline — lightweight text operation):
 1. Read `specs/{feature}/reconciled/delta-manifest.md` — collect constraint_ref and migration_needed per task_id
