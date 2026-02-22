@@ -67,6 +67,13 @@ JDD Sprint Kit의 한국어-영어 정식 용어 참조 문서입니다. 모든 
 | 캐리포워드 생명주기 | carry-forward lifecycle | 탄생 → 등록 → 생존 → 주입 → 검증 → 델타 분류 |
 | 왕복 검증 | round-trip verification | 번역 정확성 확인: 명세 → 구조 재도출 → 프로토타입과 비교 |
 | 3패스 패턴 | 3-pass pattern | Answer Discovery → Translation & Delta Extraction → Delta Execution |
+| 사영 | projection | 수학적 프레이밍: 이해관계자 관점에서 시스템을 바라봄 |
+| 제약 최적화 | constrained optimization | 수학적 프레이밍: 고객 만족(목적 함수) + 제약 조건 |
+| 목적 함수 | objective function | 수학적 프레이밍: 고객(primary user) 사영 |
+| 제약 조건 | constraints | 수학적 프레이밍: 서비스 제공자 사영 (NFR 등) |
+| 경계 조건 | boundary conditions | 수학적 프레이밍: 적분상수를 결정하는 조건 |
+| 실현 가능 영역 | feasible region | 수학적 프레이밍: 모든 제약을 만족하는 해 집합 |
+| 미적분의 기본 정리 | fundamental theorem of calculus | 수학적 프레이밍: 왕복 검증의 수학적 대응 |
 
 ## Sprint 흐름 용어
 
