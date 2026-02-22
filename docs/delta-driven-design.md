@@ -1,8 +1,8 @@
 # Delta-Driven Design
 
 > **Document type**: Design theory — Sprint Kit's conceptual foundation and methodology positioning
-> **Version**: 1.0
-> **Date**: 2026-02-21
+> **Version**: 1.1
+> **Date**: 2026-02-22
 > **Related**: [`judgment-driven-development.md`](judgment-driven-development.md) (design philosophy), [`reviews/lld-gap-analysis-and-implementation-plan.md`](reviews/lld-gap-analysis-and-implementation-plan.md) (implementation plan)
 
 ---
@@ -187,7 +187,117 @@ This is why Sprint Kit's primary goal is delta definition, not code generation.
 
 ---
 
-## 5. Sprint Kit Pipeline Reframed
+## 5. Mathematical Framing: Calculus and Projection
+
+The core concepts of Delta-Driven Design correspond precisely to concepts from calculus and projective geometry. This mathematical framing is not a metaphor but a structural isomorphism — the same operations described in a different language.
+
+### Differentiation and Integration
+
+Delta extraction is differentiation — the operation of extracting the rate of change:
+
+```
+f'(x) ↔ Delta extraction
+```
+
+Complete system restoration is integration — restoring the original system from its delta:
+
+```
+∫f'(x)dx + C ↔ Brownfield + Delta + Carry-Forward = Complete System
+```
+
+| Calculus | Delta-Driven Design |
+|---|---|
+| f(x) — original function | Complete System — target system |
+| f'(x) — derivative | Delta — the change |
+| ∫f'(x)dx — indefinite integral | Brownfield + Delta — sum of visible changes |
+| C — constant of integration | Carry-Forward — non-visible requirements |
+| C determined by initial/boundary conditions | Carry-Forward determined from PRD/Architecture/Brownfield |
+
+### Carry-Forward as the Constant of Integration
+
+In differentiation, the derivative of a constant is zero. No matter how you differentiate, constants vanish. For precisely the same reason, carry-forward items are invisible in the prototype:
+
+| Calculus | Delta-Driven Design |
+|---|---|
+| d/dx[C] = 0 | NFRs/security are invisible in the prototype |
+| Integration alone cannot recover C | Prototype translation alone cannot recover non-visible requirements |
+| Initial condition f(x₀) = y₀ determines C | PRD, Architecture, Brownfield determine carry-forward |
+| Omitting C yields an incomplete solution | Omitting carry-forward yields an incomplete system |
+
+This is why carry-forward is mandatory in Crystallize. Prototype translation (indefinite integration) alone cannot make the system complete — the constant of integration (carry-forward), determined by initial/boundary conditions (PRD, Architecture), must be added.
+
+### Round-Trip Verification = Fundamental Theorem of Calculus
+
+The fundamental theorem of calculus guarantees that differentiation and integration are inverse operations:
+
+```
+∫(d/dx[f(x)])dx + C = f(x)
+```
+
+Delta-Driven Design's round-trip verification has the same structure:
+
+```
+translate(Prototype) → Specs → re-generate → Re-Prototype ≈ Prototype
+```
+
+After differentiation (delta extraction) and integration (system restoration), you should recover the original function (prototype). If you don't, information was lost in translation — meaning either the constant of integration (carry-forward) was omitted or the differentiation (translation rules) was incomplete.
+
+### Prototype as Projection
+
+A complete system S is a high-dimensional object — API, DB, security, performance, monitoring, UI, business logic, and more. A prototype is this high-dimensional system projected onto a lower-dimensional view from a specific perspective:
+
+```
+π_customer(S) = system as seen by customers (UI, interactions, flows)
+π_developer(S) = system as seen by developers (API, DB, state machines)
+π_security(S) = system as seen by security team (auth, authorization, encryption)
+π_ops(S) = system as seen by operations (deployment, monitoring, scaling)
+```
+
+Each projection loses different information. The customer projection (π_customer) doesn't show security rules; the security projection (π_security) doesn't show UI layout. Carry-forward is **the information lost in a particular projection's collapsed dimensions**.
+
+Just as a CT scan combines projections from multiple angles to reconstruct the original 3D structure, Sprint Kit combines artifacts from multiple perspectives (prototype, PRD, Architecture, Brownfield) to reconstruct the complete system specification.
+
+### Projection Hierarchy: Constrained Optimization
+
+**Not all projections are equal.** This is a critical correction to the two-grammar model.
+
+The customer (primary user) projection is the **objective function** — the target to optimize. The remaining projections (development, security, operations) are **constraints** — they must be satisfied but are not the optimization target.
+
+```
+maximize: π_customer(S)     ← customer experience (objective function)
+subject to:
+  π_security(S) ≥ threshold  ← security requirements (constraint)
+  π_ops(S) ≥ threshold        ← operational requirements (constraint)
+  π_perf(S) ≥ threshold       ← performance requirements (constraint)
+```
+
+This structure maps precisely to Sprint Kit's current design:
+
+| Mathematical Framing | Sprint Kit Counterpart |
+|---|---|
+| Objective function (π_customer) | FR — functional requirements |
+| Constraints (π_security, π_ops, ...) | NFR — non-functional requirements |
+| Feasible region (solution set satisfying all constraints) | A design satisfying all NFRs while implementing FRs |
+| Empty feasible region (constraint conflict) | NFR conflicts → business judgment required |
+| Optimal solution selection | Judgment at JP1/JP2 |
+
+When constraints conflict — for example, the best customer experience violates a security requirement — the feasible region becomes empty. Which constraint to relax cannot be determined mechanically. **This is why CP1 ("Human judgment is the only lasting asset") is essential** — resolving constraint conflicts is a business judgment, and JPs are the moments for that judgment.
+
+### Implications
+
+This mathematical framing adds nothing new — it **reveals that the current pipeline already embodies this structure**.
+
+- Crystallize was already performing differentiation (delta extraction) + constant injection (carry-forward)
+- Round-trip verification was already applying the fundamental theorem of calculus
+- The prototype was already the customer projection
+- PRD's FR/NFR distinction was already the objective function / constraints structure
+- JP judgments were already constraint conflict resolution
+
+Furthermore, **the two-grammar model is revealed to be a special case of a hierarchical N-projection model**. User Grammar is the customer projection serving as the objective function; Development Grammar bundles the remaining constraint projections into one. Expanding from 2 to N projections doesn't change the pipeline's structure — it only requires carry-forward and verification for each additional projection.
+
+---
+
+## 6. Sprint Kit Pipeline Reframed
 
 ### The Complete Flow
 
@@ -241,7 +351,7 @@ This is why Sprint Kit's primary goal is delta definition, not code generation.
 
 ---
 
-## 6. Why This Makes "Concrete → Abstract" a Strength
+## 7. Why This Makes "Concrete → Abstract" a Strength
 
 The previous concern: "Crystallize abstracts from prototype to specs — but AI is bad at abstraction."
 
@@ -261,7 +371,7 @@ The translation is mechanical because:
 
 ---
 
-## 7. Round-Trip Verification
+## 8. Round-Trip Verification
 
 To verify that translation didn't lose information:
 
@@ -274,11 +384,11 @@ Prototype (original, JP2-approved)
 
 If the re-generated prototype structurally matches the original (same routes, same components, same API calls, same states), the translation was lossless. Differences indicate translation gaps.
 
-This is the Crystallize S7 (Cross-Artifact Consistency) check, reframed as a translation verification step.
+This is the Crystallize S7 (Cross-Artifact Consistency) check, reframed as a translation verification step. In the mathematical framing of §5, this is the same structure as the fundamental theorem of calculus.
 
 ---
 
-## 8. Implications for Greenfield
+## 9. Implications for Greenfield
 
 When there is no brownfield (new system from scratch):
 
@@ -293,7 +403,7 @@ The model degrades gracefully. For greenfield, delta IS the full spec. For brown
 
 ---
 
-## 9. Implementation Implications
+## 10. Implementation Implications
 
 This reframe has implications for Sprint Kit components including: Crystallize pipeline, design.md format, Specs as intermediate vs final artifact, handoff, Validate phase, translation rule completeness, and carry-forward mechanism.
 
@@ -325,7 +435,7 @@ Combined catch rate hypothesis: 70-80% of CRITICAL issues before translation. Th
 
 ---
 
-## 10. Design Principles (Core Principles + Design Judgments)
+## 11. Design Principles (Core Principles + Design Judgments)
 
 ### Core Principles
 
@@ -446,7 +556,7 @@ Where Sprint Kit accepts non-determinism (e.g., UI layout variation), this is a 
 
 ---
 
-## 11. What Does NOT Change
+## 12. What Does NOT Change
 
 | Element | Why It Stays |
 |---|---|
@@ -461,7 +571,7 @@ Where Sprint Kit accepts non-determinism (e.g., UI layout variation), this is a 
 
 ---
 
-## 12. Implementation Roadmap
+## 13. Implementation Roadmap
 
 > Detailed implementation plan with file-by-file changes, phased rollout, and verification strategy: [`reviews/lld-gap-analysis-and-implementation-plan.md`](reviews/lld-gap-analysis-and-implementation-plan.md)
 
@@ -493,6 +603,7 @@ The methodology survey (Round 5-6) revealed that Sprint Kit's Crystallize pass (
 
 | Round 7 | Party Mode re-evaluation of delta reframe (6 agents) | Pipeline already performs correct operations; reframe is conceptual. JP2 needs Before/After delta. Delta Manifest is critical prerequisite. carry-forward needs lifecycle management |
 | Round 8 | Design Principles finalization | FP1-FP6 (core principles) + DJ1-DJ10 (design judgments). Key additions: FP2 (prototype adapts to user type), FP3 (spec completeness ↔ non-determinism trade-off), FP4 (delta is primary goal). Option B selected |
+| Round 9 | Mathematical framing | Calculus/projection/constrained optimization analogies. Carry-forward = constant of integration, prototype = projection, implementation = constrained optimization. Confirmed that the two-grammar model is a special case of hierarchical N-projection |
 
 ---
 

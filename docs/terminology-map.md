@@ -67,6 +67,13 @@ Korean-English canonical term reference for JDD Sprint Kit. All files use the **
 | 캐리포워드 생명주기 | carry-forward lifecycle | birth → registration → survival → injection → verification → delta classification |
 | 왕복 검증 | round-trip verification | translation accuracy check: specs → re-derive structure → compare with prototype |
 | 3패스 패턴 | 3-pass pattern | Answer Discovery → Translation & Delta Extraction → Delta Execution |
+| 사영 | projection | mathematical framing: viewing the system from a stakeholder's perspective |
+| 제약 최적화 | constrained optimization | mathematical framing: customer satisfaction (objective function) + constraints |
+| 목적 함수 | objective function | mathematical framing: customer (primary user) projection |
+| 제약 조건 | constraints | mathematical framing: service provider projections (NFR etc.) |
+| 경계 조건 | boundary conditions | mathematical framing: conditions that determine the constant of integration |
+| 실현 가능 영역 | feasible region | mathematical framing: solution set satisfying all constraints |
+| 미적분의 기본 정리 | fundamental theorem of calculus | mathematical framing: mathematical counterpart of round-trip verification |
 
 ## Sprint Flow Terms
 
