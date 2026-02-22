@@ -75,6 +75,21 @@ JDD Sprint Kit의 한국어-영어 정식 용어 참조 문서입니다. 모든 
 | 실현 가능 영역 | feasible region | 수학적 프레이밍: 모든 제약을 만족하는 해 집합 |
 | 미적분의 기본 정리 | fundamental theorem of calculus | 수학적 프레이밍: 왕복 검증의 수학적 대응 |
 
+## Translation Ontology 용어
+
+| 한국어 | 영어 (정식 명칭) | 맥락 |
+|--------|-------------------|---------|
+| 번역 존재론 | translation ontology | 통합 프레이밍 — 4개 핵심 문서의 철학적 기반 |
+| 근본 관점 | foundational perspective | 공리(axiom)가 아닌, 전제 위에 서 있는 핵심 선언 |
+| 방향 검증 | direction validation | JP1 고유 기능 — 프로토타입에 없는 시나리오 누락 감지 |
+| 목표 검증 | target validation | JP2 고유 기능 — 사용자 문법으로 목표 상태 확인 |
+| 출처 | provenance | 재생성 범위 결정 기준 — 피드백이 어디서 왔는가 |
+| 보조 전제 | auxiliary hypothesis (H1-H4) | 근본 관점이 성립하기 위한 구조적 전제 |
+| 경험적 전제 | empirical hypothesis (H5-H7) | 기술 수준에 의존하는 경험적 조건 |
+| 구조적 유비 | structural analogy | 수학적 프레이밍의 정확한 지위 — 동형(isomorphism)이 아님 |
+| QUERY-N | QUERY-N | **설계 제안, 미구현** — Crystallize 중 번역 불가 비즈니스 결정 배치 질의 |
+| TECH-N | TECH-N | **설계 제안, 미구현** — AI 기본값 기술 결정 목록 |
+
 ## Sprint 흐름 용어
 
 | 한국어 | 영어 (정식 명칭) | 맥락 |
@@ -110,7 +125,7 @@ JDD Sprint Kit의 한국어-영어 정식 용어 참조 문서입니다. 모든 
 Mary (Analyst), John (PM), Winston (Architect), Amelia (Dev), Bob (SM), Sally (UX Designer), Barry (Quick Flow Solo Dev), Murat (Test Architect), Paige (Tech Writer)
 
 ### 상태 값 및 라벨
-`PASS`, `FAIL`, `SKIP`, `DONE`, `PENDING`, `APPROVED`, `JP1`, `JP2`, `L1`, `L2`, `L3`, `L4`, `FR`, `NFR`, `ADR`, `BRIEF-N`, `DISC-N`
+`PASS`, `FAIL`, `SKIP`, `DONE`, `PENDING`, `APPROVED`, `JP1`, `JP2`, `L1`, `L2`, `L3`, `L4`, `FR`, `NFR`, `ADR`, `BRIEF-N`, `DISC-N`, `QUERY-N`, `TECH-N`
 
 ### 커맨드명
 `/sprint`, `/specs`, `/preview`, `/parallel`, `/validate`, `/circuit-breaker`, `/summarize-prd`

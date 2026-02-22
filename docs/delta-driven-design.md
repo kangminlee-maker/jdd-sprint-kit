@@ -3,7 +3,7 @@
 > **문서 유형**: 설계 이론 — Sprint Kit의 개념적 기반과 방법론 포지셔닝
 > **버전**: 1.1
 > **날짜**: 2026-02-22
-> **관련 문서**: [`judgment-driven-development.md`](judgment-driven-development.md) (설계 철학), [`reviews/lld-gap-analysis-and-implementation-plan.md`](reviews/lld-gap-analysis-and-implementation-plan.md) (구현 계획)
+> **관련 문서**: [`judgment-driven-development.md`](judgment-driven-development.md) (설계 철학), [`translation-ontology.md`](translation-ontology.md) (통합 프레이밍), [`reviews/lld-gap-analysis-and-implementation-plan.md`](reviews/lld-gap-analysis-and-implementation-plan.md) (구현 계획)
 
 ---
 
@@ -162,7 +162,7 @@ Delta = Complete Specs - Brownfield
 
 ## 5. 수학적 프레이밍: 미적분과 사영
 
-Delta-Driven Design의 핵심 개념들은 미적분과 사영 기하학의 개념에 정확히 대응한다. 이 수학적 프레이밍은 비유가 아니라 구조적 동형(isomorphism)이다 — 동일한 연산을 다른 언어로 기술한 것이다.
+Delta-Driven Design의 핵심 개념들은 미적분과 사영 기하학의 개념에 정확히 대응한다. 이 수학적 프레이밍은 구조적 유비(structural analogy)다 — 동일한 연산을 다른 언어로 기술하되, 완전한 수학적 등가(isomorphism)는 주장하지 않는다.
 
 ### 미분과 적분
 
@@ -454,6 +454,15 @@ Delta = translate(Prototype) + carry-forward - Brownfield
 Crystallize의 "구체 → 추상" 단계는 열린 추상화가 아니라 두 개의 알려진 문법 사이의 번역이다. 번역은 명시적 규칙이 있는 매핑 테이블 (User Grammar 요소 → Development Grammar 등가물)을 따른다.
 
 번역 규칙이 불충분한 경우 (자동 동작 텍스트 → 스케줄러 정의와 같이 추론이 필요한 항목), 이런 항목은 조용히 추측되지 않고 캐리포워드 검증을 위해 명시적으로 플래그된다.
+
+**다중 입력 구조**: 번역의 입력은 프로토타입 하나가 아니다. 완전한 번역은 세 가지 입력을 결합한다:
+- **프로토타입**: 사용자 문법으로 표현된 목표 상태 (JP2 승인)
+- **캐리포워드 출처**: 비가시 요구사항 — NFR, 보안, 마이그레이션 (PRD, Architecture, Brownfield)
+- **Brownfield 베이스라인**: 현재 시스템 상태 (brownfield-context.md L1-L4)
+
+세 입력 중 하나라도 누락되면 번역은 불완전하다. 프로토타입 없이는 번역 대상이 없고, 캐리포워드 없이는 적분상수가 누락되며(§5), Brownfield 없이는 델타를 계산할 수 없다.
+
+> 근본 관점과 전제 체계: [`translation-ontology.md`](translation-ontology.md) §4.2
 
 ### 설계 판단
 
