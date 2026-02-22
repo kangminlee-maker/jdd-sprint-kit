@@ -706,13 +706,28 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 Report progress (in {communication_language}): "Devil's Advocate Pass complete — {N} adversarial scenarios found ({C} critical, {H} high)"
 
-### Step 6: Judgment Point 2 — Sprint Output Review
+### Step 6: Judgment Point 2 — Prototype Review & Iteration
 
-When Deliverables generation is complete, generate a visual summary and present an interactive menu.
+When Deliverables generation is complete, start the prototype server and present an interactive review.
 
-#### Step 6a: Visual Summary Generation
+#### Step 6-pre: Start Prototype Server
 
-Extract metadata only from Deliverables to generate the 3-Section JP2 visualization.
+Report progress (in {communication_language}): "Starting prototype server..."
+
+1. Kill existing process on port 5173 if any: `lsof -ti :5173 | xargs kill 2>/dev/null`
+2. Run `cd specs/{feature_name}/preview && npm install` (foreground Bash, wait)
+3. Run `cd specs/{feature_name}/preview && npm run dev` (background Bash, run_in_background: true)
+4. Wait 3 seconds, then parse background output for actual URL
+   (Vite outputs "Local: http://localhost:XXXX" — capture the actual port)
+5. Display: "Prototype server running at {actual_url}. Open in browser to review."
+
+If npm install or npm run dev fails:
+  Display error + manual instructions
+  Proceed to Step 6a regardless
+
+#### Step 6a: Prototype-First Presentation
+
+Extract metadata from Deliverables to generate JP2 visualization.
 
 **Data sources**:
 - key-flows.md: Key flow text (deliverable-generator Stage 4b output)
@@ -725,9 +740,19 @@ Extract metadata only from Deliverables to generate the 3-Section JP2 visualizat
 Output format (in {communication_language}):
 
 ```markdown
-## Judgment Point 2: Sprint Complete — {feature_name}
+## Judgment Point 2: {feature_name}
 
-### Section 0: Changes Since JP1
+Prototype running at {actual_url}
+
+### Walkthrough Guide
+
+### Flow 1: {flow_name}
+{start} → {action 1} → {response 1} → ... → {end}
+
+### Flow 2: {flow_name}
+...
+
+### Changes Since JP1
 
 {if jp1_to_jp2_changes is empty or absent}
 No changes to JP1 artifacts.
@@ -739,28 +764,10 @@ Items supplemented during Phase 2 data flow verification:
 |--------|--------|---------------|
 | {change} | {reason} | {files} |
 
-Details: can be compared against architecture.md original design.
-If you disagree with these changes, select [C] Comment.
+{when auto-reinforcement WARN exists}
+Warning: Items exceeding auto-reinforcement scope — Crystallize will run regardless of feedback.
 
-{if auto-reinforcement WARN exists}
-Warning: Items exceeding auto-reinforcement scope:
-- {WARN content}
-→ Phase 1 design review may be needed. Select [C] Comment.
-
-### Section 1: Key Action Flows
-
-{display each flow from key-flows.md step-by-step}
-
-### Flow 1: {flow_name}
-{start state} → {user action 1} → {system response 1}
-→ {user action 2} → {system response 2} → {end state}
-
-### Flow 2: {flow_name}
-...
-
-→ Try it yourself: cd specs/{feature_name}/preview && npm run dev
-
-### Section 1.5: What Changes for Users
+### What Changes for Users
 
 {when brownfield_path exists AND brownfield-context.md has L2+ data}
 
@@ -779,57 +786,28 @@ Warning: Items exceeding auto-reinforcement scope:
 {when brownfield_path absent OR L1-only data only}
 (Not applicable — greenfield project or insufficient brownfield data for Before/After comparison)
 
-### Section 2: Existing System Interaction Verification
-
-| Interaction | Verification Method | Confidence | Result |
-|-------------|-------------------|------------|--------|
-| API contract | Specmatic + OpenAPI lint + tsc | HIGH | PASS/FAIL |
-| DB schema | DBML static analysis | HIGH | PASS/FAIL |
-| Auth patterns | API spec pattern matching | MEDIUM | PASS/FAIL |
-| {existing feature impact} | Design review (L2 prediction) | LOW | Reflected in design |
-
-{LOW items: "Will be re-verified at Validate phase"}
-{Map whether JP1 Side-effects have been verified}
-
-### Section 3: Verification Results + Readiness
+### Verification Status
 
 | Item | Result |
 |------|--------|
-| API Smoke Test | {N}/{M} PASS |
-| TypeScript compilation | tsc PASS/FAIL |
-| BDD → FR coverage | {N}/{M} covered |
-| Traceability Gap | {N} gaps |
-| Devil's Advocate | {N} scenarios ({C} critical, {H} high) |
-
-{when adversarial CRITICAL findings exist}
-**Warning**: {C} CRITICAL adversarial scenarios detected. Review `adversarial-scenarios.md` before approving.
-→ Recommended: Select [C] Comment to address critical edge cases.
-
-{when all items pass AND no adversarial CRITICAL}
-**READY** — Select [S] Start Crystallize to translate prototype and compute delta.
-
-{when some items fail}
-**REVIEW NEEDED** — Please check the following:
-→ {recommended actions for each item}
-
-### Run Prototype
-cd specs/{feature_name}/preview
-npm install && npm run dev
-- React App: http://localhost:5173 (MSW intercepts API at network level)
+| API contract | PASS/FAIL |
+| TypeScript compilation | PASS/FAIL |
+| BDD coverage | {N}/{M} |
+| Adversarial | {N} scenarios ({C} critical) |
 ```
 
 > To provide feedback, select [C] Comment. Apply-fix/regenerate options will be presented with cost.
 
-#### Step 6b: A/P/C/S/X Menu
+#### Step 6b: C/A/P/S/X Menu
 
 Present 5 options via AskUserQuestion (in {communication_language}):
 
 | Option | Label | Description |
 |--------|-------|-------------|
-| **A** | Advanced Elicitation | Deep exploration of Deliverables (API Spec, BDD, Prototype focus) |
-| **P** | Party Mode | Multi-perspective review by full BMad agent panel |
-| **C** | Comment | Enter feedback → impact analysis → apply-fix/regenerate choice |
-| **S** | Start Crystallize | Approve prototype → Crystallize (translate + compute delta, ~20-25 min) |
+| **C** | Comment | Iterate on prototype — give feedback, see changes |
+| **A** | Advanced Elicitation | Deep exploration of specific deliverables |
+| **P** | Party Mode | Multi-perspective review by agent panel |
+| **S** | Confirm Prototype | Approve prototype and proceed to implementation |
 | **X** | Exit | Abort Sprint |
 
 #### Step 6c: Menu Handling
@@ -839,25 +817,81 @@ Present 5 options via AskUserQuestion (in {communication_language}):
 | **A** | Ask user for exploration target (api-spec/bdd/prototype/schema) → read full file → present 3~5 questions from Advanced Elicitation Protocol JP2 set → on feedback: execute **Comment handling flow** → regenerate Visual Summary → return to menu |
 | **P** | Invoke Party Mode workflow (`Skill("bmad:core:workflows:party-mode")`, pass JP2 artifact paths) → discussion summary → ask user to accept/reject → on accept: execute **Comment handling flow** → regenerate Visual Summary → return to menu |
 | **C** | Execute **Comment handling flow** (see Step 4c) → regenerate Visual Summary → return to menu |
-| **S** | Start Crystallize: (1) Record selection in decision-diary.md (2) Report: "Prototype approved. Starting Crystallize (~20-25 min)..." (3) Execute Crystallize pipeline as defined in crystallize.md (4) On Crystallize S10: user selects [C] proceed to /parallel with `specs_root=reconciled/`, or [R] review, or [X] exit (Crystallize only, no /parallel) (5) On Crystallize failure: present recovery options [R] Return to JP2 / [K] Skip / [X] Exit |
+| **S** | Execute **[S] Confirm Prototype logic** (see below) |
 | **X** | Abort Sprint, inform that artifacts are preserved (`specs/{feature_name}/` is retained) |
 
-**Iteration limit**: A/P/C selections combined max 5 times. On exceed, warn (in {communication_language}): "5 review/edit rounds complete. Select [S] Start Crystallize or [X] Exit."
+**After ANY Comment Handling Flow execution** (from [C], [A], or [P] path) that results in preview/ file changes:
+1. Kill: `lsof -ti :5173 | xargs kill 2>/dev/null`
+2. Re-run: `cd specs/{feature_name}/preview && npm install && npm run dev` (background Bash, run_in_background: true)
+3. Wait 3 seconds, parse actual URL
+4. Display: "Prototype server restarted at {url}. Refresh browser."
 
-#### Crystallize Pipeline (triggered by [S] Start Crystallize)
+**Iteration limit**: A/P/C selections combined max 5 times. On exceed, warn (in {communication_language}): "5 review/edit rounds complete. Select [S] Confirm Prototype or [X] Exit."
 
-Crystallize is mandatory — it translates the approved prototype into development grammar and computes the delta. Executed when [S] is selected.
+#### [S] Confirm Prototype Logic
 
-1. Record `[S] Start Crystallize` selection in decision-diary.md
-2. Append to sprint-log.md JP Interactions: `**[User] Selection: [S] Start Crystallize**`
-3. Execute the full Crystallize pipeline (S0-S10) as defined in crystallize.md, passing `feature_name`
-4. On Crystallize completion (S10): user selects [C] proceed to /parallel with `specs_root=reconciled/`, or [R] review reconciled/, or [X] exit
-5. On Crystallize failure (S3 Resolution [R] at Party Mode/S4-G/S5-G/S7 unresolvable): present recovery options:
-   - [R] Return to JP2 menu (partial reconciled/ cleaned up)
-   - [K] Skip Crystallize → proceed to /parallel with `specs_root=specs/{feature_name}/` (warning: delta manifest not available)
-   - [X] Exit Sprint
+1. Count JP2 modification rounds: number of times Comment Handling Flow completed a change ([M] Apply fix or [R] Regenerate applied). Exploration-only or cancelled interactions are not counted.
 
-**Budget**: Crystallize budget (~108-174 turns) is included in [S] Start Crystallize. Does not count against the 5-round iteration limit.
+2. Check auto-reinforcement WARN: read jp1_to_jp2_changes from readiness.md. If WARN items exist → force full Crystallize regardless of Comment count.
+
+3. Check CP availability: read brownfield-context.md Constraint Profile section. Count HIGH confidence items.
+
+4. Determine Crystallize mode:
+
+**Mode A: Full Skip** (0 modifications + no WARN + no CP HIGH):
+- Record: "[S] Confirm Prototype (no modifications, Crystallize skipped)"
+- Update decision-diary.md Sprint Context: `Crystallize: No (0 modifications, no CP)`
+- Stop prototype server: `lsof -ti :5173 | xargs kill 2>/dev/null`
+- Display: "Prototype confirmed. Proceeding to implementation with existing specs."
+- Display: "Note: delta-manifest.md not generated. /validate delta verification unavailable."
+- Proceed to /parallel with specs_root=specs/{feature_name}/
+
+**Mode B: Validation Only** (0 modifications + no WARN + CP HIGH exists):
+- Record: "[S] Confirm Prototype (no modifications, validation-only Crystallize)"
+- Update decision-diary.md Sprint Context: `Crystallize: Partial (S3+S9 only)`
+- Stop prototype server: `lsof -ti :5173 | xargs kill 2>/dev/null`
+- Display: "Prototype confirmed. Running constraint validation (~10 min)..."
+- Execute Crystallize S3 + S3-R + S9 only (skip S0/S1/S2/S4-S8/S10):
+  1. Create specs/{feature_name}/reconciled/ directory
+  2. Copy brownfield-context.md to reconciled/planning-artifacts/
+  3. Run S3 (Constraint-Aware Validation — 2 agents parallel, as defined in crystallize.md)
+  4. Run S3-R (Resolution Phase — if findings exist)
+  5. Copy original tasks.md to reconciled/tasks.md
+  6. Run S9 (Constraint Report Attachment)
+  7. Copy remaining specs files to reconciled/ (as-is, no translation)
+- Proceed to /parallel with specs_root=specs/{feature_name}/reconciled/
+
+**Mode C: Full Crystallize** (1+ modifications OR WARN exists):
+- Record: "[S] Confirm Prototype ({N} revisions)"
+- Update decision-diary.md Sprint Context: `Crystallize: Yes ({N} revisions)`
+- Display confirmation: "You made {N} revisions. Crystallize will translate changes (~20-25 min). Proceed?"
+- If confirmed:
+  - Stop prototype server: `lsof -ti :5173 | xargs kill 2>/dev/null`
+  - Execute full Crystallize S0-S10 as defined in crystallize.md, passing `feature_name`
+  - On completion: proceed to /parallel with specs_root=specs/{feature_name}/reconciled/
+- On failure (S3 Resolution [R]/S4-G/S5-G/S7 unresolvable):
+  - [R] Return to JP2 menu (partial reconciled/ cleaned up)
+  - [K] Skip Crystallize → proceed to /parallel with `specs_root=specs/{feature_name}/` (warning: delta manifest not available)
+  - [X] Exit Sprint
+
+#### Crystallize Pipeline (triggered by [S] Confirm Prototype)
+
+Crystallize execution is determined by 3-tier conditional logic:
+- **Mode A (Full Skip)**: 0 modifications + no CP HIGH → skip, use original specs
+- **Mode B (Validation Only)**: 0 modifications + CP HIGH exists → S3+S9 only (~10 min)
+- **Mode C (Full)**: 1+ modifications or auto-reinforcement WARN → full S0-S10 (~25 min)
+
+Mode B/C:
+1. Record in decision-diary.md
+2. Append to sprint-log.md JP Interactions
+3. Execute pipeline per mode
+4. On completion: proceed to /parallel with specs_root=reconciled/
+5. On failure (S3 Resolution [R]/S4-G/S5-G/S7):
+   - [R] Return to JP2 menu
+   - [K] Skip Crystallize → /parallel with specs_root=specs/{feature_name}/
+   - [X] Exit
+
+**Budget**: Mode A = 0 turns. Mode B = ~20-30 turns. Mode C = ~108-193 turns. Does not count against the 5-round iteration limit.
 
 ## Conductor Roles
 
@@ -915,7 +949,7 @@ When drift is detected (Scope Gate FAIL or goal drift):
   - Sprint Log records — Conductor writes directly via Write tool. Progress reporting and decision logging are Conductor's exclusive responsibility.
   - Causal Chain info — extracted once from sprint-input.md. For JP1 Advanced (Layer 3) generation. Not extracted when feature_only.
   - Brief Sentences — extracted once from sprint-input.md. For JP1 Section 1 tracking source verification.
-  - Readiness data — extracted from readiness.md. For JP1 info banner + JP2 Section 3 determination.
+  - Readiness data — extracted from readiness.md. For JP1 info banner + JP2 Verification Status determination.
   - Upstream Jump counter — tracks upstream jump count within Sprint (max 2)
 - Tool outputs, generated code, and full artifact contents do not enter Conductor context
 

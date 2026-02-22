@@ -34,7 +34,7 @@ flowchart TD
     JP1 -->|Comment| JP1_FB["Revise or Regenerate\n(Impact Analysis)"]
     JP1_FB --> JP1
     F --> JP2{{"JP2\nIs this the experience\ncustomers want?"}}
-    JP2 -->|Start Crystallize| CR["6b. Translate & Compute Delta\n(Crystallize)"]
+    JP2 -->|Confirm Prototype| CR["6b. Translate & Compute Delta\n(Crystallize)"]
     JP2 -->|Comment| JP2_FB["Revise or Regenerate\n(Impact Analysis)"]
     JP2_FB --> JP2
     CR --> G["7. Build\n(Parallel Implementation)"]
@@ -573,13 +573,18 @@ JP2 presentation format and Comment handling flow details in S5.3.
 
 ---
 
-### Crystallize (Mandatory Translation Step)
+### Crystallize (Conditional Translation Step)
 
 **Rationale**: In the delta-driven model, Crystallize translates the JP2-approved prototype into development grammar and computes the delta between target state and brownfield baseline. Without this translation, Workers would implement pre-JP2 specs instead of the approved prototype's delta.
 
-**User perspective**: When you select **[S] Start Crystallize** at JP2, the system runs Crystallize (~20-25 min). It analyzes the prototype code, translates it into development specifications, and computes exactly what needs to change from the current system. Original documents are preserved untouched — translated versions are written to a separate `reconciled/` directory with a delta manifest. After Crystallize completes, you choose whether to proceed to Build (/parallel).
+**User perspective**: When you select **[S] Confirm Prototype** at JP2, the system determines the next step automatically:
+- If no changes were made and no existing system constraints require validation: proceeds directly to Build.
+- If existing system constraints exist (Constraint Profile): runs a validation pass (~10 min) to catch potential conflicts.
+- If changes were made during review: runs full Crystallize (~20-25 min) to translate changes.
 
-**Mandatory**: Crystallize runs automatically on all routes after JP2 approval. If Crystallize encounters an unresolvable issue, you can return to JP2, skip Crystallize (proceed with original specs), or exit.
+Original documents are preserved untouched — translated versions are written to a separate `reconciled/` directory with a delta manifest.
+
+**Conditional**: On the Sprint route, Crystallize execution depends on JP2 outcome (0 modifications + no constraints = skip, constraints exist = validation-only, modifications made = full pipeline). On Guided/Direct routes, Crystallize always runs in full after JP2 approval. If Crystallize encounters an unresolvable issue, you can return to JP2, skip Crystallize (proceed with original specs), or exit.
 
 **System internals**:
 
@@ -610,11 +615,11 @@ S2 is skipped when brownfield-context.md has no Constraint Profile section, or w
 
 This preserves traceability from the original Brief through JP2 iteration to the final reconciled artifacts.
 
-**Budget**: ~108-174 turns (separate from JP2 iteration budget). Does not count against the 5-round JP2 iteration limit. Budget varies depending on Constraint Profile availability and whether S2/S3 are skipped.
+**Budget**: 0 turns (skip), ~20-30 turns (validation-only), ~108-193 turns (full) — separate from JP2 iteration budget. Does not count against the 5-round JP2 iteration limit. Budget varies depending on Crystallize mode, Constraint Profile availability, and whether S2/S3 are skipped.
 
 **Artifact**: `specs/{feature}/reconciled/` — mirrors the existing `specs/{feature}/` structure, minus excluded items (Product Brief, sprint-log, readiness, inputs/, preview/).
 
-**Availability**: All routes. Triggered by [S] Start Crystallize at JP2 (Sprint route) or at `/preview` Step 3 (Guided/Direct routes). Also available standalone via `/crystallize feature-name`. Decision records (decision-diary.md, sprint-log.md JP Interactions) are optional — they enrich the translation when present.
+**Availability**: All routes. Triggered by [S] Confirm Prototype at JP2 (Sprint route: conditional 3-tier logic) or at `/preview` Step 3 (Guided/Direct routes: always full pipeline). Also available standalone via `/crystallize feature-name`. Decision records (decision-diary.md, sprint-log.md JP Interactions) are optional — they enrich the translation when present.
 
 ---
 
@@ -845,8 +850,9 @@ Prototype, screen flows, interactions.
 
 ### Presentation Format
 
-1. Run prototype: `cd specs/{feature}/preview && npm run dev`
-2. Follow key scenario guide (based on key-flows.md) and click through
+The prototype server starts automatically when JP2 begins. Open the displayed URL in your browser.
+
+1. Follow key scenario guide (based on key-flows.md) and click through
 3. Debug/reset state with DevPanel — a built-in control panel in the prototype that lets you view and reset MSW's in-memory data store (useful for restarting a scenario from scratch)
 
 How the prototype works without a real backend: MSW (Mock Service Worker) installs a Service Worker in the browser that intercepts all API requests before they reach the network. When the React application (a single-page web application) calls an API endpoint, MSW catches the request and returns a mock response generated from `api-spec.yaml`. These responses are stateful — creating a record via POST means a subsequent GET returns that record. The application code is identical to what would run against a real backend; it does not know MSW exists. This is why the prototype can demonstrate realistic user flows (e.g., "create a tutor block → verify it appears in the block list") without any server running.
@@ -857,8 +863,8 @@ Any changes made after JP1 approval (e.g., from the Deliverables generation proc
 
 | Response | Action |
 |----------|--------|
-| **Start Crystallize** | Crystallize (translate prototype → compute delta). After completion, choose to proceed to Parallel or review |
-| **Comment** | Execute Comment handling flow (S5.4) |
+| **Confirm Prototype** | System determines next step automatically based on JP2 outcome (see below) |
+| **Comment** | Iterate on prototype — give feedback, see changes (S5.4) |
 
 ## 5.4 Comment Handling Flow
 
@@ -952,7 +958,7 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 
 Key changes since v0.4.1:
 - **`/crystallize` command**: After JP2 prototype iteration, reconcile all upstream artifacts to match the finalized prototype. Creates `reconciled/` directory with the definitive artifact set — original artifacts preserved untouched. Product Brief excluded (defines problem space, not derivable from UI code). Available on all routes.
-- **Crystallize mandatory**: Crystallize runs on [S] Start Crystallize at JP2 (all routes). Translates prototype into development grammar and computes delta. After completion, user chooses to proceed to Build or review.
+- **Crystallize conditional**: On Sprint route, Crystallize runs conditionally based on JP2 outcome (skip / validation-only / full). On Guided/Direct routes, always full pipeline. Translates prototype into development grammar and computes delta.
 - **decision-diary.md**: Structured JP decision summary table replacing feedback-log.md. Records each decision with JP, Type, Content, Processing method, and Result.
 - **sprint-log.md JP Interactions**: Full text of each JP exchange (Visual Summary, user input, impact analysis, processing choice, result) recorded in real-time.
 - **Source attribution tags**: `(source: PROTO, origin: BRIEF-N)`, `(source: PROTO, origin: DD-N)`, `(source: carry-forward)` — preserves traceability from original Brief through JP2 iteration to reconciled artifacts.
@@ -1145,7 +1151,7 @@ specs/{feature}/
 | **readiness.md** | JP1/JP2 Readiness data. YAML frontmatter includes jp1_to_jp2_changes field for tracking post-JP1 changes |
 | **/summarize-prd** | PRD summary/analysis + feedback application command. Used for quickly understanding existing PRDs |
 | **Scope Gate** | 3-stage verification performed by @scope-gate agent: Structured Probe + Checklist + Holistic Review. Runs after each BMad step and after Deliverables |
-| **Crystallize** | Mandatory translation step. After JP2 approval, translates prototype into development grammar and computes delta against brownfield baseline. Creates `reconciled/` directory with delta manifest. Triggered by [S] Start Crystallize (all routes), or standalone via `/crystallize` command |
+| **Crystallize** | Conditional translation step. After JP2 [S] Confirm Prototype, translates prototype into development grammar and computes delta against brownfield baseline. Creates `reconciled/` directory with delta manifest. On Sprint route: 3-tier conditional (skip / validation-only / full). On Guided/Direct routes: always full. Standalone via `/crystallize` command always runs full |
 | **reconciled/** | Directory created by Crystallize. Contains the definitive artifact set reconciled with the finalized prototype. Mirrors `specs/{feature}/` structure minus excluded items. Original artifacts are preserved untouched |
 | **carry-forward** | Items in reconciled artifacts that are not derivable from the prototype (NFRs, security, deployment, scaling) and are carried from the original documents. Marked with `[carry-forward]` tag |
 | **Constraint Profile** (CP) | Implementation-level constraints extracted from the existing codebase during Pass 2 Brownfield scan: entity column constraints (CP.1), naming conventions (CP.2), transaction patterns (CP.3), lock patterns (CP.4), API patterns (CP.5), enum DB values (CP.6), domain boundaries (CP.7). Used by Crystallize S4 as translation parameters. Skipped when no readable backend code files exist in any accessible source |

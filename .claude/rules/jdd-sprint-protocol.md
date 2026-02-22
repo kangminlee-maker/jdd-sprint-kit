@@ -17,7 +17,7 @@ Three terms are used in the Crystallize pipeline. Each has a defined scope — d
 | Term | Scope | Meaning |
 |------|-------|---------|
 | **Preview** | Directory name (`preview/`), generated deliverable state | The draft deliverable shown at JP2 for review and iteration |
-| **Prototype** | Conceptual status, Crystallize input | The JP2-approved preview. Becomes "prototype" at the moment of [S] Start Crystallize. The target state expressed in user grammar |
+| **Prototype** | Conceptual status, Crystallize input | The JP2-approved preview. Becomes "prototype" at the moment of [S] Confirm Prototype. The target state expressed in user grammar |
 
 `preview/` directory is NOT renamed to `prototype/`. The directory holds a preview that becomes a prototype upon approval. Crystallize reads `preview/` as its prototype input.
 
@@ -28,6 +28,8 @@ Three terms are used in the Crystallize pipeline. Each has a defined scope — d
 ## Brownfield Data Flow (Sprint x MCP)
 
 Brownfield data is used at every Sprint phase. Sources are cumulatively collected from 3 origins: document-project, MCP, and local codebase.
+
+> Note: Crystallize steps below execute conditionally. See Crystallize Flow for trigger conditions.
 
 | Phase | Brownfield Usage |
 |-------|-----------------|
@@ -200,7 +202,7 @@ See `docs/judgment-driven-development.md` Customer-Lens Judgment Points.
 
 - **Judgment target**: prototype, screen flows, interactions
 - **Presentation format**: working prototype + key scenario walkthrough guide
-- **Response**: [A] Advanced Elicitation / [P] Party Mode / [C] Comment / [S] Start Crystallize / [X] Exit
+- **Response**: [C] Comment / [A] Advanced Elicitation / [P] Party Mode / [S] Confirm Prototype / [X] Exit
 
 ### Comment Handling Flow
 
@@ -235,18 +237,23 @@ Guide for determining regeneration start point based on feedback magnitude:
 This table is a reference for the system when calculating regeneration scope during impact analysis.
 Users see the calculated cost alongside the options.
 
-## Crystallize Flow (Mandatory Translation Step)
+## Crystallize Flow (Conditional Translation Step)
 
-After JP2 approval, Crystallize automatically translates the finalized prototype into development grammar and computes the delta against brownfield baseline. Creates `reconciled/` directory with the definitive artifact set + delta manifest.
+After JP2 approval, Crystallize translates the finalized prototype into development grammar and computes the delta against brownfield baseline. Creates `reconciled/` directory with the definitive artifact set + delta manifest.
 
-**This is a mandatory step** — without translation, /parallel would implement pre-JP2 specs instead of the approved prototype's delta. All routes (Sprint, Guided, Direct) run Crystallize before /parallel.
+**This step is conditional** — execution mode depends on JP2 outcome:
+- 0 modifications + no CP HIGH: skip entirely (original specs used)
+- 0 modifications + CP HIGH exists: validation-only (S3+S9), ~10 min
+- 1+ modifications or auto-reinforcement WARN: full pipeline (S0-S10), ~25 min
+
+Guided/Direct routes: always full pipeline (current behavior preserved). Conditional logic applies to Sprint route only.
 
 Decision records (decision-diary.md, jp2-review-log.md, sprint-log.md JP Interactions) are optional — they enrich S0 Decision Context when present. Without them (or with 0 Comment rows), S0 is skipped and S1 runs from code analysis alone.
 
 ### Crystallize Pipeline
 
 ```
-JP2 [S] Start Crystallize (Sprint) / [S] Start Crystallize (Guided/Direct)
+JP2 [S] Confirm Prototype → Crystallize (when modifications exist or CP HIGH; Guided/Direct: always)
   S0:    Decision Context Analysis     → reconciled/decision-context.md (JP2 modification intent)
   S1:    Prototype Analysis            → reconciled/prototype-analysis.md (informed by S0)
   S2:  Incremental Constraint Profile → brownfield-context.md CP updated (delta concepts only)
@@ -267,6 +274,8 @@ On S3 findings (CRITICAL+WARNING): AUTO auto-resolved → USER_DECISION/PROTOTYP
 On gate failure (S4-G, S5-G, or S7 unresolvable): [R] Return to JP2 / [K] Skip Crystallize (original specs) / [X] Exit.
 
 ### Expected Behavior by Data Condition (Crystallize)
+
+> Note: When JP2 modifications = 0 AND no CP HIGH items, Crystallize is skipped entirely (all steps = skip). When 0 modifications + CP HIGH exists, only S3+S9 run. The table below shows behavior when full Crystallize executes.
 
 | Data Condition | CP Extraction | S2 | S3 | S9 | DA |
 |---------------|-------------|----|----|----|----|
@@ -310,7 +319,11 @@ When classification cannot be determined, use the base `[carry-forward]` tag (tr
 
 ### Downstream Integration
 
-After Crystallize, `/parallel` and `/validate` always use `specs_root=specs/{feature}/reconciled/`. Original artifacts remain untouched in `specs/{feature}/`.
+After JP2, specs_root depends on Crystallize mode:
+- Mode A (skip): `specs_root=specs/{feature}/` (original specs)
+- Mode B/C (ran): `specs_root=specs/{feature}/reconciled/`
+
+Original artifacts remain untouched in `specs/{feature}/`.
 
 ## Sprint Log Extension: JP Interactions
 
@@ -353,7 +366,7 @@ decision-diary.md is a structured table of JP decisions and feedback. Replaces f
 ## Sprint Context
 - Goals: {N}, Brownfield: {status}
 - Topology: {co-located/msa/monorepo/standalone}
-- Crystallize: {Yes/No}
+- Crystallize: {Yes/No/Partial}
 
 ## Decisions
 | # | JP | Type | Content | Processing | Result |

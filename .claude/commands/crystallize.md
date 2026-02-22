@@ -19,12 +19,16 @@ description: "Reconcile all artifacts from finalized prototype"
 
 Translate the JP2-approved prototype into development grammar and compute the delta between target state and brownfield baseline. Creates a `reconciled/` directory with the definitive artifact set + delta manifest for execution.
 
-This is a **mandatory step** before /parallel — without translation, Workers would implement pre-JP2 specs instead of the approved prototype's delta. The prototype is the source of truth for product behavior. Existing artifacts are preserved untouched.
+When modifications exist or CP constraints require validation, this step is necessary before /parallel — without translation, Workers would implement pre-JP2 specs instead of the approved prototype's delta. On Sprint route, execution is conditional (see When to Use). The prototype is the source of truth for product behavior. Existing artifacts are preserved untouched.
 
 ## When to Use
 
-- **Triggered**: Runs after JP2 approval on all routes — Sprint ([S] Start Crystallize), Guided/Direct ([S] Start Crystallize at `/preview` Step 3)
-- **Standalone**: `/crystallize feature-name` — for re-running translation independently
+- **Auto-triggered**: After JP2 [S] Confirm Prototype, based on 3-tier logic:
+  - 0 modifications + no CP HIGH → skip (Sprint route)
+  - 0 modifications + CP HIGH → validation-only S3+S9 (Sprint route)
+  - 1+ modifications → full pipeline (all routes)
+  - Guided/Direct route: always full pipeline (current behavior preserved)
+- **Standalone**: `/crystallize feature-name` — always runs full pipeline regardless of context
 
 **On Crystallize failure**: If any gate (S4-G, S5-G, S7) fails and cannot be auto-fixed, the user is offered recovery options:
 - **[R] Return to JP2**: Abort Crystallize, clean up partial reconciled/, return to JP2 menu for further iteration
