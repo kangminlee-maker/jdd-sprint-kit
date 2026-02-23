@@ -4,6 +4,30 @@ All notable changes to JDD Sprint Kit will be documented in this file.
 
 ---
 
+## [0.7.1] - 2026-02-23
+
+### Added
+- **S3 Resolution Phase** — Structured resolution replacing binary S3 gate ([R]/[F]/[X])
+  - 4-phase resolution: Auto-resolve → User Decision → Prototype Fix → Party Mode verification
+  - Resolution types use existing carry-forward taxonomy (no new concepts)
+  - `validation-resolutions.md` output as S4 translation directives
+  - S4a/b/c reference resolutions with legacy fallback; S7 verifies compliance
+  - Budget: +0-19 turns (inline within S3)
+
+### Changed
+- **JP2 restructured as prototype-first review** — Prototype iteration loop redesign
+  - Auto-start dev server before JP2, parse actual Vite URL
+  - Comment-first menu (C/A/P/S/X) with prototype URL at top
+  - Server restart after `preview/` changes from C/A/P paths
+  - Compact Verification Status replacing Section 2+3
+- **Crystallize 3-tier conditional execution** (Sprint route only)
+  - Mode A (skip): 0 modifications + no CP HIGH → use original specs
+  - Mode B (validation-only): 0 modifications + CP HIGH → S3+S9 only, ~10 min
+  - Mode C (full): 1+ modifications or auto-reinforcement WARN → S0-S10, ~25 min
+  - Guided/Direct routes: always full pipeline (unchanged)
+
+---
+
 ## [0.7.0] - 2026-02-22
 
 ### Removed
