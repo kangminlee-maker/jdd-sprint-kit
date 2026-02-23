@@ -386,6 +386,22 @@ PROTOTYPE_GAP items are presented with carry-forward taxonomy options.
 | PROTOTYPE_GAP | Yes (full detail) | Yes (Phase C) |
 | NONE (INFO) | Yes (summary count) | No |
 
+### Requirements Coverage Classification (S3 Agent B)
+
+When Agent B finds a PRD FR not visible in the prototype, classify the reason:
+
+| Classification | Meaning | Resolution Type |
+|---------------|---------|-----------------|
+| INVISIBLE | NFR, monitoring, security, migration, concurrency — inherently not visible in UI prototype | NONE |
+| ACCESS_GATED | Admin-only, role-specific views — visible only to specific user roles not in prototype | NONE |
+| OUT_OF_SCOPE | Removed by JP2 decisions — explicitly excluded during prototype review | NONE |
+| MISSING | Should be visible — FR with UI/API impact that is absent from prototype | DECISION_REQUIRED |
+
+**Rules**:
+- MISSING cannot auto carry-forward — it must be presented to the product expert
+- When uncertain → default to MISSING (safest: forces explicit decision)
+- INVISIBLE/ACCESS_GATED/OUT_OF_SCOPE items are carried forward without user interaction
+
 ### PCP Check Architecture
 
 PCP (Policy Constraint Profile) checking is independent of Agent A's CP-based skip condition:

@@ -265,6 +265,21 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     IMPORTANT: CP patterns are soft constraints (observed patterns, not absolute rules).
     Only DB-enforced rules qualify as HARD_CONFLICT. Everything else is DECISION_REQUIRED.
 
+    UX Question Template (for DECISION_REQUIRED Resolution Detail):
+    Write Resolution Detail in UX language using this structure:
+      Current service: {what users see now — screens, buttons, states}
+      Prototype change: {visible behavior change}
+      Conflict reason: {user-impact description}
+      Options:
+        [1] {option} — {UX consequence}
+        [2] {option} — {UX consequence}
+      Recommended: {which + why in user terms}
+      <details><summary>Technical detail</summary>{CP ref, migration detail}</details>
+
+    CRITICAL: No database terminology (column, nullable, enum, FK, constraint) in main text.
+    Only inside <details> blocks. The product expert makes decisions based on
+    customer-visible behavior, not database structure.
+
     Output: Write to specs/{feature}/reconciled/validation-constraint.md
     Format:
     # Constraint Validation Report
@@ -293,20 +308,34 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     Checks:
     1. State transition completeness: every state has defined transitions; no orphan/dead-end states
     2. Flow dead-ends: user flows that end without resolution or error handling
-    3. FR coverage: every PRD FR has corresponding prototype implementation
-    4. carry-forward gap: PRD items marked as in-scope but absent from prototype
-       (should be classified as carry-forward, not silently dropped)
-    5. Phase 2 deferred contradiction: items marked deferred in Phase 1 but
+    3. Requirements coverage: For each PRD FR NOT found in prototype, classify:
+       - INVISIBLE: NFR, monitoring, security, migration, concurrency — inherently not visible in prototype
+       - ACCESS_GATED: Admin-only, role-specific views — visible only to specific user roles
+       - OUT_OF_SCOPE: Removed by JP2 decisions — explicitly excluded during review
+       - MISSING: Should be visible — FR with UI/API impact that is absent from prototype
+       If uncertain → default to MISSING (safest: forces explicit decision).
+       INVISIBLE/ACCESS_GATED/OUT_OF_SCOPE → Resolution Type = NONE
+       MISSING → Resolution Type = DECISION_REQUIRED
+    4. Phase 2 deferred contradiction: items marked deferred in Phase 1 but
        implemented in prototype (scope creep signal)
 
     For each finding, classify severity:
-    - CRITICAL: Missing FR implementation, dead-end flow, state with no exit
-    - WARNING: Potential gap that may be intentional
-    - INFO: Minor observation
+    - CRITICAL: MISSING FR (should be visible but absent), dead-end flow, state with no exit
+    - WARNING: Potential gap that may be intentional, deferred contradiction
+    - INFO: Minor observation, INVISIBLE/ACCESS_GATED/OUT_OF_SCOPE items
 
     For each CRITICAL and WARNING finding, classify Resolution Type:
     - HARD_CONFLICT: carry-forward gap classification is unambiguous (e.g., item exists in original doc, absent from prototype, still applicable → [carry-forward:defined]). Write concrete classification in Resolution Detail.
-    - DECISION_REQUIRED: Intent is ambiguous (e.g., item deferred in Phase 1 but implemented in prototype → keep or remove?). Write 'Option A: ... | Option B: ...' with rationale in Resolution Detail.
+    - DECISION_REQUIRED: Intent is ambiguous, or MISSING FR. Write options using UX Question Template:
+      Current service: {what users see now}
+      Prototype change: {what changed or is missing}
+      Impact: {user-facing consequence}
+      Options:
+        [1] {option} — {UX consequence}
+        [2] {option} — {UX consequence}
+      Recommended: {which + why in user terms}
+      <details><summary>Technical detail</summary>{FR ref, spec detail}</details>
+      CRITICAL: No database terminology in main text. Only inside <details>.
     - PROTOTYPE_GAP: FR not implemented, dead-end flow, state with no exit, etc. Write spec-level workaround options using carry-forward taxonomy in Resolution Detail:
       e.g., 'Option A: Add as [carry-forward:new] requirement — Workers implement | Option B: Defer [carry-forward:deferred] to next sprint | Option C: Return to JP2 to fix in prototype'
     - INFO findings: Resolution Type = NONE, Resolution Detail = '—'
@@ -317,7 +346,9 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     ## Summary
     | Severity | Count |
     ## Findings
-    | # | Severity | Category | Element | Description | Recommendation | Resolution Type | Resolution Detail |"
+    | # | Severity | Category | Element | Description | Recommendation | Resolution Type | Resolution Detail |
+    ## Requirements Coverage
+    | FR | Classification | Rationale |"
   max_turns: 8
 ```
 
@@ -333,11 +364,13 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 4. If 0 actionable findings → skip resolution, proceed to S4 (no validation-resolutions.md)
 
-4.5. **Overlap Detection**:
-   When the same prototype element appears in both Agent A and Agent B findings:
+4.5. **Overlap Detection** (entity/feature-level matching):
+   Match Agent A (field-level constraint) and Agent B (FR-level structural) findings by entity name or feature area.
+   When the same entity/feature appears in both:
    - Both HARD_CONFLICT with identical resolution → merge into single item
    - Different resolutions → escalate to DECISION_REQUIRED (present both resolutions as options)
    - One is PROTOTYPE_GAP → PROTOTYPE_GAP takes precedence
+   - Constraint blocks FR implementation → merge into single DECISION_REQUIRED with both contexts
 
 5. **Phase A: Hard Conflicts** (no user interaction — auto-resolved, displayed individually)
    Display each HARD_CONFLICT item individually (in {communication_language}):
@@ -355,10 +388,18 @@ Task(subagent_type: "general-purpose", model: "sonnet")
    ```
 
 6. **Phase B: Decision Required** (interactive, only when user_items > 0)
-   Display context per item, then AskUserQuestion:
+   Display context per item using UX Question Template, then AskUserQuestion:
    - Group by domain (up to 4 questions per AskUserQuestion call)
-   - Each question: 2-3 concrete options from Agent's Resolution Detail
+   - Each question: 2-3 concrete options from Agent's Resolution Detail (in UX language)
    - Multiple rounds if > 4 items
+
+   **Decision budget**: If DECISION_REQUIRED > 8 items, after presenting the 2nd round (8 items):
+   ```
+   {N} decisions remaining. Select approach:
+   [C] Continue individual decisions
+   [P] Party Mode — review remaining items as a set
+   [D] Defer remaining MEDIUM severity items (keep CRITICAL only)
+   ```
 
 7. **Phase C: Prototype Gaps** (interactive, only when proto_items > 0)
    Each PROTOTYPE_GAP item has spec-level workaround options. Present via AskUserQuestion:
@@ -426,6 +467,10 @@ Resolution type → S4 Directive patterns:
 - PROTOTYPE_GAP (spec-resolved): `[carry-forward:new, origin: VR-NNN]` — gap identified at S3, added as new requirement for Workers to implement
 - PROTOTYPE_GAP (deferred): `[carry-forward:deferred, origin: VR-NNN]` — deferred to next sprint, reuses existing deferred taxonomy
 - PROTOTYPE_GAP (acknowledged): `[KNOWN-GAP: {description}]` — unresolved gap, proceed with awareness. S4 attaches tag to affected FR
+
+## Requirements Coverage (from S3 Agent B)
+| FR | Classification | Handling |
+(INVISIBLE/ACCESS_GATED/OUT_OF_SCOPE → carry-forward, MISSING → resolved in S3-R Phase B)
 
 ## S4 Translation Directives (consolidated)
 {Domain-grouped directive list — directly referenced by S4 agents}
