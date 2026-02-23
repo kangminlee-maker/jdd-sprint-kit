@@ -851,14 +851,16 @@ Present 5 options via AskUserQuestion (in {communication_language}):
 - Update decision-diary.md Sprint Context: `Crystallize: Partial (S3+S9 only)`
 - Stop prototype server: `lsof -ti :5173 | xargs kill 2>/dev/null`
 - Display: "Prototype confirmed. Running constraint validation (~10 min)..."
-- Execute Crystallize S3 + S3-R + S9 only (skip S0/S1/S2/S4-S8/S10):
+- Execute Crystallize S3-PCP + S3 + S3-R + S9 only (skip S0/S1/S2/S4-S8/S10).
+  PCP inline check runs in Mode B too (PCP check is validation, appropriate for validation-only mode):
   1. Create specs/{feature_name}/reconciled/ directory
   2. Copy brownfield-context.md to reconciled/planning-artifacts/
-  3. Run S3 (Constraint-Aware Validation — 2 agents parallel, as defined in crystallize.md)
-  4. Run S3-R (Resolution Phase — if findings exist)
-  5. Copy original tasks.md to reconciled/tasks.md
-  6. Run S9 (Constraint Report Attachment)
-  7. Copy remaining specs files to reconciled/ (as-is, no translation)
+  3. Run S3-PCP (PCP inline check — when PCP exists, as defined in crystallize.md)
+  4. Run S3 (Constraint-Aware Validation — 2 agents parallel, as defined in crystallize.md)
+  5. Run S3-R (Resolution Phase — if findings exist)
+  6. Copy original tasks.md to reconciled/tasks.md
+  7. Run S9 (Constraint Report Attachment)
+  8. Copy remaining specs files to reconciled/ (as-is, no translation)
 - Proceed to /parallel with specs_root=specs/{feature_name}/reconciled/
 
 **Mode C: Full Crystallize** (1+ modifications OR WARN exists):
@@ -891,7 +893,7 @@ Mode B/C:
    - [K] Skip Crystallize → /parallel with specs_root=specs/{feature_name}/
    - [X] Exit
 
-**Budget**: Mode A = 0 turns. Mode B = ~20-30 turns. Mode C = ~108-193 turns. Does not count against the 5-round iteration limit.
+**Budget**: Mode A = 0 turns. Mode B = ~20-33 turns. Mode C = ~108-196 turns. Does not count against the 5-round iteration limit.
 
 ## Conductor Roles
 

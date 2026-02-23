@@ -45,7 +45,7 @@ Brownfield data is used at every Sprint phase. Sources are cumulatively collecte
 | **Step 2b-G Scope Gate** | Verify 0 PCP CONFLICT + regulatory coverage + state completeness + deferral risk assessment |
 | **Step 5-D Devil's Advocate** | Lens 8: Policy & Regulatory Compliance adversarial verification (when PCP exists) |
 | **Crystallize S2** (`/crystallize`) | Incremental CP: scan prototype concepts not covered by existing CP → append to brownfield-context.md → copy to reconciled/. PCP section carried over via full file copy. |
-| **Crystallize S3** (`/crystallize`) | Constraint + Structural validation (2 agents parallel) → Resolution Phase (AUTO/USER_DECISION/PROTOTYPE_FIX) → validation-resolutions.md as S4 translation directives |
+| **Crystallize S3** (`/crystallize`) | PCP inline check (when PCP exists) + Constraint + Structural validation (2 agents parallel) → Resolution Phase (HARD_CONFLICT/DECISION_REQUIRED/PROTOTYPE_GAP) → validation-resolutions.md as S4 translation directives |
 | **Crystallize S4** (`/crystallize`) | Constraint-aware translation: CP data injected as brownfield parameters into translation rules. PCP data available in brownfield-context.md for reference (not yet auto-injected into S4 prompts). |
 | **Crystallize S9** (`/crystallize`) | Per-task Constraint Attachment: CP references auto-attached. PCP clauses available in brownfield-context.md for manual reference (not yet auto-attached to per-task constraints). |
 
@@ -258,7 +258,7 @@ JP2 [S] Confirm Prototype → Crystallize (when modifications exist or CP HIGH; 
   S1:    Prototype Analysis            → reconciled/prototype-analysis.md (informed by S0)
   S2:  Incremental Constraint Profile → brownfield-context.md CP updated (delta concepts only)
   S3:  Constraint-Aware Validation   → validation-constraint.md + validation-structural.md (2 agents parallel)
-  S3-R:  Resolution Phase              → validation-resolutions.md (AUTO + USER_DECISION + PROTOTYPE_FIX)
+  S3-R:  Resolution Phase              → validation-resolutions.md (HARD_CONFLICT + DECISION_REQUIRED + PROTOTYPE_GAP)
   S4:    Constraint-Aware Translation  → reconciled/planning-artifacts/ (PRD, Architecture, Epics)
   S4-G:  Cross-Artifact Gate           → PASS/FAIL
   S5:    Generate Execution Specs      → reconciled/ (entity-dict, requirements, design, tasks)
@@ -270,7 +270,7 @@ JP2 [S] Confirm Prototype → Crystallize (when modifications exist or CP HIGH; 
   S10:    Summary → /parallel with specs_root=reconciled/
 ```
 
-On S3 findings (CRITICAL+WARNING): AUTO auto-resolved → USER_DECISION/PROTOTYPE_FIX presented with options (carry-forward taxonomy) → Party Mode verification ([P]/[S]/[R]/[X]) → validation-resolutions.md as S4 translation supplement.
+On S3 findings: HARD_CONFLICT auto-resolved (displayed individually) → DECISION_REQUIRED/PROTOTYPE_GAP presented with options (carry-forward taxonomy) → Party Mode verification ([P]/[S]/[R]/[X]) → validation-resolutions.md as S4 translation supplement.
 On gate failure (S4-G, S5-G, or S7 unresolvable): [R] Return to JP2 / [K] Skip Crystallize (original specs) / [X] Exit.
 
 ### Expected Behavior by Data Condition (Crystallize)
@@ -288,7 +288,7 @@ Notes:
 - "Backend code accessible" = .java/.kt/.py/.go/.rs etc. exist in any source (local, --add-dir, tarball)
 - preview/ directory .tsx files are NOT CP extraction targets
 - S2 = CP section exists AND JP2 Comment > 0
-- S3 Agent A = HIGH confidence CP items 1+ exist
+- S3 Agent A = HIGH confidence CP items 1+ exist (PCP check runs independently — see Validation Principles)
 - S9 = CP section exists
 - DA = always runs
 
@@ -324,6 +324,75 @@ After JP2, specs_root depends on Crystallize mode:
 - Mode B/C (ran): `specs_root=specs/{feature}/reconciled/`
 
 Original artifacts remain untouched in `specs/{feature}/`.
+
+## Validation Principles (Crystallize S3)
+
+Three principles govern how S3 validates and presents findings.
+
+### Soft Constraint Principle
+
+All Constraint Profile items are **soft constraints** — patterns observed in existing code, not absolute rules. The only hard constraints are DB-enforced rules where violation causes runtime failure (see HARD_CONFLICT below). Everything else is presented as a decision for the product expert, not auto-applied as a rule.
+
+### All Findings Shown
+
+Every S3 finding is recorded in full detail. No finding is silently summarized or hidden. INFO findings are displayed as a summary count ("INFO: {N} items — no action needed"), but all other findings are displayed individually with full context.
+
+### UX-Language Questions
+
+When presenting findings to the product expert, questions use customer-visible language (screens, buttons, states, behaviors). Database/API/code terminology appears only inside `<details>` blocks. The product expert should be able to make a decision without understanding the technical implementation.
+
+## Resolution Types (Crystallize S3)
+
+S3 findings are classified into resolution types that determine how they are processed.
+
+### HARD_CONFLICT
+
+DB-enforced constraints where violation causes runtime failure or storage data loss:
+- NOT NULL violation → INSERT/UPDATE failure
+- DB-enforced FK constraint violation → referential integrity error (incl. transitive FK)
+- Type mismatch with storage data loss → e.g., "true" → 0 in TINYINT, float truncation to int
+- Cascading constraint violations → deleting parent orphans children with ON DELETE RESTRICT
+
+**Key distinction**: DB-enforced → HARD_CONFLICT. App-enforced → DECISION_REQUIRED.
+
+HARD_CONFLICT items are auto-resolved (only one valid resolution exists) and displayed individually with full context.
+
+### DECISION_REQUIRED
+
+All findings that are not HARD_CONFLICT and not PROTOTYPE_GAP. Includes:
+- App-managed FK validation without DB constraint
+- App-level type coercion without semantic loss
+- Enum display-label vs DB-stored-value mismatch
+- API path/versioning pattern mismatch
+- Naming convention deviation
+- Policy conflicts (PCP) — always DECISION_REQUIRED (business judgment)
+
+DECISION_REQUIRED items are presented to the product expert with options.
+
+### PROTOTYPE_GAP
+
+Prototype has a structural gap that cannot be resolved by direct reference alone, but spec-level workarounds exist. Includes:
+- Missing FR implementation (dead-end flow, state with no exit)
+- carry-forward gap (in-scope PRD item absent from prototype)
+
+PROTOTYPE_GAP items are presented with carry-forward taxonomy options.
+
+### Findings Display Scope
+
+| Type | Recorded? | Displayed individually? |
+|------|-----------|------------------------|
+| HARD_CONFLICT | Yes (full detail) | Yes (Phase A) |
+| DECISION_REQUIRED | Yes (full detail) | Yes (Phase B) |
+| PROTOTYPE_GAP | Yes (full detail) | Yes (Phase C) |
+| NONE (INFO) | Yes (summary count) | No |
+
+### PCP Check Architecture
+
+PCP (Policy Constraint Profile) checking is independent of Agent A's CP-based skip condition:
+- Agent A skip condition: unchanged (no HIGH CP items → skip Agent A)
+- PCP check: runs as **inline Conductor check** before S3 agents, independent of Agent A
+- When PCP exists: Conductor reads prototype-analysis.md + PCP section → check for conflicts
+- PCP conflicts → added to S3-R resolution queue as DECISION_REQUIRED items
 
 ## Sprint Log Extension: JP Interactions
 

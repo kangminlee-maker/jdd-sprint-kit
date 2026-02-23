@@ -422,6 +422,8 @@ Each Translation Rule (§3 table) has an implicit brownfield parameter. Constrai
 
 Without CP, translation must guess these parameters — leading to specs that require post-hoc correction during implementation. With CP, translation is fully parameterized: `translate(element, CP) → spec`.
 
+**Soft constraint principle**: CP items are soft constraints — patterns observed in existing code, not absolute rules. The only hard constraints are DB-enforced rules where violation causes runtime failure (NOT NULL, FK integrity, type-cast data loss). All other CP patterns (naming conventions, API patterns, enum mappings) are presented as decisions for the product expert, not auto-applied as rules. See Validation Principles in `jdd-sprint-protocol.md`.
+
 ### 9.2 Crystallize Validation Layer
 
 S3 (Constraint-Aware Validation) addresses a gap in the original pipeline: the translation input (prototype) was never validated against brownfield constraints before translation began. Two parallel validators catch different issue classes:

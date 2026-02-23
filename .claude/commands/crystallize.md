@@ -200,11 +200,26 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 ### Step S3: Constraint-Aware Validation
 
-Cross-validate Constraint Profile + prototype analysis before translation. Two agents run in parallel.
+Cross-validate Constraint Profile + prototype analysis before translation. PCP inline check runs first, then two agents in parallel.
 
 **Progress**: `"[S3/11] Validating prototype against constraints (2 parallel agents)..."`
 
-**Skip conditions**:
+**Pre-S3: PCP Inline Check** (Conductor, before agents):
+
+When `## Policy Constraint Profile` section exists in brownfield-context.md AND status is `collected` or `partial` AND clause_count > 0:
+1. Read `specs/{feature}/reconciled/prototype-analysis.md` — extract feature areas and user flows
+2. Read PCP.1-PCP.5 clauses from brownfield-context.md
+3. For each clause, check whether prototype behavior conflicts with the policy rule
+4. PCP conflicts → record as DECISION_REQUIRED findings with source "PCP" (added to S3-R resolution queue)
+5. Log: "PCP check: {N} policy conflicts found" or "PCP check: 0 conflicts"
+
+When PCP does not exist or status is `not-found` or `deferral-only` with clause_count=0: skip. Log: "PCP check skipped: no policy clauses"
+
+This check is independent of Agent A's CP-based skip condition. PCP conflicts are always DECISION_REQUIRED (business judgment, never auto-resolved).
+
+**Budget**: +1-3 turns (when PCP exists), 0 turns (when absent).
+
+**Skip conditions** (for agents):
 - Agent A skip: brownfield-context.md's Constraint Profile has 0 HIGH confidence items (CP section absent, or all items are MEDIUM/LOW). Crystallize Conductor reads brownfield-context.md before S3 to count HIGH items. Log: "Agent A (Constraint Validator) skipped: no HIGH confidence CP items"
 - Agent B: always runs (no skip conditions)
 
@@ -234,11 +249,21 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     - INFO: Minor deviation from convention
 
     For each CRITICAL and WARNING finding, classify Resolution Type:
-    - AUTO: CP data alone determines the correct resolution (e.g., CP.6 has DB value 'N' but prototype uses 'Normal' → use 'N'). Write concrete resolution in Resolution Detail.
-    - USER_DECISION: 2+ valid approaches exist (e.g., naming convention for a new enum value). Write 'Option A: ... | Option B: ... [| Option C: ...]' with rationale for each in Resolution Detail.
-    - PROTOTYPE_FIX: Prototype has a structural gap that cannot be resolved by direct reference alone, but spec-level workarounds exist. Write options using carry-forward taxonomy in Resolution Detail:
+    - HARD_CONFLICT: DB-enforced constraints where violation causes runtime failure or storage data loss.
+      Scope: NOT NULL violation, DB-enforced FK constraint violation (incl. transitive FK),
+      type mismatch with storage data loss (e.g., 'true' → 0 in TINYINT), cascading constraint violations.
+      Key: DB-enforced → HARD_CONFLICT. App-enforced → DECISION_REQUIRED.
+      Write the single valid resolution in Resolution Detail.
+    - DECISION_REQUIRED: All other findings — app-managed FK, app-level type coercion without semantic loss,
+      enum display-label vs DB-stored-value mismatch, API pattern mismatch, naming convention deviation.
+      Write 'Option A: ... | Option B: ... [| Option C: ...]' with rationale for each in Resolution Detail.
+    - PROTOTYPE_GAP: Prototype has a structural gap that cannot be resolved by direct reference alone,
+      but spec-level workarounds exist. Write options using carry-forward taxonomy in Resolution Detail:
       e.g., 'Option A: Add as [carry-forward:new] requirement — Workers implement | Option B: Defer [carry-forward:deferred] to next sprint | Option C: Return to JP2 to fix in prototype'
     - INFO findings: Resolution Type = NONE, Resolution Detail = '—'
+
+    IMPORTANT: CP patterns are soft constraints (observed patterns, not absolute rules).
+    Only DB-enforced rules qualify as HARD_CONFLICT. Everything else is DECISION_REQUIRED.
 
     Output: Write to specs/{feature}/reconciled/validation-constraint.md
     Format:
@@ -280,9 +305,9 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     - INFO: Minor observation
 
     For each CRITICAL and WARNING finding, classify Resolution Type:
-    - AUTO: carry-forward gap classification is unambiguous (e.g., item exists in original doc, absent from prototype, still applicable → [carry-forward:defined]). Write concrete classification in Resolution Detail.
-    - USER_DECISION: Intent is ambiguous (e.g., item deferred in Phase 1 but implemented in prototype → keep or remove?). Write 'Option A: ... | Option B: ...' with rationale in Resolution Detail.
-    - PROTOTYPE_FIX: FR not implemented, dead-end flow, state with no exit, etc. Write spec-level workaround options using carry-forward taxonomy in Resolution Detail:
+    - HARD_CONFLICT: carry-forward gap classification is unambiguous (e.g., item exists in original doc, absent from prototype, still applicable → [carry-forward:defined]). Write concrete classification in Resolution Detail.
+    - DECISION_REQUIRED: Intent is ambiguous (e.g., item deferred in Phase 1 but implemented in prototype → keep or remove?). Write 'Option A: ... | Option B: ...' with rationale in Resolution Detail.
+    - PROTOTYPE_GAP: FR not implemented, dead-end flow, state with no exit, etc. Write spec-level workaround options using carry-forward taxonomy in Resolution Detail:
       e.g., 'Option A: Add as [carry-forward:new] requirement — Workers implement | Option B: Defer [carry-forward:deferred] to next sprint | Option C: Return to JP2 to fix in prototype'
     - INFO findings: Resolution Type = NONE, Resolution Detail = '—'
 
@@ -304,31 +329,39 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 2. Parse all CRITICAL + WARNING findings into unified list (VR-001, VR-002, ...)
    - INFO findings: exclude from resolution processing
 3. Categorize by Resolution Type:
-   - auto_items (AUTO), user_items (USER_DECISION), proto_items (PROTOTYPE_FIX)
+   - hard_items (HARD_CONFLICT), user_items (DECISION_REQUIRED), proto_items (PROTOTYPE_GAP)
 
 4. If 0 actionable findings → skip resolution, proceed to S4 (no validation-resolutions.md)
 
 4.5. **Overlap Detection**:
    When the same prototype element appears in both Agent A and Agent B findings:
-   - Both AUTO with identical resolution → merge into single item
-   - Different resolutions → escalate to USER_DECISION (present both resolutions as options)
-   - One is PROTOTYPE_FIX → PROTOTYPE_FIX takes precedence
+   - Both HARD_CONFLICT with identical resolution → merge into single item
+   - Different resolutions → escalate to DECISION_REQUIRED (present both resolutions as options)
+   - One is PROTOTYPE_GAP → PROTOTYPE_GAP takes precedence
 
-5. **Phase A: Auto-Resolve** (no user interaction)
-   Display summary table (in {communication_language}):
+5. **Phase A: Hard Conflicts** (no user interaction — auto-resolved, displayed individually)
+   Display each HARD_CONFLICT item individually (in {communication_language}):
    ```
-   ## S3 Validation: Auto-Resolved ({N} items)
-   | VR ID | Source | Severity | Issue | Resolution |
+   ## S3 Validation: Hard Conflicts ({N} items — auto-resolved)
+
+   ### VR-{N}: {title in user terms}
+   Auto-resolved: {resolution}
+   Reason: {why this is the only valid option}
+   <details><summary>Technical detail</summary>{CP ref, DB constraint detail}</details>
+   ```
+   After all HARD_CONFLICT items, display INFO summary:
+   ```
+   INFO: {N} items — no action needed
    ```
 
-6. **Phase B: User Decisions** (interactive, only when user_items > 0)
+6. **Phase B: Decision Required** (interactive, only when user_items > 0)
    Display context per item, then AskUserQuestion:
    - Group by domain (up to 4 questions per AskUserQuestion call)
    - Each question: 2-3 concrete options from Agent's Resolution Detail
    - Multiple rounds if > 4 items
 
-7. **Phase C: Prototype Fix Items** (interactive, only when proto_items > 0)
-   Each PROTOTYPE_FIX item has spec-level workaround options. Present via AskUserQuestion:
+7. **Phase C: Prototype Gaps** (interactive, only when proto_items > 0)
+   Each PROTOTYPE_GAP item has spec-level workaround options. Present via AskUserQuestion:
    - Example: "VR-007: Dead-end flow — block creation has no error handling"
      [1] Add as [carry-forward:new] requirement — Workers implement (Recommended)
      [2] Defer as [carry-forward:deferred] — next sprint
@@ -345,7 +378,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
    ## S3 Resolution Set: Final Review
    | VR ID | Severity | Issue | Resolution Type | Resolution |
    ...
-   AUTO: {N} / USER_DECISION: {N} / PROTOTYPE_FIX: {N} / Total: {N}
+   HARD_CONFLICT: {N} / DECISION_REQUIRED: {N} / PROTOTYPE_GAP: {N} / Total: {N}
    ```
 
    Then AskUserQuestion:
@@ -375,11 +408,11 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 ## Summary
 | Category | Count |
 |----------|-------|
-| AUTO | {N} |
-| USER_DECISION | {N} |
-| PROTOTYPE_FIX (carry-forward:new) | {N} |
-| PROTOTYPE_FIX (carry-forward:deferred) | {N} |
-| PROTOTYPE_FIX (KNOWN-GAP) | {N} |
+| HARD_CONFLICT | {N} |
+| DECISION_REQUIRED | {N} |
+| PROTOTYPE_GAP (carry-forward:new) | {N} |
+| PROTOTYPE_GAP (carry-forward:deferred) | {N} |
+| PROTOTYPE_GAP (KNOWN-GAP) | {N} |
 | Total resolved | {N} |
 | INFO (excluded) | {N} |
 | Party Mode verified | Yes/No |
@@ -388,11 +421,11 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 | VR ID | Source | Severity | Category | Issue | Resolution Type | Resolution | S4 Directive |
 
 Resolution type → S4 Directive patterns:
-- AUTO: Concrete mapping/rule (e.g., "TicketType: map Inactive → 0")
-- USER_DECISION: User's chosen option as concrete instruction
-- PROTOTYPE_FIX (spec-resolved): `[carry-forward:new, origin: VR-NNN]` — gap identified at S3, added as new requirement for Workers to implement
-- PROTOTYPE_FIX (deferred): `[carry-forward:deferred, origin: VR-NNN]` — deferred to next sprint, reuses existing deferred taxonomy
-- PROTOTYPE_FIX (acknowledged): `[KNOWN-GAP: {description}]` — unresolved gap, proceed with awareness. S4 attaches tag to affected FR
+- HARD_CONFLICT: Concrete mapping/rule (e.g., "TicketType: map Inactive → 0")
+- DECISION_REQUIRED: User's chosen option as concrete instruction
+- PROTOTYPE_GAP (spec-resolved): `[carry-forward:new, origin: VR-NNN]` — gap identified at S3, added as new requirement for Workers to implement
+- PROTOTYPE_GAP (deferred): `[carry-forward:deferred, origin: VR-NNN]` — deferred to next sprint, reuses existing deferred taxonomy
+- PROTOTYPE_GAP (acknowledged): `[KNOWN-GAP: {description}]` — unresolved gap, proceed with awareness. S4 attaches tag to affected FR
 
 ## S4 Translation Directives (consolidated)
 {Domain-grouped directive list — directly referenced by S4 agents}
@@ -889,7 +922,7 @@ Present reconciliation results to user (in {communication_language}).
 {if S3 ran}
 - Constraint validation: {N} CRITICAL / {N} WARNING / {N} INFO
 - Structural validation: {N} CRITICAL / {N} WARNING / {N} INFO
-- Resolutions: {N} auto-resolved / {N} user-decided / {N} carry-forward:new / {N} carry-forward:deferred / {N} known-gap
+- Resolutions: {N} hard-conflict / {N} decision-required / {N} carry-forward:new / {N} carry-forward:deferred / {N} known-gap
 - Party Mode verified: Yes/No
 {if S3 skipped}
 - Validation skipped ({reason})
@@ -909,13 +942,14 @@ Select: [C] Continue to /parallel | [R] Review reconciled/ | [X] Exit
 
 ## Budget
 
-~108-193 turns across 13 Task invocations. S0, S2, S3-R, S9 run inline (no Task invocation).
+~108-196 turns across 13 Task invocations. S0, S2, S3-PCP, S3-R, S9 run inline (no Task invocation).
 
 | Step | Model | Est. Turns |
 |------|-------|------------|
 | S0 Decision Context | Conductor (inline) | 0 (no Task) |
 | S1 Prototype Analysis | Sonnet | 5-8 |
 | S2 Incremental CP | Sonnet | 0-10 (skip when delta=0) |
+| S3-PCP Policy Check | Conductor (inline) | 0-3 (0: no PCP; 1-3: PCP exists) |
 | S3a Constraint Validator | Sonnet | 5-8 (parallel) |
 | S3b Structural Validator | Sonnet | 5-8 (parallel) |
 | S3-R Resolution Phase | Conductor (inline) | 0-19 (0: no findings; 3-8: decisions; +5-8: Party Mode; worst: 15+ items) |
