@@ -121,6 +121,23 @@ These items are carried forward from PRD, Architecture, and Brownfield context i
 Complete Specs = translate(Prototype) + carry-forward(PRD, Architecture, Brownfield)
 ```
 
+### Carry-Forward Lifecycle
+
+Carry-forward items follow a defined lifecycle through the Crystallize pipeline:
+
+```
+Collection → Classification → Registry → Translation → Verification
+(S3 Agent B)   (4-way)        (S3.5)     (S4)          (S7)
+```
+
+1. **Collection**: Agent B identifies PRD FRs not found in prototype
+2. **Classification**: Each item classified as INVISIBLE, ACCESS_GATED, OUT_OF_SCOPE, or MISSING
+3. **Registry**: S3.5 collects all carry-forward candidates and assigns lifecycle states (INJECT/CONFLICT/DROP/DEFER)
+4. **Translation**: S4 reads registry FIRST — only INJECT items enter reconciled artifacts
+5. **Verification**: S7 confirms INJECT items are present and no unauthorized carry-forwards exist
+
+This lifecycle prevents the two failure modes of ad-hoc carry-forward: silent omission (items forgotten during translation) and hallucinated addition (AI adding items not in any source document).
+
 ---
 
 ## 4. The Delta
@@ -548,10 +565,11 @@ Every deployed service needs monitoring. Observability NFR is always required re
 #### DJ7: Carry-forward items require explicit lifecycle management (NEW)
 
 Items that exist in development grammar but have no user grammar counterpart (NFR, security, migration, monitoring) must be:
-1. **Registered** at Phase 1 (in design.md carry-forward registry)
-2. **Preserved** through the prototype-centric pipeline (bypassing prototype, injected at Crystallize)
-3. **Verified** for completeness (Scope Gate check: all registered items present in final specs)
-4. **Classified** in delta (positive/modification/zero per item)
+1. **Classified** at S3 — Agent B's 4-way classification (INVISIBLE/ACCESS_GATED/OUT_OF_SCOPE/MISSING) determines handling
+2. **Registered** at S3.5 — carry-forward-registry.md assigns lifecycle states (INJECT/CONFLICT/DROP/DEFER)
+3. **Injected** at S4 — only INJECT items from registry enter reconciled artifacts (no ad-hoc carry-forward)
+4. **Verified** at S7 — registry compliance check, delta-relative structure signature, coverage compliance
+5. **Classified** in delta (positive/modification/zero per item)
 
 #### DJ8: Delta Manifest as standard Crystallize output (NEW)
 

@@ -595,7 +595,8 @@ Original documents are preserved untouched — translated versions are written t
 | S2 | Incremental Constraint Profile — scan prototype concepts not yet covered in CP | brownfield-context.md CP updated |
 | S3 | Validate prototype against constraints + structural completeness (2 parallel agents) | `validation-constraint.md`, `validation-structural.md` |
 | S3-R | Resolution Phase: auto-resolve, user decisions, prototype fix options → Party Mode verification | `validation-resolutions.md` |
-| S4 | Constraint-aware translation: reconcile PRD + Architecture + Epics with CP as parameters | `reconciled/planning-artifacts/` |
+| S3.5 | Carry-Forward Registry: collect all carry-forward candidates, assign lifecycle states (INJECT/CONFLICT/DROP/DEFER) | `reconciled/carry-forward-registry.md` |
+| S4 | Constraint-aware translation: reconcile PRD + Architecture + Epics with CP as parameters. S4 reads registry FIRST — only INJECT items enter reconciled artifacts (no ad-hoc carry-forward) | `reconciled/planning-artifacts/` |
 | S5 | Generate Specs from reconciled planning artifacts | `reconciled/requirements.md`, `design.md`, `tasks.md` |
 | S6 | Verify/regenerate Deliverables (API spec, BDD, key flows) | `reconciled/api-spec.yaml`, `bdd-scenarios/`, etc. |
 | S7 | Cross-artifact consistency check (gap=0 required) | PASS/FAIL |
@@ -605,7 +606,7 @@ Original documents are preserved untouched — translated versions are written t
 
 S2 is skipped when brownfield-context.md has no Constraint Profile section, or when all prototype concepts are already covered (delta=0). PCP (Policy Constraint Profile) checking runs as an inline Conductor check before S3 agents, independent of Agent A's CP-based skip condition — this ensures policy conflicts are caught even when Agent A is skipped. S3 Agent A is skipped when no HIGH confidence CP items exist; Agent B always runs. S3-R (Resolution Phase) runs when S3 or PCP check produces findings. S3 findings are classified as HARD_CONFLICT (DB-enforced constraints causing runtime failure — auto-resolved, displayed individually), DECISION_REQUIRED (soft constraints and policy conflicts — user decides), or PROTOTYPE_GAP (structural gaps — spec-level workaround options using carry-forward taxonomy). All CP patterns are treated as soft constraints — only DB-enforced rules qualify as hard conflicts. Questions to the product expert use customer-visible language (screens, buttons, behaviors); database/API terminology appears only in collapsible technical details. When Agent B finds PRD requirements absent from the prototype, it classifies them into 4 categories (INVISIBLE — inherently non-visible like security/monitoring, ACCESS_GATED — role-specific, OUT_OF_SCOPE — removed by JP2 decisions, MISSING — should be visible). MISSING items are presented as decisions; the rest carry forward automatically. S3-R then offers Party Mode verification before proceeding. When no actionable findings exist, S3-R is skipped entirely. S9 is skipped when no Constraint Profile exists.
 
-**Reconciliation principles**: The prototype provides what the product **does** (screens, features, API endpoints, data model, user flows). Items that the prototype cannot supply — NFRs (Non-Functional Requirements), security architecture, deployment strategy, scaling — are carried forward from the original documents and marked with `[carry-forward]`. Product Brief is excluded from reconciliation because it defines the problem space, not the solution.
+**Reconciliation principles**: The prototype provides what the product **does** (screens, features, API endpoints, data model, user flows). Items that the prototype cannot supply — NFRs (Non-Functional Requirements), security architecture, deployment strategy, scaling — are managed through a carry-forward registry (S3.5) that assigns lifecycle states (INJECT/CONFLICT/DROP/DEFER). S4 reads the registry first and only includes INJECT items — no ad-hoc carry-forward is permitted. This prevents both silent omission and hallucinated additions. Product Brief is excluded from reconciliation because it defines the problem space, not the solution.
 
 **Source attribution**: Each requirement in the reconciled PRD is tagged with its origin chain. In this notation, `source` indicates where the requirement was confirmed (prototype or carried from original), and `origin` indicates where it was first proposed:
 - `(source: PROTO, origin: BRIEF-3)` — confirmed in prototype, originally from brief sentence 3
@@ -615,7 +616,7 @@ S2 is skipped when brownfield-context.md has no Constraint Profile section, or w
 
 This preserves traceability from the original Brief through JP2 iteration to the final reconciled artifacts.
 
-**Budget**: 0 turns (skip), ~20-30 turns (validation-only), ~108-193 turns (full) — separate from JP2 iteration budget. Does not count against the 5-round JP2 iteration limit. Budget varies depending on Crystallize mode, Constraint Profile availability, and whether S2/S3 are skipped.
+**Budget**: 0 turns (skip), ~20-33 turns (validation-only), ~108-211 turns (full) — separate from JP2 iteration budget. Does not count against the 5-round JP2 iteration limit. Budget varies depending on Crystallize mode, Constraint Profile availability, and whether S2/S3 are skipped.
 
 **Artifact**: `specs/{feature}/reconciled/` — mirrors the existing `specs/{feature}/` structure, minus excluded items (Product Brief, sprint-log, readiness, inputs/, preview/).
 
@@ -1091,6 +1092,7 @@ specs/{feature}/
     ├── validation-constraint.md     # S3: Constraint validation report (if ran)
     ├── validation-structural.md     # S3: Structural validation report (if ran)
     ├── validation-resolutions.md    # S3-R: Resolved findings with S4 translation directives
+    ├── carry-forward-registry.md   # S3.5: Carry-forward candidates with lifecycle states
     ├── planning-artifacts/          # Reconciled PRD, Architecture, Epics, brownfield-context (with CP)
     ├── entity-dictionary.md         # Reconciled entity dictionary
     ├── requirements.md              # Reconciled requirements
@@ -1153,7 +1155,9 @@ specs/{feature}/
 | **Scope Gate** | 3-stage verification performed by @scope-gate agent: Structured Probe + Checklist + Holistic Review. Runs after each BMad step and after Deliverables |
 | **Crystallize** | Conditional translation step. After JP2 [S] Confirm Prototype, translates prototype into development grammar and computes delta against brownfield baseline. Creates `reconciled/` directory with delta manifest. On Sprint route: 3-tier conditional (skip / validation-only / full). On Guided/Direct routes: always full. Standalone via `/crystallize` command always runs full |
 | **reconciled/** | Directory created by Crystallize. Contains the definitive artifact set reconciled with the finalized prototype. Mirrors `specs/{feature}/` structure minus excluded items. Original artifacts are preserved untouched |
-| **carry-forward** | Items in reconciled artifacts that are not derivable from the prototype (NFRs, security, deployment, scaling) and are carried from the original documents. Marked with `[carry-forward]` tag |
+| **carry-forward** | Items in reconciled artifacts that are not derivable from the prototype (NFRs, security, deployment, scaling) and are carried from the original documents. Managed through a carry-forward registry (S3.5) with lifecycle states (INJECT/CONFLICT/DROP/DEFER). Marked with `[carry-forward]` tag and `(cf: CF-{N})` registry reference |
+| **carry-forward-registry.md** | S3.5 artifact. Lists all carry-forward candidates with lifecycle states. S4 reads this first — only INJECT items enter reconciled artifacts. S7 verifies compliance |
+| **Requirements Coverage Classification** | S3 Agent B's 4-way classification for PRD FRs not found in prototype: INVISIBLE (inherently non-visible), ACCESS_GATED (role-specific), OUT_OF_SCOPE (JP2 excluded), MISSING (should be visible). MISSING → DECISION_REQUIRED; others carry forward automatically |
 | **Constraint Profile** (CP) | Implementation-level constraints extracted from the existing codebase during Pass 2 Brownfield scan: entity column constraints (CP.1), naming conventions (CP.2), transaction patterns (CP.3), lock patterns (CP.4), API patterns (CP.5), enum DB values (CP.6), domain boundaries (CP.7). Used by Crystallize S4 as translation parameters. Skipped when no readable backend code files exist in any accessible source |
 | **DD-N** | Decision Diary entry ID (DD-1, DD-2, ...). Used in Crystallize source attribution to trace prototype features back to specific JP2 decisions |
 | **specs_root** | Parameter added to `/parallel` and `/validate` to specify the base directory for specs files. Default: `specs/{feature}/`. After Crystallize: `specs/{feature}/reconciled/` |

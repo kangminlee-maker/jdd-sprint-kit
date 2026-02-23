@@ -127,6 +127,7 @@ specs/{feature}/
     ├── validation-constraint.md # S3 Agent A: Constraint validation report (if ran)
     ├── validation-structural.md # S3 Agent B: Structural validation report (if ran)
     ├── validation-resolutions.md  # S3: Resolved findings with S4 translation directives
+    ├── carry-forward-registry.md  # S3.5: Carry-forward candidates with lifecycle states
     ├── planning-artifacts/     # Reconciled planning artifacts
     │   ├── prd.md              # PRD final (reconciled with prototype)
     │   ├── architecture.md     # Architecture final (reconciled)
@@ -259,6 +260,7 @@ JP2 [S] Confirm Prototype → Crystallize (when modifications exist or CP HIGH; 
   S2:  Incremental Constraint Profile → brownfield-context.md CP updated (delta concepts only)
   S3:  Constraint-Aware Validation   → validation-constraint.md + validation-structural.md (2 agents parallel)
   S3-R:  Resolution Phase              → validation-resolutions.md (HARD_CONFLICT + DECISION_REQUIRED + PROTOTYPE_GAP)
+  S3.5:  Carry-Forward Registry        → reconciled/carry-forward-registry.md (INJECT/CONFLICT/DROP/DEFER)
   S4:    Constraint-Aware Translation  → reconciled/planning-artifacts/ (PRD, Architecture, Epics)
   S4-G:  Cross-Artifact Gate           → PASS/FAIL
   S5:    Generate Execution Specs      → reconciled/ (entity-dict, requirements, design, tasks)
@@ -401,6 +403,25 @@ When Agent B finds a PRD FR not visible in the prototype, classify the reason:
 - MISSING cannot auto carry-forward — it must be presented to the product expert
 - When uncertain → default to MISSING (safest: forces explicit decision)
 - INVISIBLE/ACCESS_GATED/OUT_OF_SCOPE items are carried forward without user interaction
+
+### Carry-Forward Registry (S3.5)
+
+After S3-R resolution, S3.5 builds a registry of all carry-forward candidates with lifecycle states:
+
+| State | Meaning |
+|-------|---------|
+| INJECT | Confirmed applicable — must be included in reconciled artifacts |
+| CONFLICT | Conflicts with prototype or another item — resolved as DECISION_REQUIRED |
+| DROP | Superseded by prototype changes or JP2 decisions |
+| DEFER | Explicitly deferred to future sprint |
+
+**Rules**:
+- S4 uses INJECT items only — no ad-hoc carry-forward permitted when registry exists
+- S7 verifies: INJECT items present in specs, no unauthorized carry-forwards
+- CF tags coexist with origin tags: `(source: carry-forward, origin: BRIEF-3, cf: CF-7)`
+- MISSING items (from 4-way classification) only enter registry after user confirmed in S3-R
+- Mode B (validation-only): S3.5 is skipped — no registry produced
+- Greenfield: INJECT items only (no DROP, no CONFLICT)
 
 ### PCP Check Architecture
 

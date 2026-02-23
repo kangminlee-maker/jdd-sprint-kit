@@ -62,7 +62,7 @@ Load config per Language Protocol in jdd-sprint-guide.md.
 
 Analyze JP2 decision records to understand the intent and context behind prototype modifications BEFORE analyzing the code. This enables S1 and S4 to distinguish deliberate business decisions from implementation details.
 
-**Progress**: `"[S0/11] Analyzing JP2 decision context..."`
+**Progress**: `"[S0/12] Analyzing JP2 decision context..."`
 
 1. Create `specs/{feature}/reconciled/` directory and `reconciled/planning-artifacts/`
 2. (brownfield-context.md copy deferred to S2 — may be incrementally updated first)
@@ -99,7 +99,7 @@ If no decision records exist, skip this step and proceed to S1 without decision 
 
 Analyze the finalized prototype code and produce a structured analysis document.
 
-**Progress**: `"[S1/11] Analyzing prototype structure..."`
+**Progress**: `"[S1/12] Analyzing prototype structure..."`
 
 Invoke prototype analyzer:
 
@@ -146,7 +146,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 Compare S1 prototype analysis domain concepts against existing Constraint Profile (CP) coverage. Scan only missing concepts.
 
-**Progress**: `"[S2/11] Checking Constraint Profile coverage..."`
+**Progress**: `"[S2/12] Checking Constraint Profile coverage..."`
 
 **Skip conditions** (any one triggers skip):
 - brownfield-context.md has no `## Constraint Profile` section → skip ("No base Constraint Profile from Phase 1")
@@ -202,7 +202,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 Cross-validate Constraint Profile + prototype analysis before translation. PCP inline check runs first, then two agents in parallel.
 
-**Progress**: `"[S3/11] Validating prototype against constraints (2 parallel agents)..."`
+**Progress**: `"[S3/12] Validating prototype against constraints (2 parallel agents)..."`
 
 **Pre-S3: PCP Inline Check** (Conductor, before agents):
 
@@ -476,13 +476,77 @@ Resolution type → S4 Directive patterns:
 {Domain-grouped directive list — directly referenced by S4 agents}
 ```
 
+### Step S3.5: Carry-Forward Registry
+
+Build a registry of all items that must be carried forward from existing documents into reconciled artifacts. This registry becomes the authoritative source for S4 — no ad-hoc carry-forward is permitted.
+
+**Progress**: `"[S3.5/12] Building carry-forward registry..."`
+
+**Skip conditions**:
+- Mode B (validation-only): SKIP entirely — registry only for full pipeline
+- Greenfield: INJECT items only (no DROP, no CONFLICT)
+
+**Logic** (Conductor inline or Task, depending on candidate count):
+
+1. **Collect candidates** from all sources:
+   - PRD NFRs, success criteria, constraints (from `planning-artifacts/prd.md`)
+   - Architecture security, deployment, scaling, monitoring, ADRs (from `planning-artifacts/architecture.md`)
+   - CP migration items (from `reconciled/planning-artifacts/brownfield-context.md` Constraint Profile)
+   - Decision-diary business decisions (from `decision-diary.md`, if exists)
+   - PCP.4 deferred items (from brownfield-context.md Policy Constraint Profile, if exists)
+   - S3 Agent B INVISIBLE/ACCESS_GATED/OUT_OF_SCOPE items (from `validation-structural.md`)
+   - S3-R resolved PROTOTYPE_GAP items with carry-forward:new or carry-forward:deferred (from `validation-resolutions.md`)
+
+2. **Assign state** to each candidate:
+   - **INJECT**: Confirmed applicable, must be included in reconciled artifacts
+   - **CONFLICT**: Conflicts with prototype or another carry-forward item → resolve as DECISION_REQUIRED inline
+   - **DROP**: Superseded by prototype changes or JP2 decisions
+   - **DEFER**: Explicitly deferred to future sprint (from PCP.4, carry-forward:deferred)
+
+3. **MISSING items from S3-R**: Only enter registry AFTER user confirmed in S3-R Phase B.
+   Never auto-add MISSING items — they must be explicitly resolved first.
+
+4. **CONFLICT resolution**: When a candidate conflicts with prototype or another item,
+   present as DECISION_REQUIRED inline (same UX Question Template as S3-R Phase B).
+
+5. **Capacity handling**:
+   - <30 candidates: inline (Conductor, 0-5 turns)
+   - 30-60 candidates: template-based (Conductor with structured template, 5-8 turns)
+   - 60+ candidates: Task invocation (general-purpose agent, 8-15 turns)
+
+6. **Write** `specs/{feature}/reconciled/carry-forward-registry.md`:
+
+```markdown
+# Carry-Forward Registry: {feature_name}
+
+## Summary
+| State | Count |
+|-------|-------|
+| INJECT | {N} |
+| CONFLICT (resolved) | {N} |
+| DROP | {N} |
+| DEFER | {N} |
+
+## Registry
+| CF-ID | Source | Item | State | Origin Tag | Notes |
+|-------|--------|------|-------|-----------|-------|
+| CF-1 | PRD NFR | p95 < 500ms monitoring | INJECT | (source: carry-forward, origin: BRIEF-3, cf: CF-1) | |
+| CF-2 | Architecture | JWT auth middleware | INJECT | (source: carry-forward, cf: CF-2) | |
+| CF-3 | S3-R VR-005 | Error handling for block creation | INJECT | (source: carry-forward, origin: VR-005, cf: CF-3) | carry-forward:new |
+| CF-4 | PCP.4 | Multi-language support | DEFER | — | deferred to Phase 2 |
+```
+
+**CF tag coexistence**: CF tags coexist with origin tags. Example: `(source: carry-forward, origin: BRIEF-3, cf: CF-7)`. The `cf:` reference links to the registry entry; `origin:` preserves the original source chain.
+
+**Budget**: 0 turns (Mode B skip) ~ 15 turns (60+ candidates with Task invocation).
+
 ### Step S4: Constraint-Aware Translation (Reconcile Planning Artifacts)
 
 Reconcile PRD, Architecture, and Epics using the prototype analysis as primary input, existing documents as context, and **Constraint Profile as brownfield parameters for translation rules**.
 
 **Product Brief is excluded** — it defines the problem space, which the prototype cannot supply.
 
-**Progress**: `"[S4/11] Reconciling PRD..."` → `"...Architecture..."` → `"...Epics..."` → `"...Cross-artifact validation..."`
+**Progress**: `"[S4/12] Reconciling PRD..."` → `"...Architecture..."` → `"...Epics..."` → `"...Cross-artifact validation..."`
 
 #### Reconciliation Principles
 
@@ -532,6 +596,14 @@ Task(subagent_type: "general-purpose", model: "opus")
       For HIGH confidence patterns: apply as translation rule parameters
       For MEDIUM confidence: tag as [CP-MEDIUM: {pattern}] for Worker decision
       If no Constraint Profile section exists: proceed without constraint parameters
+
+    Carry-forward registry (MANDATORY — read FIRST):
+      specs/{feature}/reconciled/carry-forward-registry.md (if exists)
+      1. INJECT items only — include in output, tag with (cf: CF-{N})
+      2. CONFLICT/DROP/DEFER items — do NOT include
+      3. Items NOT in registry — CANNOT add as carry-forward
+      4. PROTOTYPE_GAP carry-forward:new items (origin: VR-NNN) → add as required FR
+      If carry-forward-registry.md does not exist: use ad-hoc carry-forward (legacy fallback)
 
     Validation resolutions (supplement prototype translation with constraint-aware context):
       specs/{feature}/reconciled/validation-resolutions.md (if exists)
@@ -593,6 +665,13 @@ Task(subagent_type: "general-purpose", model: "opus")
       For MEDIUM confidence: note as [CP-MEDIUM: {pattern}]
       If no Constraint Profile section exists: proceed without constraint parameters
 
+    Carry-forward registry (MANDATORY — read FIRST):
+      specs/{feature}/reconciled/carry-forward-registry.md (if exists)
+      1. INJECT items only — include in output, tag with (cf: CF-{N})
+      2. CONFLICT/DROP/DEFER items — do NOT include
+      3. Items NOT in registry — CANNOT add as carry-forward
+      If carry-forward-registry.md does not exist: use ad-hoc carry-forward (legacy fallback)
+
     Validation resolutions (supplement prototype translation with constraint-aware context):
       specs/{feature}/reconciled/validation-resolutions.md (if exists)
       Read '## S4 Translation Directives' section.
@@ -638,6 +717,13 @@ Task(subagent_type: "general-purpose", model: "opus")
 
     Context reference:
       specs/{feature}/planning-artifacts/epics-and-stories.md
+
+    Carry-forward registry (MANDATORY — read FIRST):
+      specs/{feature}/reconciled/carry-forward-registry.md (if exists)
+      1. INJECT items only — ensure corresponding stories exist, tag with (cf: CF-{N})
+      2. CONFLICT/DROP/DEFER items — do NOT create stories for
+      3. Items NOT in registry — CANNOT add as carry-forward stories
+      If carry-forward-registry.md does not exist: use ad-hoc carry-forward (legacy fallback)
 
     Validation resolutions (supplement prototype translation with constraint-aware context):
       specs/{feature}/reconciled/validation-resolutions.md (if exists)
@@ -690,7 +776,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 Generate Specs 4-file from reconciled planning artifacts.
 
-**Progress**: `"[S5/11] Generating execution specs (requirements + design + tasks)..."`
+**Progress**: `"[S5/12] Generating execution specs (requirements + design + tasks)..."`
 
 ```
 Task(subagent_type: "general-purpose", model: "sonnet")
@@ -725,7 +811,7 @@ After specs generation:
 
 Verify existing deliverables against prototype. Regenerate where needed.
 
-**Progress**: `"[S6/11] Verifying API spec..."` → `"...Regenerating BDD scenarios..."` → ...
+**Progress**: `"[S6/12] Verifying API spec..."` → `"...Regenerating BDD scenarios..."` → ...
 
 Invoke deliverable reconciler:
 
@@ -774,7 +860,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 Verify mutual consistency across the entire reconciled/ artifact set.
 
-**Progress**: `"[S7/11] Cross-artifact consistency check..."`
+**Progress**: `"[S7/12] Cross-artifact consistency check..."`
 
 ```
 Task(subagent_type: "general-purpose", model: "sonnet")
@@ -806,6 +892,19 @@ Task(subagent_type: "general-purpose", model: "sonnet")
        - Enum values in reconciled prd.md/design.md match CP.6 DB-stored values (not prototype display labels)
        - Naming in reconciled architecture.md follows CP.2 HIGH confidence patterns
        - [NEW-ENUM] tags are used for genuinely new values (not misspellings of existing values)
+    10. Registry compliance (when carry-forward-registry.md exists):
+       - Every INJECT item in registry appears in reconciled specs (with cf: CF-{N} tag)
+       - No carry-forward items in specs that are NOT in registry (unauthorized carry-forwards)
+       - CONFLICT/DROP/DEFER items do NOT appear in specs
+    11. Delta-relative structure signature:
+       - Count new items in reconciled/ vs what prototype analysis predicts
+       - If reconciled/ contains >50% more items than expected from prototype → FAIL
+       - Compare deltas (new items), not absolute totals
+       - Purpose: catches hallucinated additions during translation
+    12. Requirements coverage compliance (when validation-structural.md Requirements Coverage exists):
+       - INVISIBLE/ACCESS_GATED items → must be in carry-forward registry as INJECT
+       - OUT_OF_SCOPE items → must be in registry as DROP
+       - MISSING items → must have been resolved in S3-R (check validation-resolutions.md)
 
     Output: PASS (gap=0) or FAIL with gap list and count."
 ```
@@ -818,7 +917,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 Compare reconciled/ artifacts against brownfield baseline + Constraint Profile to classify every change with constraint references.
 
-**Progress**: `"[S8/11] Computing precise delta with constraint mapping..."`
+**Progress**: `"[S8/12] Computing precise delta with constraint mapping..."`
 
 **Precondition**: S7 completed (PASS or user-skip). If S7 was user-skipped, include `consistency_verified: false` in manifest header.
 
@@ -891,7 +990,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
 Attach constraint references from delta-manifest.md and Constraint Profile to each task in reconciled/tasks.md.
 
-**Progress**: `"[S9/11] Attaching constraint references to tasks..."`
+**Progress**: `"[S9/12] Attaching constraint references to tasks..."`
 
 **Skip conditions**: If no Constraint Profile exists → skip S9.
 
@@ -930,7 +1029,7 @@ Attach constraint references from delta-manifest.md and Constraint Profile to ea
 
 Present reconciliation results to user (in {communication_language}).
 
-**Progress**: `"[S10/11] Generating summary..."`
+**Progress**: `"[S10/12] Generating summary..."`
 
 **Output format**:
 
@@ -972,8 +1071,20 @@ Present reconciliation results to user (in {communication_language}).
 {if S3 skipped}
 - Validation skipped ({reason})
 
+### Carry-Forward Registry (from S3.5)
+{if S3.5 ran}
+| State | Count |
+|-------|-------|
+| INJECT | {N} |
+| DROP | {N} |
+| DEFER | {N} |
+| CONFLICT (resolved) | {N} |
+{if S3.5 skipped}
+- Registry skipped ({reason})
+
 ### Verification
 - Cross-artifact consistency: PASS (gap 0)
+- Registry compliance: PASS / {N} unauthorized carry-forwards
 - Traceability coverage: {N}/{M} FRs fully traced
 
 ### reconciled/ created ({N} files)
@@ -987,7 +1098,7 @@ Select: [C] Continue to /parallel | [R] Review reconciled/ | [X] Exit
 
 ## Budget
 
-~108-196 turns across 13 Task invocations. S0, S2, S3-PCP, S3-R, S9 run inline (no Task invocation).
+~108-211 turns across 13 Task invocations. S0, S2, S3-PCP, S3-R, S3.5 (inline), S9 run inline (no Task invocation). S3.5 may invoke a Task for 60+ candidates.
 
 | Step | Model | Est. Turns |
 |------|-------|------------|
@@ -998,6 +1109,7 @@ Select: [C] Continue to /parallel | [R] Review reconciled/ | [X] Exit
 | S3a Constraint Validator | Sonnet | 5-8 (parallel) |
 | S3b Structural Validator | Sonnet | 5-8 (parallel) |
 | S3-R Resolution Phase | Conductor (inline) | 0-19 (0: no findings; 3-8: decisions; +5-8: Party Mode; worst: 15+ items) |
+| S3.5 Carry-Forward Registry | Conductor (inline) or Sonnet | 0-15 (0: Mode B skip; 0-5: <30 items; 5-8: 30-60; 8-15: 60+) |
 | S4a PRD | Opus | 15-20 |
 | S4b Architecture | Opus | 15-20 |
 | S4c Epics | Opus | 10-15 |
@@ -1017,6 +1129,7 @@ specs/{feature}/reconciled/
 ├── validation-constraint.md        # S3 Agent A (if ran)
 ├── validation-structural.md        # S3 Agent B (if ran)
 ├── validation-resolutions.md       # S3 Resolution Phase (if findings exist)
+├── carry-forward-registry.md      # S3.5 Carry-Forward Registry (if full pipeline)
 ├── planning-artifacts/
 │   ├── prd.md
 │   ├── architecture.md
