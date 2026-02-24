@@ -25,7 +25,7 @@ When modifications exist or CP constraints require validation, this step is nece
 
 - **Auto-triggered**: After JP2 [S] Confirm Prototype, based on 3-tier logic:
   - 0 modifications + no CP HIGH → skip (Sprint route)
-  - 0 modifications + CP HIGH → validation-only S3+S9 (Sprint route)
+  - 0 modifications + CP HIGH → validation-only PCP check + S3 + S9 (Sprint route)
   - 1+ modifications → full pipeline (all routes)
   - Guided/Direct route: always full pipeline (current behavior preserved)
 - **Standalone**: `/crystallize feature-name` — always runs full pipeline regardless of context
@@ -325,7 +325,6 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     - INFO: Minor observation, INVISIBLE/ACCESS_GATED/OUT_OF_SCOPE items
 
     For each CRITICAL and WARNING finding, classify Resolution Type:
-    - HARD_CONFLICT: carry-forward gap classification is unambiguous (e.g., item exists in original doc, absent from prototype, still applicable → [carry-forward:defined]). Write concrete classification in Resolution Detail.
     - DECISION_REQUIRED: Intent is ambiguous, or MISSING FR. Write options using UX Question Template:
       Current service: {what users see now}
       Prototype change: {what changed or is missing}
@@ -339,6 +338,12 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     - PROTOTYPE_GAP: FR not implemented, dead-end flow, state with no exit, etc. Write spec-level workaround options using carry-forward taxonomy in Resolution Detail:
       e.g., 'Option A: Add as [carry-forward:new] requirement — Workers implement | Option B: Defer [carry-forward:deferred] to next sprint | Option C: Return to JP2 to fix in prototype'
     - INFO findings: Resolution Type = NONE, Resolution Detail = '—'
+
+    Note: Agent B does NOT use HARD_CONFLICT. HARD_CONFLICT is reserved for DB-enforced
+    constraints (Agent A's domain). When carry-forward classification is unambiguous
+    (e.g., item in original doc, absent from prototype, still applicable → [carry-forward:defined]),
+    record it as INFO with the classification in Resolution Detail. The classification
+    is captured in the Requirements Coverage table and processed by S3.5.
 
     Output: Write to specs/{feature}/reconciled/validation-structural.md
     Format:

@@ -848,7 +848,7 @@ Present 5 options via AskUserQuestion (in {communication_language}):
 
 **Mode B: Validation Only** (0 modifications + no WARN + CP HIGH exists):
 - Record: "[S] Confirm Prototype (no modifications, validation-only Crystallize)"
-- Update decision-diary.md Sprint Context: `Crystallize: Partial (S3+S9 only)`
+- Update decision-diary.md Sprint Context: `Crystallize: Partial (PCP check + S3 + S9)`
 - Stop prototype server: `lsof -ti :5173 | xargs kill 2>/dev/null`
 - Display: "Prototype confirmed. Running constraint validation (~10 min)..."
 - Execute Crystallize S3-PCP + S3 + S3-R + S9 only (skip S0/S1/S2/S3.5/S4-S8/S10).
@@ -881,7 +881,7 @@ Present 5 options via AskUserQuestion (in {communication_language}):
 
 Crystallize execution is determined by 3-tier conditional logic:
 - **Mode A (Full Skip)**: 0 modifications + no CP HIGH → skip, use original specs
-- **Mode B (Validation Only)**: 0 modifications + CP HIGH exists → S3+S9 only (~10 min)
+- **Mode B (Validation Only)**: 0 modifications + CP HIGH exists → PCP check + S3 + S9 (~10 min)
 - **Mode C (Full)**: 1+ modifications or auto-reinforcement WARN → full S0-S10 (~25 min)
 
 Mode B/C:

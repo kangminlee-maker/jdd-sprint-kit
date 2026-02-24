@@ -244,7 +244,7 @@ After JP2 approval, Crystallize translates the finalized prototype into developm
 
 **This step is conditional** — execution mode depends on JP2 outcome:
 - 0 modifications + no CP HIGH: skip entirely (original specs used)
-- 0 modifications + CP HIGH exists: validation-only (S3+S9), ~10 min
+- 0 modifications + CP HIGH exists: validation-only (PCP check + S3 + S9), ~10 min
 - 1+ modifications or auto-reinforcement WARN: full pipeline (S0-S10), ~25 min
 
 Guided/Direct routes: always full pipeline (current behavior preserved). Conditional logic applies to Sprint route only.
@@ -277,20 +277,21 @@ On gate failure (S4-G, S5-G, or S7 unresolvable): [R] Return to JP2 / [K] Skip C
 
 ### Expected Behavior by Data Condition (Crystallize)
 
-> Note: When JP2 modifications = 0 AND no CP HIGH items, Crystallize is skipped entirely (all steps = skip). When 0 modifications + CP HIGH exists, only S3+S9 run. The table below shows behavior when full Crystallize executes.
+> Note: When JP2 modifications = 0 AND no CP HIGH items, Crystallize is skipped entirely (all steps = skip). When 0 modifications + CP HIGH exists, only PCP check + S3 + S9 run. The table below shows behavior when full Crystallize executes.
 
-| Data Condition | CP Extraction | S2 | S3 | S9 | DA |
-|---------------|-------------|----|----|----|----|
-| Backend code accessible + HIGH CP items exist | Extracted | Per JP2 Comment | Agent A+B | Runs | Runs |
-| Backend code accessible + LOW/MEDIUM CP only | Extracted (result: LOW/MEDIUM only) | Per JP2 Comment | Agent B only | Runs | Runs |
-| Code not accessible | None | skip | Agent B only | skip | Runs |
-| No brownfield data (Greenfield) | None | skip | Agent B only (delta=all positive) | skip | Runs |
+| Data Condition | CP Extraction | S2 | PCP Check | S3 | S9 | DA |
+|---------------|-------------|----|-----------|----|----|----|
+| Backend code accessible + HIGH CP items exist | Extracted | Per JP2 Comment | When PCP exists | Agent A+B | Runs | Runs |
+| Backend code accessible + LOW/MEDIUM CP only | Extracted (result: LOW/MEDIUM only) | Per JP2 Comment | When PCP exists | Agent B only | Runs | Runs |
+| Code not accessible | None | skip | When PCP exists | Agent B only | skip | Runs |
+| No brownfield data (Greenfield) | None | skip | When PCP exists | Agent B only (delta=all positive) | skip | Runs |
 
 Notes:
 - "Backend code accessible" = .java/.kt/.py/.go/.rs etc. exist in any source (local, --add-dir, tarball)
 - preview/ directory .tsx files are NOT CP extraction targets
 - S2 = CP section exists AND JP2 Comment > 0
-- S3 Agent A = HIGH confidence CP items 1+ exist (PCP check runs independently — see Validation Principles)
+- PCP Check = PCP section exists AND (status=collected OR status=partial) AND clause_count > 0. Independent of Agent A skip condition.
+- S3 Agent A = HIGH confidence CP items 1+ exist
 - S9 = CP section exists
 - DA = always runs
 
