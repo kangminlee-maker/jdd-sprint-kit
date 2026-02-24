@@ -1,8 +1,8 @@
 ---
-synced_to: "0d9167b"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
+synced_to: "b2e0322"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
 audience: "non-developer product expert"
 product: "JDD Sprint Kit"
-version: "0.6.0"
+version: "0.7.2"
 ---
 
 # JDD Sprint Kit Blueprint
@@ -615,6 +615,11 @@ When Agent B finds PRD requirements absent from the prototype, it classifies the
 
 S3-R processes findings in 4 phases: Phase A (Hard Conflicts — auto-resolved, displayed individually), Phase B (Decision Required — user decides), Phase C (Prototype Gaps — carry-forward options), Phase D (Party Mode verification of the full resolution set). When no actionable findings exist, S3-R is skipped entirely. S9 is skipped when no Constraint Profile exists.
 
+Three principles govern how S3 validates and presents findings:
+1. **Soft Constraint Principle**: All Constraint Profile items are soft constraints — patterns observed in existing code, not absolute rules. Only DB-enforced rules (NOT NULL, FK integrity, type-cast data loss) are hard constraints. This prevents the system from auto-rejecting prototype design choices based on existing code conventions.
+2. **All Findings Shown**: Every S3 finding is recorded in full detail. No finding is silently summarized or hidden. INFO findings are displayed as a summary count, but all other findings are displayed individually. This ensures the product expert sees the complete picture before making decisions.
+3. **UX-Language Questions**: When presenting findings to the product expert, questions use customer-visible language (screens, buttons, states, behaviors). Database/API/code terminology appears only inside collapsible detail blocks. This ensures the product expert can make informed decisions without needing to understand database structure or API design.
+
 **Reconciliation principles**: The prototype provides what the product **does** (screens, features, API endpoints, data model, user flows). Items that the prototype cannot supply — NFRs (Non-Functional Requirements), security architecture, deployment strategy, scaling — are managed through a carry-forward registry (S3.5) that assigns lifecycle states (INJECT/CONFLICT/DROP/DEFER). S4 reads the registry first and only includes INJECT items — no ad-hoc carry-forward is permitted. This prevents both silent omission and hallucinated additions. Product Brief is excluded from reconciliation because it defines the problem space, not the solution.
 
 **Source attribution**: Each requirement in the reconciled PRD is tagged with its origin chain. In this notation, `source` indicates where the requirement was confirmed (prototype or carried from original), and `origin` indicates where it was first proposed:
@@ -626,6 +631,23 @@ S3-R processes findings in 4 phases: Phase A (Hard Conflicts — auto-resolved, 
 This preserves traceability from the original Brief through JP2 iteration to the final reconciled artifacts.
 
 **Budget**: 0 turns (skip), ~25-41 turns (validation-only, includes S1), ~108-211 turns (full) — separate from JP2 iteration budget. Does not count against the 5-round JP2 iteration limit. Budget varies depending on Crystallize mode, Constraint Profile availability, and whether S2/S3 are skipped.
+
+**Expected behavior by data condition** — which steps run depends on what data is available:
+
+| Existing System State | CP Extraction | S2 | PCP Check | S3 | S9 | DA |
+|----------------------|---------------|----|-----------|----|----|----|
+| Backend code accessible + HIGH CP items | Extracted | Per JP2 Comment | When PCP exists | Agent A+B | Runs | Runs |
+| Backend code accessible + LOW/MEDIUM CP only | Extracted (LOW/MED only) | Per JP2 Comment | When PCP exists | Agent B only | Runs | Runs |
+| Code not accessible | None | skip | When PCP exists | Agent B only | skip | Runs |
+| No brownfield data (Greenfield) | None | skip | When PCP exists | Agent B only (delta=all new) | skip | Runs |
+
+Step definitions:
+- **CP Extraction**: Constraint Profile — implementation-level rules extracted from existing code (entity constraints, naming patterns, enum DB values, etc.). Extracted during the Brownfield Targeted Scan (Pass 2).
+- **S2 (Incremental CP)**: Scans prototype concepts not yet covered in the existing Constraint Profile. Runs only when JP2 modifications introduced new domain concepts.
+- **PCP Check**: Policy Constraint Profile check — validates prototype behavior against existing service terms, regulations, and policy rules. Independent of the code-based Constraint Profile.
+- **S3 (Validation)**: Two parallel validators. **Agent A** (Constraint Validator) checks prototype against code-level constraints (enum values, nullable rules, API patterns). Requires HIGH confidence CP items. **Agent B** (Structural Validator) checks prototype logic completeness and FR coverage. Always runs.
+- **S9 (Constraint Attachment)**: Attaches constraint references from delta-manifest.md and Constraint Profile to each task, so Workers know which existing code rules to respect.
+- **DA (Devil's Advocate)**: Adversarial edge case detection. Always runs regardless of data condition.
 
 **Artifact**: `specs/{feature}/reconciled/` — mirrors the existing `specs/{feature}/` structure, minus excluded items (Product Brief, sprint-log, readiness, inputs/, preview/).
 
@@ -964,9 +986,19 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 
 ## 8.1 Current Version
 
-**v0.6.0** (2026-02-21)
+**v0.7.2** (2026-02-24)
 
-Key changes since v0.4.1:
+Key changes since v0.6.0:
+- **Resolution type reclassification**: AUTO/USER_DECISION/PROTOTYPE_FIX → HARD_CONFLICT/DECISION_REQUIRED/PROTOTYPE_GAP. Soft Constraint Principle: all CP patterns are soft constraints — only DB-enforced rules are hard.
+- **UX-Language Questions**: S3-R presents findings in customer-visible language. Database/API terms only in collapsible detail blocks.
+- **4-way requirements coverage classification**: Agent B classifies missing FRs as INVISIBLE/ACCESS_GATED/OUT_OF_SCOPE/MISSING. MISSING → DECISION_REQUIRED (cannot auto carry-forward).
+- **Carry-Forward Registry (S3.5)**: New step between S3-R and S4. Collects all carry-forward candidates with lifecycle states (INJECT/CONFLICT/DROP/DEFER). S4 reads registry first — no ad-hoc carry-forward.
+- **S7 verification enhanced**: Registry compliance, delta-relative structure signature, requirements coverage compliance — 3 new checks.
+- **PCP inline check**: Policy Constraint Profile checking independent of Agent A's CP-based skip condition.
+- **Mode B includes S1**: Validation-only mode now runs S1 (Prototype Analysis) because S3 agents require prototype-analysis.md. Findings are advisory (S4 not applied).
+- **BDD @skip tags**: Deferred and KNOWN-GAP FRs generate BDD scenarios with @skip tag for coverage completeness.
+
+Key changes in v0.6.0 (since v0.4.1):
 - **`/crystallize` command**: After JP2 prototype iteration, reconcile all upstream artifacts to match the finalized prototype. Creates `reconciled/` directory with the definitive artifact set — original artifacts preserved untouched. Product Brief excluded (defines problem space, not derivable from UI code). Available on all routes.
 - **Crystallize conditional**: On Sprint route, Crystallize runs conditionally based on JP2 outcome (skip / validation-only / full). On Guided/Direct routes, always full pipeline. Translates prototype into development grammar and computes delta.
 - **decision-diary.md**: Structured JP decision summary table replacing feedback-log.md. Records each decision with JP, Type, Content, Processing method, and Result.

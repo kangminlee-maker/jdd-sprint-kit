@@ -568,7 +568,7 @@ Every deployed service needs monitoring. Observability NFR is always required re
 Items that exist in development grammar but have no user grammar counterpart (NFR, security, migration, monitoring) must be:
 1. **Classified** at S3 — Agent B's 4-way classification (INVISIBLE/ACCESS_GATED/OUT_OF_SCOPE/MISSING) determines handling
 2. **Registered** at S3.5 — carry-forward-registry.md assigns lifecycle states (INJECT/CONFLICT/DROP/DEFER)
-3. **Injected** at S4 — only INJECT items from registry enter reconciled artifacts (no ad-hoc carry-forward)
+3. **Injected** at S4 — only INJECT items from registry enter reconciled artifacts (no ad-hoc carry-forward). When registry does not exist (legacy or Mode B): ad-hoc carry-forward as fallback
 4. **Verified** at S7 — registry compliance check, delta-relative structure signature, coverage compliance
 5. **Classified** in delta (positive/modification/zero per item)
 

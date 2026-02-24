@@ -848,13 +848,14 @@ Present 5 options via AskUserQuestion (in {communication_language}):
 
 **Mode B: Validation Only** (0 modifications + no WARN + CP HIGH exists):
 - Record: "[S] Confirm Prototype (no modifications, validation-only Crystallize)"
-- Update decision-diary.md Sprint Context: `Crystallize: Partial (PCP check + S3 + S9)`
+- Update decision-diary.md Sprint Context: `Crystallize: Partial (S1 + PCP check + S3 + S3-R + S9)`
 - Stop prototype server: `lsof -ti :5173 | xargs kill 2>/dev/null`
 - Display: "Prototype confirmed. Running constraint validation (~10 min)..."
 - Execute Crystallize S1 + S3-PCP + S3 + S3-R + S9 only (skip S0/S2/S3.5/S4-S8/S10).
   S1 required — S3 agents and PCP check read prototype-analysis.md as input.
   S3.5 skipped — carry-forward registry only for full pipeline.
   PCP inline check runs in Mode B too (PCP check is validation, appropriate for validation-only mode).
+  PCP conflicts are always DECISION_REQUIRED (business judgment, never auto-resolved).
   Mode B PCP/S3 findings are advisory: recorded in validation-resolutions.md, referenced by S9
   constraint attachment, but S4 Translation Directives are NOT applied (S4 is skipped).
   If findings require spec modification, switch to Mode C (full Crystallize):

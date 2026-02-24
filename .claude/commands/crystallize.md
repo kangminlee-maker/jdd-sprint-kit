@@ -58,6 +58,9 @@ On validation failure: report missing items (in {communication_language}) and ab
 
 Load config per Language Protocol in jdd-sprint-guide.md.
 
+> Progress counter `/12` counts the 12 numbered steps: S0, S1, S2, S3, S3.5, S4, S5, S6, S7, S8, S9, S10.
+> Sub-steps (S3-R, S4-G, S5-G) are part of their parent step and do not increment the counter.
+
 ### Step S0: Decision Context Analysis
 
 Analyze JP2 decision records to understand the intent and context behind prototype modifications BEFORE analyzing the code. This enables S1 and S4 to distinguish deliberate business decisions from implementation details.
@@ -851,6 +854,15 @@ Task(subagent_type: "general-purpose", model: "sonnet")
     4. bdd-scenarios/: Regenerate from specs/{feature}/reconciled/planning-artifacts/prd.md
        acceptance criteria. Write to reconciled/bdd-scenarios/.
 
+       Carry-forward tag handling in BDD:
+       - [carry-forward:defined] and [carry-forward:new] FRs → generate BDD scenarios normally
+       - [carry-forward:deferred] FRs → generate BDD scenario WITH @skip tag and reason
+         (e.g., @skip(reason='deferred to next sprint, origin: VR-005'))
+       - [KNOWN-GAP] FRs → generate BDD scenario WITH @skip tag and reason
+         (e.g., @skip(reason='known gap acknowledged, see VR-007'))
+       @skip scenarios ensure coverage completeness (every FR has a scenario)
+       while preventing Workers from implementing deferred/gap items.
+
     5. key-flows.md: Regenerate from prototype-analysis User Flows +
        reconciled PRD user journeys. Write to reconciled/key-flows.md.
 
@@ -879,7 +891,10 @@ Task(subagent_type: "general-purpose", model: "sonnet")
 
     IMPORTANT: Write ALL output in {document_output_language}.
 
-    Read ALL files in reconciled/ directory.
+    Read ALL files in reconciled/ directory. Key files for checks #10-#12:
+    - reconciled/carry-forward-registry.md (for check #10: registry compliance)
+    - reconciled/validation-structural.md (for check #12: requirements coverage)
+    - reconciled/prototype-analysis.md (for check #11: delta-relative signature)
     Also read prototype MSW handlers (Glob: specs/{feature}/preview/src/mocks/**/*.ts).
 
     Verify:

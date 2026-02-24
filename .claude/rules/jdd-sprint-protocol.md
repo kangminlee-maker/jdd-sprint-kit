@@ -244,7 +244,7 @@ After JP2 approval, Crystallize translates the finalized prototype into developm
 
 **This step is conditional** — execution mode depends on JP2 outcome:
 - 0 modifications + no CP HIGH: skip entirely (original specs used)
-- 0 modifications + CP HIGH exists: validation-only (S1 + PCP check + S3 + S9), ~15 min
+- 0 modifications + CP HIGH exists: validation-only (S1 + PCP check + S3 + S3-R + S9), ~15 min
 - 1+ modifications or auto-reinforcement WARN: full pipeline (S0-S10), ~25 min
 
 Guided/Direct routes: always full pipeline (current behavior preserved). Conditional logic applies to Sprint route only.
