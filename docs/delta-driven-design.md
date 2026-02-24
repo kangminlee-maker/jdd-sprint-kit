@@ -126,15 +126,16 @@ Complete Specs = translate(Prototype) + carry-forward(PRD, Architecture, Brownfi
 Carry-forward items follow a defined lifecycle through the Crystallize pipeline:
 
 ```
-Collection → Classification → Registry → Translation → Verification
-(S3 Agent B)   (4-way)        (S3.5)     (S4)          (S7)
+Collection → Classification → Resolution → Registry → Translation → Verification
+(S3 Agent B)   (4-way)        (S3-R)       (S3.5)     (S4)          (S7)
 ```
 
 1. **Collection**: Agent B identifies PRD FRs not found in prototype
 2. **Classification**: Each item classified as INVISIBLE, ACCESS_GATED, OUT_OF_SCOPE, or MISSING
-3. **Registry**: S3.5 collects all carry-forward candidates and assigns lifecycle states (INJECT/CONFLICT/DROP/DEFER)
-4. **Translation**: S4 reads registry FIRST — only INJECT items enter reconciled artifacts
-5. **Verification**: S7 confirms INJECT items are present and no unauthorized carry-forwards exist
+3. **Resolution**: MISSING items → DECISION_REQUIRED, presented to product expert in S3-R Phase B. User confirms action before item can enter registry
+4. **Registry**: S3.5 collects all carry-forward candidates (including user-confirmed MISSING items) and assigns lifecycle states (INJECT/CONFLICT/DROP/DEFER)
+5. **Translation**: S4 reads registry FIRST — only INJECT items enter reconciled artifacts. If registry does not exist (legacy): ad-hoc carry-forward as fallback
+6. **Verification**: S7 confirms INJECT items are present and no unauthorized carry-forwards exist
 
 This lifecycle prevents the two failure modes of ad-hoc carry-forward: silent omission (items forgotten during translation) and hallucinated addition (AI adding items not in any source document).
 
@@ -445,8 +446,8 @@ Without CP, translation must guess these parameters — leading to specs that re
 
 S3 (Constraint-Aware Validation) addresses a gap in the original pipeline: the translation input (prototype) was never validated against brownfield constraints before translation began. Two parallel validators catch different issue classes:
 
-- **Constraint Validator**: Catches conflicts between prototype assumptions and existing code rules (hypothesis: 30-40% of CRITICALs)
-- **Structural Validator**: Catches logic completeness issues within the prototype itself (hypothesis: 40-50% of CRITICALs)
+- **Constraint Validator** (Agent A): Catches conflicts between prototype assumptions and existing code rules (hypothesis: 30-40% of CRITICALs). Findings classified as HARD_CONFLICT (DB-enforced → auto-resolved), DECISION_REQUIRED (soft constraints → user decides), or PROTOTYPE_GAP (structural gaps → carry-forward options)
+- **Structural Validator** (Agent B): Catches logic completeness issues within the prototype itself (hypothesis: 40-50% of CRITICALs). Uses 4-way classification for missing FRs: INVISIBLE, ACCESS_GATED, OUT_OF_SCOPE (→ carry forward automatically), MISSING (→ DECISION_REQUIRED)
 
 Combined catch rate hypothesis: 70-80% of CRITICAL issues before translation. These percentages are design targets, not empirically measured values. Actual catch rates will be calibrated after the first real Sprint execution (Phase 3-3). The remaining 20-30% are expected to be domain-specific or cross-cutting issues only discoverable through full team analysis.
 

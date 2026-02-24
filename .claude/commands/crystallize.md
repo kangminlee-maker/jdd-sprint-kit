@@ -25,7 +25,7 @@ When modifications exist or CP constraints require validation, this step is nece
 
 - **Auto-triggered**: After JP2 [S] Confirm Prototype, based on 3-tier logic:
   - 0 modifications + no CP HIGH → skip (Sprint route)
-  - 0 modifications + CP HIGH → validation-only PCP check + S3 + S9 (Sprint route)
+  - 0 modifications + CP HIGH → validation-only S1 + PCP check + S3 + S9 (Sprint route)
   - 1+ modifications → full pipeline (all routes)
   - Guided/Direct route: always full pipeline (current behavior preserved)
 - **Standalone**: `/crystallize feature-name` — always runs full pipeline regardless of context
@@ -213,7 +213,9 @@ When `## Policy Constraint Profile` section exists in brownfield-context.md AND 
 4. PCP conflicts → record as DECISION_REQUIRED findings with source "PCP" (added to S3-R resolution queue)
 5. Log: "PCP check: {N} policy conflicts found" or "PCP check: 0 conflicts"
 
-When PCP does not exist or status is `not-found` or `deferral-only` with clause_count=0: skip. Log: "PCP check skipped: no policy clauses"
+When PCP section does not exist, or status is `not-found`, or status is `deferral-only`: skip.
+(`deferral-only` contains only PCP.4 deferrals — no policy clauses to validate against prototype.)
+Log: "PCP check skipped: {reason}"
 
 This check is independent of Agent A's CP-based skip condition. PCP conflicts are always DECISION_REQUIRED (business judgment, never auto-resolved).
 
@@ -378,7 +380,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
    - Constraint blocks FR implementation → merge into single DECISION_REQUIRED with both contexts
 
 5. **Phase A: Hard Conflicts** (no user interaction — auto-resolved, displayed individually)
-   Display each HARD_CONFLICT item individually (in {communication_language}):
+   If hard_items > 0: display each HARD_CONFLICT item individually (in {communication_language}):
    ```
    ## S3 Validation: Hard Conflicts ({N} items — auto-resolved)
 
@@ -387,7 +389,8 @@ Task(subagent_type: "general-purpose", model: "sonnet")
    Reason: {why this is the only valid option}
    <details><summary>Technical detail</summary>{CP ref, DB constraint detail}</details>
    ```
-   After all HARD_CONFLICT items, display INFO summary:
+   If hard_items = 0: skip Phase A display entirely (do not show "0 items" header).
+   INFO summary (always, after Phase A if shown or as first display):
    ```
    INFO: {N} items — no action needed
    ```
@@ -403,7 +406,7 @@ Task(subagent_type: "general-purpose", model: "sonnet")
    {N} decisions remaining. Select approach:
    [C] Continue individual decisions
    [P] Party Mode — review remaining items as a set
-   [D] Defer remaining MEDIUM severity items (keep CRITICAL only)
+   [D] Defer remaining WARNING severity items (keep CRITICAL only)
    ```
 
 7. **Phase C: Prototype Gaps** (interactive, only when proto_items > 0)
@@ -501,6 +504,7 @@ Build a registry of all items that must be carried forward from existing documen
    - PCP.4 deferred items (from brownfield-context.md Policy Constraint Profile, if exists)
    - S3 Agent B INVISIBLE/ACCESS_GATED/OUT_OF_SCOPE items (from `validation-structural.md`)
    - S3-R resolved PROTOTYPE_GAP items with carry-forward:new or carry-forward:deferred (from `validation-resolutions.md`)
+   - S3-R resolved MISSING items (DECISION_REQUIRED) where user confirmed action (from `validation-resolutions.md`)
 
 2. **Assign state** to each candidate:
    - **INJECT**: Confirmed applicable, must be included in reconciled artifacts
@@ -512,12 +516,14 @@ Build a registry of all items that must be carried forward from existing documen
    Never auto-add MISSING items — they must be explicitly resolved first.
 
 4. **CONFLICT resolution**: When a candidate conflicts with prototype or another item,
-   present as DECISION_REQUIRED inline (same UX Question Template as S3-R Phase B).
+   resolve at Conductor level (not inside Task). If using Task for capacity (60+ candidates),
+   the Task collects and classifies candidates, returns the registry draft to Conductor.
+   Conductor then resolves CONFLICT items via AskUserQuestion (same UX Question Template as S3-R Phase B).
 
 5. **Capacity handling**:
    - <30 candidates: inline (Conductor, 0-5 turns)
    - 30-60 candidates: template-based (Conductor with structured template, 5-8 turns)
-   - 60+ candidates: Task invocation (general-purpose agent, 8-15 turns)
+   - 60+ candidates: Task builds draft registry → Conductor resolves CONFLICTs (8-15 turns + user interaction)
 
 6. **Write** `specs/{feature}/reconciled/carry-forward-registry.md`:
 

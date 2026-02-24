@@ -244,7 +244,7 @@ After JP2 approval, Crystallize translates the finalized prototype into developm
 
 **This step is conditional** — execution mode depends on JP2 outcome:
 - 0 modifications + no CP HIGH: skip entirely (original specs used)
-- 0 modifications + CP HIGH exists: validation-only (PCP check + S3 + S9), ~10 min
+- 0 modifications + CP HIGH exists: validation-only (S1 + PCP check + S3 + S9), ~15 min
 - 1+ modifications or auto-reinforcement WARN: full pipeline (S0-S10), ~25 min
 
 Guided/Direct routes: always full pipeline (current behavior preserved). Conditional logic applies to Sprint route only.
@@ -277,7 +277,7 @@ On gate failure (S4-G, S5-G, or S7 unresolvable): [R] Return to JP2 / [K] Skip C
 
 ### Expected Behavior by Data Condition (Crystallize)
 
-> Note: When JP2 modifications = 0 AND no CP HIGH items, Crystallize is skipped entirely (all steps = skip). When 0 modifications + CP HIGH exists, only PCP check + S3 + S9 run. The table below shows behavior when full Crystallize executes.
+> Note: When JP2 modifications = 0 AND no CP HIGH items, Crystallize is skipped entirely (all steps = skip). When 0 modifications + CP HIGH exists, only S1 + PCP check + S3 + S3-R + S9 run (S1 required because S3/PCP agents read prototype-analysis.md). Findings are advisory — S4 Translation Directives are not applied. The table below shows behavior when full Crystallize executes.
 
 | Data Condition | CP Extraction | S2 | PCP Check | S3 | S9 | DA |
 |---------------|-------------|----|-----------|----|----|----|
