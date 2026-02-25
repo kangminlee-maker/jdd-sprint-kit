@@ -61,12 +61,6 @@ Business logic never imports I/O directly. Pass deps as params.
 - Use `Error` subclasses with descriptive messages for domain errors.
 - Async/await over raw Promises. No `.then()` chains.
 
-### Date Handling (JavaScript/TypeScript)
-- **Never use `new Date("YYYY-MM-DD")`** for local date operations. The Date constructor interprets date-only strings as UTC midnight, which shifts to a different calendar date in non-UTC timezones (e.g., UTC+9 Korea: `new Date("2026-02-25")` → Feb 24 15:00 local).
-- **Parse date strings manually** for local dates: `const [y, m, d] = "2026-02-25".split("-").map(Number); new Date(y, m - 1, d)`.
-- **Format local dates manually** instead of `toISOString().split("T")[0]`: use `getFullYear()`, `getMonth() + 1`, `getDate()` with zero-padding.
-- **Compare date strings directly** (`"2026-02-25" < "2026-02-26"`) when only calendar date matters — avoids Date object timezone pitfalls entirely.
-- **`new Date()` is local** but **`toISOString()` converts to UTC** — never mix them in the same date pipeline.
 
 ## Python (scripts only)
 - Type hints on all function params and returns.

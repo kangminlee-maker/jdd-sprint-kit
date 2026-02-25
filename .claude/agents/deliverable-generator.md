@@ -356,7 +356,7 @@ Spec validation is handled by OpenAPI lint (`@redocly/cli`) + `tsc --noEmit`.
 - Cross-endpoint state: When one endpoint's action affects another endpoint's query results (e.g., rating+block POST → block list GET), directly manipulate the store within handlers to maintain linkage
 - Always include `POST /__reset` + `GET /__store` + `resetStore()` function
 - **State transition validation** (conditional: only when `state-machines/` directory exists in output): Import valid transitions from state-machines/ TypeScript definitions. For endpoints that trigger state transitions, validate the requested transition is legal before applying. On invalid transition, return 422 with `{ error: "Invalid state transition", from: currentState, to: requestedState, valid_transitions: [...] }`. When state-machines/ does not exist, skip this rule entirely — do not hardcode state transitions in handlers.
-- **Date handling**: Follow coding-conventions.md Date Handling rules. Never use `new Date("YYYY-MM-DD")` for local date logic — parse manually via `split("-").map(Number)`. Never use `toISOString().split("T")[0]` to get local date — format manually via `getFullYear()/getMonth()/getDate()`. This prevents timezone offset bugs where UTC midnight shifts to a different calendar date in non-UTC zones.
+- **Date handling**: `new Date("YYYY-MM-DD")` is UTC midnight — wrong in non-UTC zones. Handlers must include local-date utilities (`getToday()`, `addDays()`) that parse/format via `split("-")` + `getFullYear()/getMonth()/getDate()`, never via `toISOString()`.
 
 **Spec Validation** (run after Stage 10 code generation):
 
