@@ -4,6 +4,65 @@ All notable changes to JDD Sprint Kit will be documented in this file.
 
 ---
 
+## [0.7.2] - 2026-02-25
+
+### Added
+- **Carry-Forward Registry (S3.5)** — New Crystallize pipeline step between S3-R and S4
+  - 4 lifecycle states: INJECT (include), CONFLICT (needs resolution), DROP (superseded), DEFER (future sprint)
+  - S4 reads registry first — unauthorized carry-forwards blocked when registry exists
+  - S7 verifies: INJECT items present, no unauthorized additions, CF tags coexist with origin tags
+  - Progress /11 → /12 pipeline steps
+- **UX-Language Questions** — User-facing findings use customer-visible language
+  - DB/API/code terminology confined to `<details>` blocks
+  - 4-way requirements coverage classification: INVISIBLE, ACCESS_GATED, OUT_OF_SCOPE, MISSING
+  - MISSING items cannot auto carry-forward — forces explicit product expert decision
+  - Decision budget: >8 items triggers Party Mode or batch defer suggestion
+- **Soft Constraint Principle** — All CP items are soft constraints (observed patterns, not rules)
+  - Only DB-enforced constraints (NOT NULL, FK, type-cast) are HARD_CONFLICT
+  - App-enforced validation → DECISION_REQUIRED (product expert decides)
+- **Resolution Type Reclassification** — AUTO/USER_DECISION/PROTOTYPE_FIX → HARD_CONFLICT/DECISION_REQUIRED/PROTOTYPE_GAP
+  - HARD_CONFLICT: auto-resolved (only one valid option), displayed individually
+  - DECISION_REQUIRED: presented to product expert with options
+  - PROTOTYPE_GAP: carry-forward taxonomy options presented
+  - PCP inline check: independent of Agent A skip condition, runs as Conductor check before S3 agents
+- **Agent carry-forward integration** — Registry handling propagated to execution agents
+  - worker.md §1.7: carry-forward tags, registry precedence, INJECT/DEFER/DROP handling
+  - judge-business.md §7.1: registry compliance verification (INJECT present, DEFER not implemented, DROP not added)
+  - scope-gate.md: Crystallize S7 cross-reference note (no duplication)
+  - auto-sprint.md: Mode-dependent artifact availability table, Worker/Judge specs_root handoff
+- **Preview server management rule** — `.claude/rules/preview-server.md`
+  - Kill existing processes before starting new dev server (prevents HMR failure from multiple Vite instances)
+- **Project onboard files** — CLAUDE.md, coding-conventions.md, project-patterns.md auto-generated via /onboard
+
+### Changed
+- **Crystallize Mode B enhanced** — S1 added (prototype-analysis.md required by S3/PCP agents)
+  - Mode B budget: ~20-30 → ~25-41 turns
+  - PCP findings are advisory (S4 does not run, directives not applied)
+- **Crystallize Mode C budget** — ~108-193 → ~108-211 turns (S3.5 added)
+- **Agent B HARD_CONFLICT removed** — Agent B's "clear carry-forward classification" is not DB-enforced, preventing semantic conflict with HARD_CONFLICT definition
+
+### Fixed
+- **6 edge case bugs** found during Party Mode adversarial review (28 findings total, all resolved)
+  - Mode B missing prototype-analysis.md (CRITICAL)
+  - Mode B PCP results not flagged as advisory (CRITICAL)
+  - Agent B HARD_CONFLICT semantic conflict (CRITICAL)
+  - S3.5 60+ candidate CONFLICT resolution path (HIGH)
+  - MISSING items not entering S3.5 registry (HIGH)
+  - PCP deferral-only condition misalignment (HIGH)
+- **Phase 1 verification findings** — 5 issues resolved across protocol and agent definitions
+
+### Verified
+- **dtp-0 (Duplicate Ticket Purchase)** Sprint test
+  - Phase 0→JP1→JP2 full pipeline execution
+  - Deliverables: 9 endpoints, 74 BDD scenarios, 2 state machines, 5-page React prototype
+  - Spec Validation: redocly lint PASS, tsc PASS
+  - CP extraction: 47 files, 10 entities, 25 enums, CP.1-CP.7 all populated
+  - PCP extraction: 14 clauses from terms-of-service.md
+  - S3 Agent A: 3 CRITICAL runtime failures caught pre-implementation
+  - PRD Policy Review (6-agent team): 42 findings → 10 PM decisions, 7 dev-level downgrades
+
+---
+
 ## [0.7.1] - 2026-02-23
 
 ### Added
