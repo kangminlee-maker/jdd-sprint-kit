@@ -130,6 +130,8 @@ Apply stage-specific checklist:
 - [ ] Shared files are identified and assigned to a single owner or pre-created
 - [ ] Tasks are traceable to core/enabling/supporting FR categories (if sprint_input_path provided)
 
+**Crystallize S7 Note**: When `reconciled/` directory exists, additional cross-artifact consistency checks (registry compliance, delta-relative structure signature, coverage compliance) are executed by the Crystallize S7 step in `.claude/commands/crystallize.md`. These checks are NOT duplicated in scope-gate — they run as part of the Crystallize pipeline. See `crystallize.md` Step S7 for the full checklist.
+
 #### deliverables
 
 **Input**: `artifact_paths` array includes key-flows.md + api-spec.yaml

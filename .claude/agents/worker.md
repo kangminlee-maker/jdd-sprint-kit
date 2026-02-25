@@ -51,6 +51,27 @@ If the assigned task in `tasks.md` has a `### Constraints` subsection (added by 
 
 If no `### Constraints` subsection exists, proceed with standard brownfield-context.md reference (Step 1 above).
 
+### 1.7. Carry-Forward Tags & Registry
+
+Tasks or requirements may include these tags:
+
+- `(cf: CF-{N})`: References an entry in `carry-forward-registry.md`. Only implement if the entry's state is `INJECT`.
+- `(source: carry-forward, origin: BRIEF-N)`: Requirement carried from original docs, not visible in prototype.
+- `[carry-forward:defined]`: Confirmed carry-forward item → implement as specified.
+- `[carry-forward:new]`: Gap discovered at S3 → implement as specified.
+- `[carry-forward:deferred]`: Deferred to future phase → **do NOT implement**. If your task references a deferred item, skip it and note in task completion.
+- `[KNOWN-GAP]`: Acknowledged unresolved gap → do NOT implement the gap itself. Add a `// TODO: KNOWN-GAP — {description}` comment at the relevant code location.
+
+**When `carry-forward-registry.md` exists** (Crystallize Mode C):
+- INJECT items only may be implemented. DEFER/DROP items are out of scope.
+- Items NOT in the registry cannot be added as carry-forward — unauthorized additions are flagged by judges.
+
+**When `carry-forward-registry.md` does not exist** (Mode A/B):
+- Follow `[carry-forward:*]` tags in tasks.md/requirements.md directly.
+- No registry compliance check applies.
+
+**Priority when both exist** — `carry-forward-registry.md` (S3.5 output, standalone file) takes precedence over the `## Carry-Forward Registry` section in `design.md` (deliverable-generator output). If they conflict, registry.md is authoritative.
+
 ### 2. Implementation (in isolated worktree)
 - Read the full story/spec file before starting
 - **Check brownfield-context.md for existing patterns and follow them**

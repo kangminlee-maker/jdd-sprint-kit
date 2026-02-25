@@ -870,6 +870,26 @@ Present 5 options via AskUserQuestion (in {communication_language}):
   9. Copy remaining specs files to reconciled/ (as-is, no translation)
 - Proceed to /parallel with specs_root=specs/{feature_name}/reconciled/
 
+### Crystallize Mode-Dependent Artifact Availability
+
+| Artifact | Mode A (skip) | Mode B (validation) | Mode C (full) |
+|----------|:---:|:---:|:---:|
+| prototype-analysis.md | — | Yes | Yes |
+| validation-constraint.md | — | Yes (when CP HIGH) | Yes |
+| validation-structural.md | — | Yes | Yes |
+| validation-resolutions.md | — | Yes (advisory) | Yes (mandatory) |
+| carry-forward-registry.md | — | — | Yes |
+| reconciled/planning-artifacts/ | — | — | Yes |
+| reconciled/tasks.md (w/ Constraints) | — | — | Yes |
+| delta-manifest.md | — | — | Yes |
+| constraint-report.md | — | Yes | Yes |
+
+**Mode B "advisory"**: validation-resolutions.md findings are informational only — S4 Translation Directives are NOT applied (S4 does not run in Mode B). Workers/Judges should reference findings but cannot assume they are reflected in specs.
+
+**Mode C "mandatory"**: All directives are applied to reconciled/ artifacts. Workers/Judges use reconciled/ as the authoritative spec source.
+
+**Worker/Judge handoff**: When invoking workers after Crystallize, pass `specs_root=specs/{feature}/reconciled/` for Mode C. For Mode A, pass `specs_root=specs/{feature}/`. For Mode B, pass `specs_root=specs/{feature}/` (original specs, with validation-resolutions.md as supplementary reference).
+
 **Mode C: Full Crystallize** (1+ modifications OR WARN exists):
 - Record: "[S] Confirm Prototype ({N} revisions)"
 - Update decision-diary.md Sprint Context: `Crystallize: Yes ({N} revisions)`

@@ -68,6 +68,18 @@ When `{feature_dir}/constraint-report.md` also exists, cross-reference constrain
 - `carry-forward:deferred` → verify task_id is null in delta-manifest (not implemented this Sprint). If task_id exists, flag as SCOPE_CREEP WARNING
 - `carry-forward:new` → verify it exists in implementation with appropriate justification
 
+### 7.1 Carry-Forward Registry Compliance
+
+**Prerequisite**: `reconciled/carry-forward-registry.md` exists (Crystallize Mode C only). If absent, skip this section.
+
+**Relationship to Section 7**: This section supplements (not replaces) the delta-manifest.md-based checks above. Section 7 verifies delta types; Section 7.1 verifies carry-forward lifecycle states.
+
+Checks:
+- **INJECT items** (CF-1 through CF-N): Verify the corresponding capability exists in the implementation. Missing INJECT items → FAIL.
+- **DEFER items**: If implementation code contains functionality matching a DEFER item → **scope creep warning**. DEFER items must NOT be implemented in this Sprint.
+- **DROP items**: If implementation code contains functionality matching a DROP item → **unauthorized carry-forward warning**.
+- **CF tag alignment**: When tasks.md has `(cf: CF-{N})`, verify the registry entry state matches implementation state (INJECT → implemented, DEFER → not implemented).
+
 ### 8. Adversarial Scenario Verification (when adversarial-scenarios.md available)
 
 When `{feature_dir}/adversarial-scenarios.md` exists:
