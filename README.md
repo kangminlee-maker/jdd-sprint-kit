@@ -67,7 +67,7 @@ A single Sprint run auto-generates the following artifacts:
 npx jdd-sprint-kit init
 ```
 
-An interactive wizard detects your environment and installs Sprint Kit files.
+An interactive wizard detects your environment, installs Sprint Kit files, and optionally sets up Brownfield source declarations (`specs/brief-template.md`).
 
 ### (Optional) Connect Existing Service Data
 
@@ -178,17 +178,21 @@ External service data can be provided through 3 methods (see Quick Start for set
 
 | Source Type | Access Method | When to Use |
 |-------------|---------------|-------------|
-| **External repos** (backend, client, service-map) | `--add-dir` (local clone) or tarball snapshot (GitHub URL in brief.md) | When existing service code needs analysis |
+| **External repos** (code, backend, client, ontology, design-system) | `--add-dir` (local clone) or tarball snapshot (GitHub URL in brief-template.md) | When existing service code/docs needs analysis |
 | **Figma** | MCP (OAuth) | When live design data needs analysis |
 
-The 4 roles external data can fill:
+Source roles determine scan strategy:
 
-| Role | Provided Information |
-|------|---------------------|
-| **backend-docs** | API specs, domain policies, business rules, data models |
-| **client-docs** | Component structure, state management patterns, screen flows |
-| **svc-map** | Customer journeys, screen screenshots, flow graphs |
-| **figma** | Wireframes, design tokens, component specs |
+| Role | Nature | Provided Information |
+|------|--------|---------------------|
+| **code** | Code | Combined backend + client — AI auto-detects structure |
+| **backend** | Code | API specs, business rules, data models (physical truth) |
+| **client** | Code | Component structure, state management, screen flows |
+| **ontology** | Knowledge | Domain terminology, entity relationships, business rules |
+| **design-system** | Normative | Design tokens, component specs, interaction patterns |
+| **policy** | Legal | Terms of service, policy documents |
+
+Roles are declared in `specs/brief-template.md` YAML frontmatter (auto-generated during `init`, or edit manually).
 
 #### Manual Preparation (Without External Sources)
 

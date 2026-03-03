@@ -1,5 +1,5 @@
 ---
-synced_to: "2e49835"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
+synced_to: "d8b957b"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
 audience: "non-developer product expert"
 product: "JDD Sprint Kit"
 version: "0.7.4"
@@ -986,11 +986,14 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 
 ## 8.1 Current Version
 
-**v0.7.4** (2026-03-03)
+**v0.7.4** (2026-03-04)
 
 Key changes since v0.7.2:
-- **Interactive Brownfield Source Setup**: `npx jdd-sprint-kit init` now includes Step 8 — a guided wizard that generates `specs/brief-template.md` by asking for source URLs/paths, purposes, and policy documents. Eliminates manual YAML editing for initial setup.
-- **`code` role**: Convenience alias for `backend` + `client` combined scan. The Brownfield Scanner auto-detects backend/client structure from the codebase. Simplifies source configuration for users who don't need to distinguish backend from client.
+- **brief-template.md YAML frontmatter** (v0.7.3): Structured Brownfield source declaration format. Each source entry has `url`/`path`, `role` (code/backend/client/ontology/design-system), and `notes`. `/sprint` copies this frontmatter when creating brief.md for each feature. `specs/brief-template.md` is gitignored (project-specific data); sample file provided.
+- **Interactive Brownfield Source Setup** (v0.7.4): `npx jdd-sprint-kit init` now includes Step 8 — a guided wizard that generates `specs/brief-template.md` by asking for source URLs/paths, purposes, and policy documents. Eliminates manual YAML editing for initial setup.
+- **`code` role** (v0.7.4): Convenience alias for `backend` + `client` combined scan. The Brownfield Scanner auto-detects backend/client structure from the codebase. Simplifies source configuration for users who don't need to distinguish backend from client.
+- **Date Handling rules** (v0.7.3): Prevent UTC/local timezone bugs in preview prototype.
+- **Preview server management rule** (v0.7.3): Kill existing Vite processes before starting new dev server.
 
 Key changes since v0.6.0 (v0.7.0~v0.7.2):
 - **Resolution type reclassification**: AUTO/USER_DECISION/PROTOTYPE_FIX → HARD_CONFLICT/DECISION_REQUIRED/PROTOTYPE_GAP. Soft Constraint Principle: all CP patterns are soft constraints — only DB-enforced rules are hard.

@@ -17,12 +17,12 @@ sources:
   - url: "https://github.com/re-speak/podo-ontology"
     role: ontology
     notes: "Domain SSOT. glossary 5 domains, 55 classes, 134 relationships, 43 enums, 7 state machines, 155 actions, naming audit, generated/ cross-references"
-  # - path: "/path/to/design-system/"
-  #   role: design-system
-  #   notes: "Design tokens, component specs"
+  - path: "specs/podo-design-guide.md"
+    role: design-system
+    notes: "3-tier tokens (Static/Semantic/Scale), Tailwind mapping, 20+ CVA components, 8 layout templates, 142 screens flow map, credit system extension (3-color assets, 13 new screens), Korean copy style guide"
 
 policy_docs:
-  - "terms-of-service.md"
+  - "specs/terms-of-service.md"
 
 # Optional references (project-specific, not universal)
 # figma:

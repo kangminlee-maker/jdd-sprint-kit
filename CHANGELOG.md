@@ -4,7 +4,7 @@ All notable changes to JDD Sprint Kit will be documented in this file.
 
 ---
 
-## [0.7.4] - 2026-03-03
+## [0.7.4] - 2026-03-04
 
 ### Added
 - **Interactive Brownfield Source Setup** — `npx jdd-sprint-kit init` Step 8
@@ -18,6 +18,22 @@ All notable changes to JDD Sprint Kit will be documented in this file.
   - Scanner auto-detects backend/client structure from the codebase
   - Advanced users can still use `backend`/`client` directly in YAML
   - Added to brownfield-scanner.md Role Scan Mapping + jdd-mcp-search.md Core Roles table
+
+## [0.7.3] - 2026-02-27
+
+### Added
+- **brief-template.md YAML frontmatter** — Structured Brownfield source declaration format
+  - `sources:` array with `url`/`path`, `role`, `notes` per entry
+  - `policy_docs:` array for policy document filenames
+  - `/sprint` copies this frontmatter when creating brief.md for each feature
+  - `specs/brief-template.sample.md` as reference; `specs/brief-template.md` is gitignored (project-specific data)
+- **Date Handling rules** — Prevent UTC/local timezone bugs in preview prototype
+  - Centralizes timezone conversion logic (browser timezone → display, UTC → API)
+- **Preview server management rule** — `.claude/rules/preview-server.md`
+  - Kill existing Vite processes before starting new dev server
+
+### Fixed
+- **brief-template.md gitignored** — actual project data file excluded from git; sample file provided instead
 
 ## [0.7.2] - 2026-02-25
 
