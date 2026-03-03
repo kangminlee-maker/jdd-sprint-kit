@@ -166,6 +166,9 @@ Parse `$ARGUMENTS` — 2 entry points, 1 pipeline:
       Reference materials (meeting notes, specs, etc.) can be added to inputs/.
       Declare GitHub repo URLs, Figma URLs in the Reference Sources section of brief.md
       to enable automatic existing system analysis.
+
+      Tip: To pre-configure project-wide sources, copy specs/brief-template.sample.md
+      to specs/brief-template.md and fill in your project's repos.
       ```
    d. Exit (brief.md 작성 대기)
 
