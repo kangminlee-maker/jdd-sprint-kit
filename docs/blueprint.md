@@ -1,8 +1,8 @@
 ---
-synced_to: "b2e0322"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
+synced_to: "2e49835"  # Last commit where non-Blueprint source file changes were reflected. Blueprint's own commits are not tracked.
 audience: "non-developer product expert"
 product: "JDD Sprint Kit"
-version: "0.7.2"
+version: "0.7.4"
 ---
 
 # JDD Sprint Kit Blueprint
@@ -986,9 +986,13 @@ Each trade-off below links to its design judgment (S2.2) and implementation (S4/
 
 ## 8.1 Current Version
 
-**v0.7.2** (2026-02-24)
+**v0.7.4** (2026-03-03)
 
-Key changes since v0.6.0:
+Key changes since v0.7.2:
+- **Interactive Brownfield Source Setup**: `npx jdd-sprint-kit init` now includes Step 8 — a guided wizard that generates `specs/brief-template.md` by asking for source URLs/paths, purposes, and policy documents. Eliminates manual YAML editing for initial setup.
+- **`code` role**: Convenience alias for `backend` + `client` combined scan. The Brownfield Scanner auto-detects backend/client structure from the codebase. Simplifies source configuration for users who don't need to distinguish backend from client.
+
+Key changes since v0.6.0 (v0.7.0~v0.7.2):
 - **Resolution type reclassification**: AUTO/USER_DECISION/PROTOTYPE_FIX → HARD_CONFLICT/DECISION_REQUIRED/PROTOTYPE_GAP. Soft Constraint Principle: all CP patterns are soft constraints — only DB-enforced rules are hard.
 - **UX-Language Questions**: S3-R presents findings in customer-visible language. Database/API terms only in collapsible detail blocks.
 - **4-way requirements coverage classification**: Agent B classifies missing FRs as INVISIBLE/ACCESS_GATED/OUT_OF_SCOPE/MISSING. MISSING → DECISION_REQUIRED (cannot auto carry-forward).
@@ -1051,7 +1055,7 @@ Sprint Kit is installed/updated via the `npx jdd-sprint-kit` CLI.
 
 | Command | Action |
 |---------|--------|
-| `npx jdd-sprint-kit init` | Interactive wizard: BMad detection → file installation → Hook setup |
+| `npx jdd-sprint-kit init` | Interactive wizard: BMad detection → file installation → Hook setup → Brownfield source setup |
 | `npx jdd-sprint-kit update` | Update existing files (version comparison + diff display) |
 | `npx jdd-sprint-kit compat-check` | BMad version compatibility check |
 

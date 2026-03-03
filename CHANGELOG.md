@@ -4,6 +4,21 @@ All notable changes to JDD Sprint Kit will be documented in this file.
 
 ---
 
+## [0.7.4] - 2026-03-03
+
+### Added
+- **Interactive Brownfield Source Setup** — `npx jdd-sprint-kit init` Step 8
+  - Guided wizard: GitHub URL or local path → purpose (Code/Knowledge/Design) → description → policy docs
+  - Auto-generates `specs/brief-template.md` with YAML frontmatter
+  - Re-run detection: prompts for reconfiguration when template already exists
+  - `--yes` skips Step 8 entirely; `--dry-run` exits before reaching it
+  - New file: `src/lib/generate-brief-template.js` (pure functions, no I/O)
+  - 4 new prompt functions in `src/lib/prompts.js`
+- **`code` role** — Convenience alias for `backend` + `client` combined scan
+  - Scanner auto-detects backend/client structure from the codebase
+  - Advanced users can still use `backend`/`client` directly in YAML
+  - Added to brownfield-scanner.md Role Scan Mapping + jdd-mcp-search.md Core Roles table
+
 ## [0.7.2] - 2026-02-25
 
 ### Added
