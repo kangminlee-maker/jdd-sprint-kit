@@ -8,21 +8,21 @@
 # path: local directory (--add-dir alternative)
 
 sources:
-  # - url: "https://github.com/{owner}/{repo}"
-  #   role: backend
-  #   notes: "Backend service description"
-  # - url: "https://github.com/{owner}/{repo}"
-  #   role: client
-  #   notes: "Client app description"
-  # - path: "/path/to/ontology-docs/"
-  #   role: ontology
-  #   notes: "Domain terminology and entity relationships"
+  - url: "https://github.com/re-speak/podo-backend"
+    role: backend
+    notes: "Java/Spring Boot. Lesson/ticket domain"
+  - url: "https://github.com/re-speak/podo-app"
+    role: client
+    notes: "Vue/Nuxt mobile app"
+  - url: "https://github.com/re-speak/podo-ontology"
+    role: ontology
+    notes: "Domain SSOT. glossary 5 domains, 55 classes, 134 relationships, 43 enums, 7 state machines, 155 actions, naming audit, generated/ cross-references"
   # - path: "/path/to/design-system/"
   #   role: design-system
   #   notes: "Design tokens, component specs"
 
-policy_docs: []
-  # - "terms-of-service.md"
+policy_docs:
+  - "terms-of-service.md"
 
 # Optional references (project-specific, not universal)
 # figma:

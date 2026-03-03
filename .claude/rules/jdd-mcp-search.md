@@ -42,11 +42,14 @@ Sources are declared in `specs/brief-template.md` frontmatter (project defaults)
 
 | Role              | Nature   | Purpose                                                     | Access Method |
 | ----------------- | -------- | ----------------------------------------------------------- | ------------- |
+| **code**          | Code     | Combined backend + client: AI auto-detects structure        | `--add-dir`, tarball, local |
 | **backend**       | Code     | Backend service: DB, API, business logic (physical truth)   | `--add-dir`, tarball, local |
 | **client**        | Code     | Frontend/app: UI, state management, component structure     | `--add-dir`, tarball, local |
 | **ontology**      | Knowledge | Domain terminology, entity relationships, business rules (intended truth) | `--add-dir`, tarball |
 | **design-system** | Normative | Design tokens, component specs, interaction patterns        | `--add-dir`, tarball |
 | **policy**        | Legal    | Terms of service, policy documents (legal truth)            | `policy_docs` field in frontmatter |
+
+> `code` is a convenience role for interactive setup. Scanner treats `code` as `backend` + `client` combined scan — AI determines backend/client classification from the code structure. Advanced users may still use `backend`/`client` directly in YAML.
 
 > Core roles participate in the conflict priority matrix (see `brownfield-scanner.md`).
 

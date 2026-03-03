@@ -235,10 +235,20 @@ When `external_resources` entries include a `role` field (from brief.md frontmat
 
 | role | Scan Focus | brownfield-context.md Enrichment |
 |------|-----------|--------------------------------|
+| **code** | Combined backend + client scan (L1~L4, CP extraction when backend code found) | AI auto-detects backend/client structure. Equivalent to `backend` + `client` |
 | **backend** | Full scan (L1~L4, CP extraction) | Standard — entities, APIs, business logic |
 | **client** | L1~L2 scan (UI components, state, routes) | Standard — screens, flows, components |
 | **ontology** | Terminology → L1 enrichment, rules → L2 enrichment, relationships → Entity Index | Tag: `(source: ontology/{file})` |
 | **design-system** | Tokens → L2 UI constraints, components → L2 inventory | Tag: `(source: design-system/{file})` |
+
+### Code Role Handling
+
+When a source has `role: code`:
+1. Treat it as a combined `backend` + `client` source
+2. Scan the full codebase for both backend patterns (.java, .kt, .py, .go, etc.) and client patterns (.tsx, .jsx, .vue, etc.)
+3. If backend code files are found → extract CP (same as `role: backend`)
+4. If client code files are found → extract UI components, state, routes (same as `role: client`)
+5. Tag data as `(source: external/{name}/{path})` or `(source: local-codebase/{path})` — no special tag for `code` role
 
 ### Ontology Source Handling
 

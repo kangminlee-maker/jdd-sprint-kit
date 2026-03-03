@@ -2,6 +2,7 @@ import * as p from '@clack/prompts';
 import { SPRINT_KIT_VERSION } from './manifest.js';
 import { detect, checkBmadCompat } from './detect.js';
 import { describeHookChanges } from './merge.js';
+import { SOURCE_PURPOSES, buildSourceEntry } from './generate-brief-template.js';
 
 export function showIntro() {
   p.intro(`JDD Sprint Kit Installer v${SPRINT_KIT_VERSION}`);
@@ -176,6 +177,92 @@ export function showVerification(checks) {
     `  ${c.path.padEnd(25)} ${c.ok ? '✓' : '✗'}  ${c.label}`
   );
   p.note(lines.join('\n'), '설치 검증');
+}
+
+export async function confirmBrownfieldSetup() {
+  const result = await p.confirm({
+    message: '프로젝트의 기존 서비스 소스를 설정하시겠습니까?',
+  });
+  if (p.isCancel(result)) {
+    p.cancel('설치가 취소되었습니다.');
+    process.exit(0);
+  }
+  return result;
+}
+
+export async function confirmBrownfieldReconfigure() {
+  const result = await p.confirm({
+    message: '기존 소스 설정이 있습니다. 재설정하시겠습니까?',
+  });
+  if (p.isCancel(result)) {
+    p.cancel('설치가 취소되었습니다.');
+    process.exit(0);
+  }
+  return result;
+}
+
+export async function promptSource() {
+  const location = await p.text({
+    message: 'GitHub URL 또는 로컬 경로를 입력하세요:',
+    placeholder: 'https://github.com/org/repo 또는 /path/to/local',
+    validate(value) {
+      if (!value || value.trim().length === 0) return '값을 입력해주세요.';
+    },
+  });
+  if (p.isCancel(location)) {
+    p.cancel('설치가 취소되었습니다.');
+    process.exit(0);
+  }
+
+  const role = await p.select({
+    message: '이 소스의 목적은?',
+    options: SOURCE_PURPOSES.map(sp => ({
+      value: sp.value,
+      label: sp.label,
+      hint: sp.hint,
+    })),
+  });
+  if (p.isCancel(role)) {
+    p.cancel('설치가 취소되었습니다.');
+    process.exit(0);
+  }
+
+  const notes = await p.text({
+    message: '설명 (선택사항):',
+    placeholder: '예: Java/Spring Boot 주문 도메인',
+    defaultValue: '',
+  });
+  if (p.isCancel(notes)) {
+    p.cancel('설치가 취소되었습니다.');
+    process.exit(0);
+  }
+
+  return buildSourceEntry(role, location.trim(), notes.trim());
+}
+
+export async function promptPolicyDocs() {
+  const hasPolicyDocs = await p.confirm({
+    message: '정책 문서(이용약관 등)가 있습니까?',
+  });
+  if (p.isCancel(hasPolicyDocs)) {
+    p.cancel('설치가 취소되었습니다.');
+    process.exit(0);
+  }
+  if (!hasPolicyDocs) return [];
+
+  const fileNames = await p.text({
+    message: '정책 문서 파일명을 입력하세요 (쉼표로 구분):',
+    placeholder: 'terms-of-service.md, refund-policy.md',
+    validate(value) {
+      if (!value || value.trim().length === 0) return '파일명을 입력해주세요.';
+    },
+  });
+  if (p.isCancel(fileNames)) {
+    p.cancel('설치가 취소되었습니다.');
+    process.exit(0);
+  }
+
+  return fileNames.split(',').map(f => f.trim()).filter(Boolean);
 }
 
 export function showOutro(ideSelection) {

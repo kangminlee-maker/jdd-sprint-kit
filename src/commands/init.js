@@ -12,7 +12,10 @@ import {
   showBmadRequired, showAlreadyInstalled, showOutro,
   confirmOverwrite, confirmSettingsMerge,
   showVerification,
+  confirmBrownfieldSetup, confirmBrownfieldReconfigure,
+  promptSource, promptPolicyDocs,
 } from '../lib/prompts.js';
+import { buildBriefTemplateContent } from '../lib/generate-brief-template.js';
 import { convertToCodex } from '../lib/adapters/codex.js';
 
 export async function runInit(options = {}) {
@@ -189,6 +192,7 @@ export async function runInit(options = {}) {
 
   if (!yes) {
     showVerification(checks);
+    await runBrownfieldSetup(projectDir);
     showOutro(ideSelection);
   } else {
     const failed = checks.filter(c => !c.ok);
@@ -201,6 +205,55 @@ export async function runInit(options = {}) {
     }
     console.log(`Sprint Kit v${SPRINT_KIT_VERSION} installed successfully.`);
   }
+}
+
+async function runBrownfieldSetup(projectDir) {
+  const templatePath = join(projectDir, 'specs', 'brief-template.md');
+  const templateExists = existsSync(templatePath);
+
+  if (templateExists) {
+    const reconfigure = await confirmBrownfieldReconfigure();
+    if (!reconfigure) return;
+  } else {
+    const setup = await confirmBrownfieldSetup();
+    if (!setup) {
+      p.log.info('나중에 설정하려면: npx jdd-sprint-kit init 또는 specs/brief-template.md 직접 편집');
+      return;
+    }
+  }
+
+  const sources = [];
+  let addMore = true;
+
+  while (addMore) {
+    const source = await promptSource();
+    sources.push(source);
+
+    const continueResult = await p.confirm({
+      message: '소스를 더 추가하시겠습니까?',
+    });
+    if (p.isCancel(continueResult)) {
+      p.cancel('설치가 취소되었습니다.');
+      process.exit(0);
+    }
+    addMore = continueResult;
+  }
+
+  const policyDocs = await promptPolicyDocs();
+
+  ensureDirSync(join(projectDir, 'specs'));
+  const content = buildBriefTemplateContent({ sources, policyDocs });
+
+  const { writeFileSync } = await import('node:fs');
+  writeFileSync(templatePath, content, 'utf-8');
+
+  const summary = [
+    `소스: ${sources.length}개`,
+    `정책 문서: ${policyDocs.length}개`,
+    '',
+    `저장: specs/brief-template.md`,
+  ];
+  p.note(summary.join('\n'), 'Brownfield 소스 설정 완료');
 }
 
 function showCopyResults(results) {
