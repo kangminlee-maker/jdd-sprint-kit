@@ -227,6 +227,52 @@ Collect from all accessible sources. Apply Merge Strategy (see Scan Strategy abo
 - **Conflicting data**: record both with source tags, flag in Self-Validation
 - **Source tagging**: all local scan data tagged as `(source: local-codebase/{relative_path})`
 
+## Role-Based Scan Strategy
+
+When `external_resources` entries include a `role` field (from brief.md frontmatter), apply role-specific scan differentiation. No new brownfield-context.md sections are created — role data enriches existing L1/L2 layers.
+
+### Role Scan Mapping
+
+| role | Scan Focus | brownfield-context.md Enrichment |
+|------|-----------|--------------------------------|
+| **backend** | Full scan (L1~L4, CP extraction) | Standard — entities, APIs, business logic |
+| **client** | L1~L2 scan (UI components, state, routes) | Standard — screens, flows, components |
+| **ontology** | Terminology → L1 enrichment, rules → L2 enrichment, relationships → Entity Index | Tag: `(source: ontology/{file})` |
+| **design-system** | Tokens → L2 UI constraints, components → L2 inventory | Tag: `(source: design-system/{file})` |
+
+### Ontology Source Handling
+
+When a source has `role: ontology`:
+1. **Term extraction** → L1 Domain Concept Layer (canonical names, aliases, definitions)
+2. **Business rule extraction** → L2 Behavior Layer (validation rules, state transitions, constraints)
+3. **Entity relationship extraction** → Entity Index pre-population (relationships, cardinality)
+4. All data tagged as `(source: ontology/{relative_path})`
+
+### Design System Source Handling
+
+When a source has `role: design-system`:
+1. **Design token extraction** → L2 Behavior Layer under UI constraints (colors, spacing, typography)
+2. **Component spec extraction** → L2 Behavior Layer under component inventory (props, variants, states)
+3. All data tagged as `(source: design-system/{relative_path})`
+
+### Conflict Priority Matrix (Built-in)
+
+When conflicting information is found across sources with different roles, apply this priority matrix:
+
+| Information Type | 1st Priority | 2nd Priority | 3rd Priority | Rationale |
+|-----------------|-------------|-------------|-------------|-----------|
+| **Entity structure** (tables, columns, types) | backend | ontology | client | DB is physical truth |
+| **Business rules** (allow/deny) | policy | ontology | backend | Legal > intent > implementation |
+| **API contracts** (endpoints, params) | backend | client | — | Running code is truth |
+| **Terminology** (concept names) | ontology | policy | backend | Canonical terms are authoritative |
+| **UI norms** (components, tokens) | design-system | client | — | Design system is normative |
+
+**Conflict handling**:
+- Adopt the value from the highest-priority source
+- Record the conflict in brownfield-context.md: `[CONFLICT] {role_a} says X, {role_b} says Y → {winner} priority ({information_type})`
+- When the highest-priority source is absent, fall back to the next priority
+- Report all conflicts in Self-Validation Report under a `Conflict Resolution` check
+
 ## Self-Validation
 
 After collection, perform self-check:
@@ -243,6 +289,7 @@ After collection, perform self-check:
 | Ontology Coverage | {N}/{M} document-project entities found in scan results (or "N/A" if document_project_path is null) |
 | Document-Project Coverage | {N}/{M} expected files found and parsed (or "N/A" if document_project_path is null) |
 | Cross-Validation | {description of source consistency across document-project, external sources, local} |
+| Conflict Resolution | {N} conflicts detected, {N} resolved via priority matrix. Details: [{info_type}: {role_a} vs {role_b} → {winner}] (or "No conflicts" if none) |
 | Data Sources | {which sources responded: document-project files, external sources (--add-dir / MCP), local scan} |
 | Gap Classification | {list of gaps with severity} |
 ```

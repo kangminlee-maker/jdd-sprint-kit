@@ -73,13 +73,16 @@ tracking_source: brief | success-criteria
 external_resources:
   github_repos:
     - owner_repo: "org/backend-api"
-      source_file: "brief.md#참고-소스"  # or auto-detect source filename
-      notes: "NestJS API. 매칭 엔진: src/matching/"  # from 참고 소스 section
+      source_file: "brief.md#frontmatter"  # or "brief.md#참고-소스" or auto-detect source filename
+      source_origin: "frontmatter"  # "frontmatter" | "reference-sources" | "auto-detect"
+      role: "backend"  # "backend" | "client" | "ontology" | "design-system" | null
+      notes: "NestJS API. 매칭 엔진: src/matching/"  # from frontmatter or 참고 소스 section
     status: configured | not-configured | reference-only
   external_repos:
     - name: "{repo-name}"
       path: "{accessible local path}"  # ~/docs-cache/{feature}/{name}/ for tarball-snapshot
       access_method: "add-dir"  # or "tarball-snapshot"
+      role: "backend"  # "backend" | "client" | "ontology" | "design-system" | null
       source_url: ""  # present when access_method is tarball-snapshot
       snapshot_commit: ""  # commit SHA at download time (tarball-snapshot only)
       snapshot_branch: ""  # branch name or "HEAD" (tarball-snapshot only)
@@ -122,10 +125,13 @@ flags:
 | `external_resources.github_repos` | N | GitHub repo references auto-detected from inputs |
 | `external_resources.github_repos[].owner_repo` | (Y if github_repos exists) | GitHub owner/repo (e.g., `org/backend-api`) |
 | `external_resources.github_repos[].source_file` | (Y if github_repos exists) | File where the GitHub URL was detected |
+| `external_resources.github_repos[].source_origin` | (Y if github_repos exists) | How the URL was discovered: `frontmatter` (brief.md YAML frontmatter) / `reference-sources` (## Reference Sources body section) / `auto-detect` (found in file content) |
+| `external_resources.github_repos[].role` | N | Source role from frontmatter: `backend` / `client` / `ontology` / `design-system` / null. Determines scan strategy and conflict priority in brownfield-scanner |
 | `external_resources.github_repos.status` | (Y if github_repos exists) | `configured` (downloaded) / `not-configured` (download failed) / `reference-only` (URL only) |
 | `external_resources.external_repos` | N | External repo paths detected via `--add-dir` or tarball snapshot |
 | `external_resources.external_repos[].name` | (Y if external_repos exists) | Repo identifier (derived from directory name) |
 | `external_resources.external_repos[].path` | (Y if external_repos exists) | Accessible local path to the repo (`~/docs-cache/{feature}/{name}/` for tarball-snapshot) |
+| `external_resources.external_repos[].role` | N | Source role from frontmatter: `backend` / `client` / `ontology` / `design-system` / null. Propagated from github_repos role when access_method is `tarball-snapshot` |
 | `external_resources.external_repos[].access_method` | (Y if external_repos exists) | How the path was provided (`add-dir` / `tarball-snapshot`) |
 | `external_resources.external_repos[].source_url` | N | Original URL (for tarball re-download; present when access_method is `tarball-snapshot`) |
 | `external_resources.external_repos[].snapshot_commit` | N | Commit SHA at download time (tarball-snapshot only; `"unknown"` if query failed) |

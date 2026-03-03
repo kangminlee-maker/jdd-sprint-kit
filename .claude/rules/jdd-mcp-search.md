@@ -36,17 +36,30 @@ GitHub URLs only. For GitLab/Bitbucket, use --add-dir.
 
 ### External Data Source Roles
 
-These roles apply regardless of access method (`--add-dir` or MCP):
+Sources are declared in `specs/brief-template.md` frontmatter (project defaults) or per-feature `brief.md` frontmatter. Each source has a `role` that determines scan strategy and conflict priority.
+
+#### Core Roles (universal, applicable to all projects)
+
+| Role              | Nature   | Purpose                                                     | Access Method |
+| ----------------- | -------- | ----------------------------------------------------------- | ------------- |
+| **backend**       | Code     | Backend service: DB, API, business logic (physical truth)   | `--add-dir`, tarball, local |
+| **client**        | Code     | Frontend/app: UI, state management, component structure     | `--add-dir`, tarball, local |
+| **ontology**      | Knowledge | Domain terminology, entity relationships, business rules (intended truth) | `--add-dir`, tarball |
+| **design-system** | Normative | Design tokens, component specs, interaction patterns        | `--add-dir`, tarball |
+| **policy**        | Legal    | Terms of service, policy documents (legal truth)            | `policy_docs` field in frontmatter |
+
+> Core roles participate in the conflict priority matrix (see `brownfield-scanner.md`).
+
+#### Optional References (project-specific, not universal)
 
 | Role              | Purpose                                                     | Access Method |
 | ----------------- | ----------------------------------------------------------- | ------------- |
-| **backend-docs**  | Backend domain policies, API specs, business logic          | `--add-dir` (local clone) |
-| **client-docs**   | Client UI/UX, screen flows, component structure             | `--add-dir` (local clone) |
 | **svc-map**       | Brownfield service map: customer journeys, screenshots, flow data | `--add-dir` (local clone) |
 | **figma**         | Figma live design data: wireframes, components, design tokens | MCP server (OAuth) |
 
 > - The `figma` MCP server uses OAuth authentication. Add via `claude mcp add --transport http figma https://mcp.figma.com/mcp`, then authenticate at `/mcp`.
 > - When `svc-map` and `figma` data conflict, prefer `figma` (more recent).
+> - Optional references do not participate in the conflict priority matrix.
 
 ### Search Strategy
 
@@ -62,8 +75,10 @@ When answering domain-related questions, **always search from multiple perspecti
 
 | Keywords/Topics                                            | Search Target                         |
 | ---------------------------------------------------------- | ------------------------------------- |
-| API, endpoints, data models, business logic, auth, permissions | backend-docs (--add-dir or MCP)  |
-| UI code, component implementation, state management, code structure | client-docs (--add-dir or MCP) |
+| API, endpoints, data models, business logic, auth, permissions | backend (--add-dir, tarball, or local) |
+| UI code, component implementation, state management, code structure | client (--add-dir, tarball, or local) |
+| Domain terms, entity names, business rules, glossary       | ontology (--add-dir or tarball)       |
+| Design tokens, component specs, spacing, typography        | design-system (--add-dir or tarball)  |
 | Customer journeys, screen flows, service maps, screenshots | svc-map (--add-dir or MCP)            |
 | Wireframes, design mockups, layouts, design tokens, styles | figma MCP                             |
 | Full feature, domain policies, service flows               | **all sources**                       |

@@ -63,7 +63,13 @@ Parse `$ARGUMENTS` — 2 entry points, 1 pipeline:
    - `specs/{feature_name}/` exists + has `inputs/` → switch to Case 2 (confirm whether to use existing brief.md)
    - `specs/{feature_name}/` exists + no `inputs/` → append `-v2` suffix to feature_name
 4. Create `specs/{feature_name}/inputs/` directory
-5. Save Brief text to `specs/{feature_name}/inputs/brief.md`
+5. **Template-aware brief.md generation**:
+   - If `specs/brief-template.md` exists:
+     - Read template → extract YAML frontmatter
+     - Combine: template frontmatter + user Brief text as body (`{feature_name}` placeholder replaced)
+     - Write combined content to `specs/{feature_name}/inputs/brief.md`
+   - If `specs/brief-template.md` does not exist:
+     - Save Brief text directly to `specs/{feature_name}/inputs/brief.md` (no frontmatter)
 6. Quick Start path → proceed to Step 0c without reference materials
 
 **Case 2: Feature Name** (`/sprint tutor-exclusion`)
@@ -78,12 +84,35 @@ Parse `$ARGUMENTS` — 2 entry points, 1 pipeline:
 3. **Verify specs/{feature_name}/ exists**:
    If missing → auto-create + guide:
    a. Create `specs/{feature_name}/inputs/`
-   b. Generate `specs/{feature_name}/inputs/brief.md` template (in {document_output_language}):
-      Section headings and placeholder text must be written in {document_output_language}.
-      HTML comments (guidance for the user) are written in {communication_language}.
-      The `## Reference Sources` section heading and sub-section headings are always in English (machine-parseable).
+   b. **Template-aware brief.md generation**:
+      - If `specs/brief-template.md` exists:
+        - Copy template to `specs/{feature_name}/inputs/brief.md`
+        - Replace `{feature_name}` placeholder with actual feature_name
+        - Translate body section headings and placeholder text to {document_output_language} (frontmatter stays as-is)
+      - If `specs/brief-template.md` does not exist:
+        - Generate inline brief.md template (in {document_output_language}):
+          Section headings and placeholder text must be written in {document_output_language}.
+          HTML comments (guidance for the user) are written in {communication_language}.
+          The `## Reference Sources` section heading and sub-section headings are always in English (machine-parseable).
 
-      Example (when document_output_language=Korean, communication_language=Korean):
+      Example (when using brief-template.md, document_output_language=Korean):
+      ```markdown
+      ---
+      sources:
+        # (pre-filled from template — user edits as needed)
+      policy_docs: []
+      ---
+
+      # {feature_name}
+
+      ## 배경
+      (이 기능이 필요한 이유를 작성하세요)
+
+      ## 만들어야 할 기능
+      (구체적인 기능을 설명하세요)
+      ```
+
+      Example (when no template, document_output_language=Korean, communication_language=Korean):
       ```markdown
       # {feature_name}
 
@@ -112,17 +141,31 @@ Parse `$ARGUMENTS` — 2 entry points, 1 pipeline:
       <!-- Brownfield 탐색 시 참고할 자유 형식 메모 -->
       ```
    c. Message (in {communication_language}):
+      When `specs/brief-template.md` was used:
       ```
-      Sprint 프로젝트 생성 완료: {feature_name}
+      Sprint project created: {feature_name}
 
       specs/{feature_name}/inputs/brief.md
 
-      brief.md를 작성한 후 다시 실행하세요:
+      Project-wide Brownfield sources are pre-configured from brief-template.md.
+      Write the feature description in brief.md, then re-run:
         /sprint {feature_name}
 
-      참조 문서(회의록, 기획서 등)가 있으면 inputs/에 함께 넣어주세요.
-      brief.md 하단의 '참고 소스' 섹션에 GitHub repo URL, Figma URL을 선언하면
-      Sprint이 기존 시스템을 자동으로 분석합니다.
+      To adjust sources for this feature, edit the frontmatter in brief.md.
+      Reference materials (meeting notes, specs, etc.) can be added to inputs/.
+      ```
+      When no template was used:
+      ```
+      Sprint project created: {feature_name}
+
+      specs/{feature_name}/inputs/brief.md
+
+      Write brief.md, then re-run:
+        /sprint {feature_name}
+
+      Reference materials (meeting notes, specs, etc.) can be added to inputs/.
+      Declare GitHub repo URLs, Figma URLs in the Reference Sources section of brief.md
+      to enable automatic existing system analysis.
       ```
    d. Exit (brief.md 작성 대기)
 
@@ -260,7 +303,17 @@ Read brief.md and assess quality.
 
 See `_bmad/docs/sprint-input-format.md` for reference analysis format.
 
-1. **Read brief.md in full** — preserve original (include verbatim in Core Brief section)
+0. **Parse brief.md YAML frontmatter** (if present):
+   Read brief.md. If YAML frontmatter exists (content between `---` delimiters at the start):
+   - Extract `sources` array: each entry has `url` or `path`, `role`, and optional `notes`
+   - Extract `policy_docs` array: list of policy document filenames
+   - Extract optional `figma` array: each entry has `file_key` and optional `description`
+   - Extract optional `scan_notes`: free-text scanning guidance
+   - Store extracted data in memory for merge at step 5 below
+   - If no frontmatter exists → skip (proceed with existing flow)
+   - **Body text**: everything after the closing `---` delimiter is the Brief body (used in step 1 below)
+
+1. **Read brief.md in full** — preserve original (include verbatim in Core Brief section). When frontmatter exists, the "Core Brief" is the body text only (excluding frontmatter).
 2. **Decompose Brief sentences + assign IDs**:
    Decompose each semantic unit (sentence or clause) in the Brief and assign unique IDs.
    - Only decompose sentences describing features/actions (exclude background, greetings, etc.)
@@ -299,19 +352,45 @@ See `_bmad/docs/sprint-input-format.md` for reference analysis format.
    - 참고 소스 섹션의 GitHub repos는 사용자 명시 의도 → AskUserQuestion 없이 다운로드 대상 확정
    - 섹션이 없거나 비어있으면 → skip (기존 auto-detect만 사용)
    - HTML 주석으로 감싸인 라인 (`<!-- ... -->`)은 skip (템플릿 상태 그대로)
+5b. **Merge frontmatter + Reference Sources** (when frontmatter data exists from step 0):
+   Combine frontmatter sources (step 0) and Reference Sources body (step 5) into a single source list.
+
+   **Merge rules**:
+   - Same source (matched by `owner/repo` for GitHub URLs, or by path) exists in both → **Reference Sources body wins** (user may have overridden template defaults per-feature)
+   - Source only in frontmatter → use frontmatter data (with `source_origin: "frontmatter"`)
+   - Source only in Reference Sources body → use body data (with `source_origin: "reference-sources"`)
+   - `policy_docs` → union of both lists (deduplicated)
+   - `scan_notes` → concatenate (frontmatter first, then body, separated by newline)
+   - `figma` → merge by `file_key` (body wins on duplicate)
+
+   **Frontmatter `sources` to GitHub repos conversion**:
+   - Frontmatter entries with `url` field matching `https://github.com/{owner}/{repo}` → convert to `github_repos` entry with:
+     - `owner_repo`: extracted `{owner}/{repo}`
+     - `source_file`: `"brief.md#frontmatter"`
+     - `source_origin`: `"frontmatter"`
+     - `role`: from frontmatter entry
+     - `notes`: from frontmatter entry
+   - Frontmatter entries with `path` field → convert to `external_repos` entry with:
+     - `name`: directory basename
+     - `path`: from frontmatter entry
+     - `access_method`: `"add-dir"`
+     - `role`: from frontmatter entry
+
+   **Frontmatter GitHub repos → skip AskUserQuestion**: Frontmatter sources are user-confirmed project defaults. Download without prompting (same treatment as Reference Sources body repos).
+
 6. **Figma URL auto-detection + merge**:
    While reading inputs/ files (steps 1-3 above), detect Figma URL patterns in all file contents:
    - Pattern: `https://figma.com/design/{fileKey}/...` or `https://figma.com/file/{fileKey}/...`
    - Extract `fileKey` from each matched URL
-   - Merge with step 5 Figma URLs → deduplicate by `fileKey`
-   - 참고 소스 섹션 출처: `source_file: "brief.md#참고-소스"`, auto-detect 출처: detected filename
-   - If no Figma URLs found (neither 참고 소스 nor auto-detect): omit `external_resources.figma`
+   - Merge with step 5/5b Figma URLs → deduplicate by `fileKey`
+   - Source origin tagging: frontmatter → `source_file: "brief.md#frontmatter"`, 참고 소스 섹션 → `source_file: "brief.md#참고-소스"`, auto-detect → detected filename
+   - If no Figma URLs found (neither frontmatter nor 참고 소스 nor auto-detect): omit `external_resources.figma`
 7. **GitHub repo URL auto-detection + merge**:
    While reading inputs/ files (steps 1-3 above), detect GitHub repo URL patterns in all file contents:
    - Pattern: `https://github.com/{owner}/{repo}` (path, query, fragment after repo name are ignored)
    - Extract `owner/repo` from each matched URL. Collect unique pairs.
-   - Deduplicate with step 5 GitHub repos (by `owner/repo` unit)
-   - **Auto-detected repos NOT in 참고 소스 섹션** → present via AskUserQuestion (in {communication_language}):
+   - Deduplicate with step 5/5b GitHub repos (by `owner/repo` unit)
+   - **Auto-detected repos NOT in frontmatter or 참고 소스 섹션** → present via AskUserQuestion (in {communication_language}):
      ```
      GitHub 리포지토리 URL이 감지되었습니다: {owner}/{repo}
      이 리포지토리의 코드를 Sprint에 반영하면 기존 시스템 분석 정확도가 향상됩니다.
@@ -324,10 +403,10 @@ See `_bmad/docs/sprint-input-format.md` for reference analysis format.
      - [1] selected → mark as download target
      - [2] selected → mark as `reference-only` (no download)
      - [3] selected → do not record
-   - **Repos already in 참고 소스 섹션** → skip AskUserQuestion (already confirmed by user)
+   - **Repos already in frontmatter or 참고 소스 섹션** → skip AskUserQuestion (already confirmed by user)
    - Non-GitHub URLs (GitLab, Bitbucket, etc.) detected → inform (in {communication_language}):
      "현재 GitHub URL만 자동 감지됩니다. GitLab/Bitbucket은 git clone + claude --add-dir로 추가하세요."
-   - If no GitHub URLs found (neither 참고 소스 nor auto-detect): omit `external_resources.github_repos`
+   - If no GitHub URLs found (neither frontmatter nor 참고 소스 nor auto-detect): omit `external_resources.github_repos`
 8. **Set tracking_source**: `tracking_source: brief` — Sprint route always uses BRIEF-N based tracking
 9. **Causal Chain extraction**:
    Structure the background of the feature request from Core Brief + Reference Materials.
@@ -533,11 +612,13 @@ If Step 0d detected GitHub repo URLs and user selected [1] (download):
       - name: "{owner}-{repo}"
         path: "~/docs-cache/{feature}/{name}/"
         access_method: "tarball-snapshot"
+        role: "{role}"  # propagated from github_repos[].role (null if not set)
         source_url: "https://github.com/{owner_repo}"
         snapshot_commit: "{snapshot_commit}"
         snapshot_branch: "{snapshot_branch}"
         snapshot_at: "{snapshot_at}"
       ```
+      `role` is propagated from the corresponding `github_repos` entry (matched by `owner_repo`). If the github_repos entry has no role, set to null.
       Update github_repos status to `configured`
    h. **On failure** → classify error and present via AskUserQuestion (in {communication_language}):
 

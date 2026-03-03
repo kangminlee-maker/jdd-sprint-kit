@@ -27,14 +27,15 @@ Three terms are used in the Crystallize pipeline. Each has a defined scope — d
 
 ## Brownfield Data Flow (Sprint x MCP)
 
-Brownfield data is used at every Sprint phase. Sources are cumulatively collected from 3 origins: document-project, MCP, and local codebase.
+Brownfield data is used at every Sprint phase. Sources are cumulatively collected from multiple origins: brief.md frontmatter declarations, document-project, external repos (--add-dir / tarball), MCP, and local codebase.
 
 > Note: Crystallize steps below execute conditionally. See Crystallize Flow for trigger conditions.
 
 | Phase | Brownfield Usage |
 |-------|-----------------|
-| **Phase 0 Step 0f** (pre-Sprint) | Detect document-project + MCP + build tools → determine topology + `brownfield_status` |
-| **Pass 1: Broad Scan** (Sprint start) | Stage 0: consume document-project → Stage 1~4: MCP + local scan → brownfield-context.md **L1 + L2** |
+| **Phase 0 Step 0d** (pre-Sprint) | Parse brief.md YAML frontmatter → extract `sources` (with role), `policy_docs`, optional refs → merge with `## Reference Sources` body section |
+| **Phase 0 Step 0f** (pre-Sprint) | Detect document-project + MCP + build tools → determine topology + `brownfield_status`. Frontmatter sources included as external sources |
+| **Pass 1: Broad Scan** (Sprint start) | Stage 0: consume document-project → Stage 1~4: external sources (role-aware) + MCP + local scan → brownfield-context.md **L1 + L2**. Ontology sources enrich L1 terms, design-system sources enrich L2 UI constraints. Conflict priority matrix applied |
 | **BMad Phase 1-3** | Reference brownfield-context.md L1+L2 |
 | **Pass 2: Targeted Scan** (post-Epics) | Reference Stage 0 data + backend-docs/client-docs MCP + local scan → brownfield-context.md **L3 + L4 + Constraint Profile** (CP.1-CP.7, when readable backend code files exist) |
 | **Specs generation** (`/specs`) | Copy frozen snapshot (@deliverable-generator Stage 2) |
