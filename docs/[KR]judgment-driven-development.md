@@ -334,11 +334,12 @@ JDD:        AI가 빠르게 생성 → 인간이 판단 → 재생성 (이상)
 
 Sprint Kit의 3-pass 패턴(Answer Discovery → Translation & Delta Extraction → Delta Execution)은 파이프라인의 목적을 재정의한다: 스펙을 생성하는 것이 아니라, **현재 시스템(brownfield)과 목표 상태(사용자가 검증한 프로토타입) 사이의 델타를 정의하는 것**이다.
 
-프로토타입은 시스템의 실제 사용자 문법으로 표현된 목표 상태이다 — 인간 사용자에게는 시각적 UI, 서비스 소비자에게는 API 목업, AI 소비자에게는 구조화된 문서가 된다. Crystallize는 이 목표를 개방형 추상화가 아닌 규칙 기반 매핑을 사용하여 개발 문법으로 번역한다. 번역된 목표와 brownfield 기준선 사이의 델타가 구축해야 할 것이다.
+프로토타입은 시스템의 실제 Experience projection으로 표현된 목표 상태이다 — 인간 사용자에게는 시각적 UI, 서비스 소비자에게는 API 목업, AI 소비자에게는 구조화된 문서가 된다. Crystallize는 이 목표를 개방형 추상화가 아닌 규칙 기반 매핑을 사용하여 Code projection으로 번역한다. 번역된 목표와 brownfield 기준선 사이의 델타가 구축해야 할 것이다.
 
 스펙 완전성(spec completeness)은 AI 비결정성(non-determinism)을 제어한다: 스펙이 완전할수록 더 일관된 출력을 생산한다. Sprint Kit은 트레이드오프를 수용한다 — 계약이 중요한 곳(API, DB 스키마)에서는 높은 명세, 변이가 수용 가능한 곳(UI 레이아웃, 내부 명명)에서는 낮은 명세 — 그리고 계약 테스트(contract testing)와 BDD를 사용하여 변이와 무관하게 기능적 정확성을 검증한다.
 
 > 전체 이론, 핵심 원칙(FP1-FP6), 설계 판단(DJ1-DJ10), 번역 규칙, 방법론 비교: [`docs/delta-driven-design.md`](delta-driven-design.md)
+> 개념적 기반 — Canonical + 3 Projections: [`docs/canonical-projection-model.md`](canonical-projection-model.md)
 
 ---
 

@@ -3,7 +3,7 @@
 > **Document type**: Unified framing — philosophical foundation of Sprint Kit's core documents
 > **Version**: 1.0
 > **Date**: 2026-02-22
-> **Related**: [`judgment-driven-development.md`](judgment-driven-development.md) (design philosophy), [`delta-driven-design.md`](delta-driven-design.md) (design theory), [`blueprint.md`](blueprint.md) (product specification), [`terminology-map.md`](terminology-map.md) (term reference)
+> **Related**: [`canonical-projection-model.md`](canonical-projection-model.md) (conceptual foundation), [`judgment-driven-development.md`](judgment-driven-development.md) (design philosophy), [`delta-driven-design.md`](delta-driven-design.md) (design theory), [`blueprint.md`](blueprint.md) (product specification), [`terminology-map.md`](terminology-map.md) (term reference)
 > **Future roadmap**: [`reviews/translation-ontology-roadmap.md`](reviews/translation-ontology-roadmap.md)
 
 ---
@@ -16,7 +16,7 @@ This declaration decomposes into two parts:
 
 | Part | Nature | Essence |
 |------|--------|---------|
-| **A1 — Ontological**: "The core operation is translation" | What Sprint Kit *does* | A rule-based mapping exists between user grammar and development grammar, and Crystallize executes this mapping |
+| **A1 — Ontological**: "The core operation is translation" | What Sprint Kit *does* | A rule-based mapping exists between Experience projection and Code projection, and Crystallize executes this mapping |
 | **A2 — Axiological**: "Only humans can set the direction" | Why Sprint Kit *needs humans* | The decision of what to translate (what the target should be) cannot be mechanically derived |
 
 From A1, Delta-Driven Design is derived — if translation is the core operation, the delta is translation's natural output.
@@ -53,10 +53,10 @@ Structural hypotheses required for A1 and A2 to hold. These are conditions for S
 
 | ID | Hypothesis | Basis | Breaking Condition |
 |----|-----------|-------|-------------------|
-| **H1** | User grammar and development grammar are separable | The system's users and implementers use different expression systems | When the user is the developer (developer tools, CLIs, etc.) |
+| **H1** | The three projections (Experience, Code, Policy) are separable | The system's users, implementers, and regulators use different expression systems | When projections collapse into one — e.g., a solo developer building a personal tool (user = developer = policymaker: all three projections merge) or a heavily regulated system where compliance fully dictates UX (Policy ≈ Experience) |
 | **H2** | Deterministic mapping rules exist between the two grammars | The Translation Rules table is finite and enumerable | When mapping is inherently emergent and cannot be rule-ified |
 | **H3** | Users can verify correctness only in their own grammar | Product experts judge through prototypes, not through specs | When users can speak development grammar |
-| **H4** | Information lost in translation (carry-forward) can be recovered from separate sources | NFR, security, migration, etc. are injected from PRD, Architecture, Brownfield | When carry-forward sources themselves are incomplete or inaccessible |
+| **H4** | Information lost in translation (carry-forward) can be recovered from separate sources | NFR, security, migration, etc. are injected from PRD, Architecture, Brownfield | When carry-forward sources are incomplete or inaccessible — e.g., legacy system with no PRD or architecture docs, or third-party service with no accessible codebase. Sprint Kit degrades: unverifiable carry-forward items are flagged as UNKNOWN provenance |
 
 ### 2.3 Empirical Hypotheses (H5-H7)
 
@@ -127,14 +127,14 @@ JP1 is not simply "let's check midway because AI is slow." JP1 has a unique func
 
 Therefore, JP1 may not completely disappear even if AI speed becomes infinite. Its form may change — for example, presenting a requirements checklist alongside the prototype.
 
-### 4.2 DDD Derivation (A1+H1+H2 → 2-Grammar → FP6(H4) → FP4)
+### 4.2 DDD Derivation (A1+H1+H2 → 3-Projection → FP6(H4) → FP4)
 
 ```
 A1: The core operation is translation
-  + H1: Two grammars are separable
+  + H1: Three projections are separable
   + H2: Deterministic mapping rules exist
-    → 2-Grammar Model: User Grammar ↔ Development Grammar
-      + H4: Lost information is recoverable from separate sources
+    → 3-Projection Model: Experience ↔ Code (+ Policy carry-forward)
+      + H4: Projection gaps are recoverable from separate sources
         → FP6: Translation is rule-based
           → Complete Specs = translate(Prototype) + carry-forward
             → FP4: Delta definition is the primary goal
@@ -159,7 +159,7 @@ translate(Prototype, CarryForwardSources, Brownfield)
 
 If any of the three inputs is missing, translation is incomplete:
 - Without prototype: no translation target
-- Without carry-forward: integration constant missing (non-visible requirements lost)
+- Without carry-forward: projection gaps missing (non-visible requirements lost)
 - Without Brownfield: cannot compute delta (degrades to ∅ for Greenfield)
 
 ### 4.3 Economic Principles Derivation (H5+H6 → Input Quality, Regeneration, Cost)
@@ -292,15 +292,15 @@ Sprint Kit's pipeline includes activities not captured by the translation framin
 - **Implementation (Phase 3)**: Workers converting delta to code is "realization" rather than translation. Code generation requires implementation judgments (library selection, performance optimization, etc.) beyond translation rules.
 - **Verification (Validate)**: Judge agents' quality/security/business verification is not translation accuracy verification but independent quality assurance.
 
-### 7.2 Ontological Ambiguity of "Two Grammars" vs "N-Projections"
+### 7.2 Projection Model Resolution
 
-DDD §5 states "the 2-grammar model is a special case of a hierarchical N-projection model." This raises ontological questions:
+The ontological ambiguity between "Two Grammars" and "N-Projections" (previously an open question) has been resolved by the **Canonical + 3 Projections model** ([`canonical-projection-model.md`](canonical-projection-model.md)):
 
-- **Are there actually 2 or N?** Whether the 2-grammar model is a practical simplification or an essential distinction is unclear.
-- **Is the hierarchy fixed?** Does "customer projection = objective function, rest = constraints" apply to all systems? (What about systems where security is the objective function?)
-- **Interactions between projections**: In an N-projection model, can each projection's carry-forward be managed independently, or do inter-projection interactions exist?
+- **How many projections?** Three: Code, Policy, Experience. Fixed set, not unbounded N.
+- **What is their relationship?** Each projection reveals different aspects of a single canonical definition. No hierarchy — JPs resolve conflicts between projections through business judgment.
+- **What about inter-projection interactions?** Carry-forward is precisely the inter-projection information gap. The 3-Projection model makes this structurally explicit.
 
-Currently, Sprint Kit operates sufficiently with the 2-grammar model. N-projection extension remains a theoretical possibility.
+The Two Grammars terminology (User Grammar, Development Grammar) is preserved as operational shorthand in translation rules.
 
 ### 7.3 Verification Status of Empirical Hypotheses (H5-H7)
 

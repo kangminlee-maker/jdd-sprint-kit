@@ -53,27 +53,32 @@ Korean-English canonical term reference for JDD Sprint Kit. All files use the **
 
 | Korean | English (Canonical) | Context |
 |--------|-------------------|---------|
-| 사용자 문법 | user grammar | language the system's actual users speak; form adapts to user type |
-| 개발 문법 | development grammar | language of implementation (API, DB, state machines, algorithms) |
-| 번역 | translation | rule-based conversion from user grammar to development grammar |
-| 번역 규칙 | translation rules | mapping table: user grammar element → development grammar equivalent |
+| 사용자 문법 | user grammar | **operational shorthand** for Experience projection; language the system's actual users speak |
+| 개발 문법 | development grammar | **operational shorthand** for Code projection; language of implementation (API, DB, state machines) |
+| 번역 | translation | rule-based conversion from Experience projection to Code projection |
+| 번역 규칙 | translation rules | mapping table: Experience element → Code equivalent |
+| 정준 정의 | canonical definition | the complete, internally consistent description of a service (not directly observable) |
+| 코드 사영 | Code projection | implementation view: API, DB, state machines, infrastructure |
+| 정책 사영 | Policy projection | business rules, regulatory constraints, terms of service |
+| 경험 사영 | Experience projection | what the system's actual user sees and does |
+| 수렴 | convergence | all pipeline stages are convergence processes: measure gap → iterate → zero |
 | 델타 | delta | difference between target state (translated prototype) and brownfield |
 | 양성 델타 | positive delta | delta type: must create or add (new element) |
 | 수정 델타 | modification delta | delta type: must change existing element |
 | 음성 델타 | negative delta | delta type: must remove or deprecate existing element |
 | 영 델타 | zero delta | delta type: no change needed (regression test target) |
 | 델타 매니페스트 | delta manifest | Crystallize output: classified list of all delta items by type |
-| 캐리포워드 | carry-forward | development grammar elements with no user grammar counterpart (NFR, security, migration) |
+| 캐리포워드 | carry-forward | inter-projection information gaps (elements in Code/Policy without Experience counterpart) |
 | 캐리포워드 생명주기 | carry-forward lifecycle | birth → registration → survival → injection → verification → delta classification |
 | 왕복 검증 | round-trip verification | translation accuracy check: specs → re-derive structure → compare with prototype |
 | 3패스 패턴 | 3-pass pattern | Answer Discovery → Translation & Delta Extraction → Delta Execution |
-| 사영 | projection | mathematical framing: viewing the system from a stakeholder's perspective |
-| 제약 최적화 | constrained optimization | mathematical framing: customer satisfaction (objective function) + constraints |
-| 목적 함수 | objective function | mathematical framing: customer (primary user) projection |
-| 제약 조건 | constraints | mathematical framing: service provider projections (NFR etc.) |
-| 경계 조건 | boundary conditions | mathematical framing: conditions that determine the constant of integration |
-| 실현 가능 영역 | feasible region | mathematical framing: solution set satisfying all constraints |
-| 미적분의 기본 정리 | fundamental theorem of calculus | mathematical framing: mathematical counterpart of round-trip verification |
+| 사영 (일반) | projection (generic math) | **DEPRECATED** — unbounded N-projection (π_customer, π_developer, ...) replaced by three named projections (Code, Policy, Experience). The term "projection" itself remains active. See `deprecated-concepts.md` |
+| 제약 최적화 | constrained optimization | **DEPRECATED** — replaced by JP conflict resolution. See `deprecated-concepts.md` |
+| 목적 함수 | objective function | **DEPRECATED** — replaced by JP conflict resolution. See `deprecated-concepts.md` |
+| 제약 조건 (수학) | constraints (math) | **DEPRECATED** — replaced by JP conflict resolution. See `deprecated-concepts.md` |
+| 경계 조건 | boundary conditions | **DEPRECATED** — replaced by projection gaps (carry-forward). See `deprecated-concepts.md` |
+| 실현 가능 영역 | feasible region | **DEPRECATED** — replaced by JP conflict resolution. See `deprecated-concepts.md` |
+| 미적분의 기본 정리 | fundamental theorem of calculus | **DEPRECATED** — replaced by convergence. See `deprecated-concepts.md` |
 
 ## Translation Ontology Terms
 
@@ -131,4 +136,4 @@ Mary (Analyst), John (PM), Winston (Architect), Amelia (Dev), Bob (SM), Sally (U
 `/sprint`, `/specs`, `/preview`, `/parallel`, `/validate`, `/circuit-breaker`, `/summarize-prd`
 
 ### Technical Terms (already English)
-Entropy Tolerance, File Ownership, DAG, SSOT, Scope Gate, Circuit Breaker, Brownfield, Greenfield, Conductor, Worker, Judge, MSW, Specmatic, OpenAPI, DBML, BDD, Gherkin, User Grammar, Development Grammar, Delta Manifest, Translation Rules, Carry-Forward, Round-Trip Verification
+Entropy Tolerance, File Ownership, DAG, SSOT, Scope Gate, Circuit Breaker, Brownfield, Greenfield, Conductor, Worker, Judge, MSW, Specmatic, OpenAPI, DBML, BDD, Gherkin, User Grammar, Development Grammar, Delta Manifest, Translation Rules, Carry-Forward, Round-Trip Verification, Canonical Definition, Code Projection, Policy Projection, Experience Projection, Convergence

@@ -109,7 +109,8 @@ This is Sprint Kit's sole principle. Every other design judgment exists to reali
 Design judgments Sprint Kit has made to realize the core principle.
 
 > Philosophical background and discussion for each judgment: [`docs/judgment-driven-development.md`](judgment-driven-development.md)
-> Delta-Driven Design (conceptual foundation): [`docs/delta-driven-design.md`](delta-driven-design.md)
+> Canonical + 3 Projections (conceptual foundation): [`docs/canonical-projection-model.md`](canonical-projection-model.md)
+> Delta-Driven Design (design theory): [`docs/delta-driven-design.md`](delta-driven-design.md)
 > Foundational perspective and hypothesis system: [`docs/translation-ontology.md`](translation-ontology.md)
 
 ### Artifacts as Medium
@@ -575,7 +576,7 @@ JP2 presentation format and Comment handling flow details in S5.3.
 
 ### Crystallize (Conditional Translation Step)
 
-**Rationale**: In the delta-driven model, Crystallize translates the JP2-approved prototype into development grammar and computes the delta between target state and brownfield baseline. Without this translation, Workers would implement pre-JP2 specs instead of the approved prototype's delta.
+**Rationale**: In the delta-driven model, Crystallize translates the JP2-approved prototype (Experience projection) into the Code projection and computes the delta between target state and brownfield baseline. Without this translation, Workers would implement pre-JP2 specs instead of the approved prototype's delta.
 
 **User perspective**: When you select **[S] Confirm Prototype** at JP2, the system determines the next step automatically:
 - If no changes were made and no existing system constraints require validation: proceeds directly to Build.
@@ -1007,7 +1008,7 @@ Key changes since v0.6.0 (v0.7.0~v0.7.2):
 
 Key changes in v0.6.0 (since v0.4.1):
 - **`/crystallize` command**: After JP2 prototype iteration, reconcile all upstream artifacts to match the finalized prototype. Creates `reconciled/` directory with the definitive artifact set — original artifacts preserved untouched. Product Brief excluded (defines problem space, not derivable from UI code). Available on all routes.
-- **Crystallize conditional**: On Sprint route, Crystallize runs conditionally based on JP2 outcome (skip / validation-only / full). On Guided/Direct routes, always full pipeline. Translates prototype into development grammar and computes delta.
+- **Crystallize conditional**: On Sprint route, Crystallize runs conditionally based on JP2 outcome (skip / validation-only / full). On Guided/Direct routes, always full pipeline. Translates prototype (Experience projection) into Code projection and computes delta.
 - **decision-diary.md**: Structured JP decision summary table replacing feedback-log.md. Records each decision with JP, Type, Content, Processing method, and Result.
 - **sprint-log.md JP Interactions**: Full text of each JP exchange (Visual Summary, user input, impact analysis, processing choice, result) recorded in real-time.
 - **Source attribution tags**: `(source: PROTO, origin: BRIEF-N)`, `(source: PROTO, origin: DD-N)`, `(source: carry-forward)` — preserves traceability from original Brief through JP2 iteration to reconciled artifacts.

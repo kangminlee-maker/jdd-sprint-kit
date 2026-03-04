@@ -111,6 +111,7 @@ AI는 빠르게 코딩할 수 있다. 그러나 인간의 시간은 요구사항
 > 각 판단의 철학적 배경과 논의: [`docs/judgment-driven-development.md`](judgment-driven-development.md)
 > Delta-Driven Design(개념적 기반): [`docs/delta-driven-design.md`](delta-driven-design.md)
 > 기반 관점과 가설 체계: [`docs/translation-ontology.md`](translation-ontology.md)
+> Canonical + 3 Projections 모델: [`docs/canonical-projection-model.md`](canonical-projection-model.md)
 
 ### 산출물을 매개체로 (Artifacts as Medium)
 
@@ -575,7 +576,7 @@ JP2 제시 형식과 Comment 처리 흐름 상세는 S5.3에서 다룬다.
 
 ### Crystallize (조건부 번역 단계)
 
-**근거**: Delta-Driven 모델에서, Crystallize는 JP2에서 승인된 프로토타입을 개발 문법으로 번역하고, 목표 상태와 Brownfield 베이스라인 사이의 델타를 계산한다. 이 번역 없이는 Worker가 승인된 프로토타입의 델타 대신 JP2 이전 스펙을 구현하게 된다.
+**근거**: Delta-Driven 모델에서, Crystallize는 JP2에서 승인된 프로토타입을 Code projection으로 번역하고, 목표 상태와 Brownfield 베이스라인 사이의 델타를 계산한다. 이 번역 없이는 Worker가 승인된 프로토타입의 델타 대신 JP2 이전 스펙을 구현하게 된다.
 
 **사용자 관점**: JP2에서 **[S] Confirm Prototype**을 선택하면, 시스템이 다음 단계를 자동으로 결정한다:
 - 변경이 없고 기존 시스템 제약 검증이 불필요한 경우: 빌드로 직접 진행한다.
@@ -1007,7 +1008,7 @@ v0.6.0 이후 주요 변경 (v0.7.0~v0.7.2):
 
 v0.6.0 주요 변경 (v0.4.1 이후):
 - **`/crystallize` 명령**: JP2 프로토타입 반복 후, 모든 상류 산출물을 확정된 프로토타입과 조정. `reconciled/` 디렉토리에 최종 산출물 세트 생성 — 원본 산출물은 변경 없이 보존. Product Brief 제외(문제 공간 정의, UI 코드에서 도출 불가). 모든 루트에서 사용 가능.
-- **Crystallize 조건부**: Sprint 루트에서 JP2 결과에 따라 조건부 실행(건너뜀 / 검증만 / 전체). Guided/Direct 루트에서는 항상 전체 파이프라인. 프로토타입을 개발 문법으로 번역하고 델타를 계산.
+- **Crystallize 조건부**: Sprint 루트에서 JP2 결과에 따라 조건부 실행(건너뜀 / 검증만 / 전체). Guided/Direct 루트에서는 항상 전체 파이프라인. 프로토타입을 Code projection으로 번역하고 델타를 계산.
 - **decision-diary.md**: feedback-log.md를 대체하는 구조화된 JP 결정 요약 테이블. 각 결정을 JP, Type, Content, Processing method, Result와 함께 기록.
 - **sprint-log.md JP Interactions**: 각 JP 교환의 전체 텍스트(Visual Summary, 사용자 입력, 영향도 분석, 처리 선택, 결과)를 실시간 기록.
 - **출처 속성 태그**: `(source: PROTO, origin: BRIEF-N)`, `(source: PROTO, origin: DD-N)`, `(source: carry-forward)` — 원본 Brief에서 JP2 반복을 거쳐 reconciled 산출물까지의 추적성 보존.
@@ -1201,7 +1202,7 @@ specs/{feature}/
 | **readiness.md** | JP1/JP2 Readiness 데이터. YAML frontmatter에 post-JP1 변경 추적을 위한 jp1_to_jp2_changes 필드 포함 |
 | **/summarize-prd** | PRD 요약/분석 + 피드백 적용 명령. 기존 PRD를 빠르게 이해하는 데 사용 |
 | **Scope Gate** | @scope-gate 에이전트가 수행하는 3단계 검증: Structured Probe + Checklist + Holistic Review. 각 BMad 단계 후와 Deliverables 후 실행 |
-| **Crystallize** | 조건부 번역 단계. JP2 [S] Confirm Prototype 후, 프로토타입을 개발 문법으로 번역하고 brownfield 베이스라인 대비 델타를 계산한다. 델타 매니페스트와 함께 `reconciled/` 디렉토리 생성. Sprint 루트: 3단계 조건부(건너뜀 / 검증만 / 전체). Guided/Direct 루트: 항상 전체. `/crystallize` 명령으로 독립 실행 시 항상 전체 |
+| **Crystallize** | 조건부 번역 단계. JP2 [S] Confirm Prototype 후, 프로토타입을 Code projection으로 번역하고 brownfield 베이스라인 대비 델타를 계산한다. 델타 매니페스트와 함께 `reconciled/` 디렉토리 생성. Sprint 루트: 3단계 조건부(건너뜀 / 검증만 / 전체). Guided/Direct 루트: 항상 전체. `/crystallize` 명령으로 독립 실행 시 항상 전체 |
 | **reconciled/** | Crystallize가 생성하는 디렉토리. 확정된 프로토타입과 조정된 최종 산출물 세트를 포함한다. 제외 항목을 뺀 `specs/{feature}/` 구조를 미러링. 원본 산출물은 변경 없이 보존 |
 | **carry-forward** | 프로토타입에서 도출할 수 없는 reconciled 산출물의 항목(NFR, 보안, 배포, 스케일링)으로, 원본 문서에서 전달된다. 라이프사이클 상태(INJECT/CONFLICT/DROP/DEFER)를 가진 carry-forward registry(S3.5)를 통해 관리. `[carry-forward]` 태그와 `(cf: CF-{N})` registry 참조로 표시 |
 | **carry-forward-registry.md** | S3.5 산출물. 모든 carry-forward 후보를 라이프사이클 상태와 함께 나열. S4가 이를 먼저 읽음 — INJECT 항목만 reconciled 산출물에 진입. S7이 준수 여부 검증 |

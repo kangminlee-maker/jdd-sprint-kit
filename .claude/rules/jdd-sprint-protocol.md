@@ -7,17 +7,17 @@ Three terms are used in the Crystallize pipeline. Each has a defined scope — d
 | Term | Scope | Usage Examples | Never Use For |
 |------|-------|----------------|---------------|
 | **Crystallize** | Process name, command name, pipeline step name | `/crystallize`, "Crystallize Pipeline", "Step 7: Crystallize", `crystallize.md` | As a verb on artifacts ("crystallize the PRD" ❌) |
-| **Translate** | Verb describing the operation type (rule-based grammar conversion per FP6) | "translate user grammar into development grammar", "translation is rule-based" | Directory names, artifact names, step names |
-| **Reconcile** | Internal step verb, directory name, artifact-alignment actions | S4 "Reconcile Planning", S6 "Reconcile Deliverables", `reconciled/` directory | Referring to the whole Crystallize process |
+| **Translate** | Verb describing the operation type (rule-based projection conversion per FP6) | "translate Experience projection into Code projection", "translation is rule-based" | Directory names, artifact names, step names |
+| **Reconcile** | Internal step verb, directory name, artifact-alignment actions | S3.5 "Carry-Forward Registry", S4 "Reconcile Planning", S6 "Reconcile Deliverables", `reconciled/` directory | Referring to the whole Crystallize process |
 
-**Rationale**: Crystallize is the brand name for the process. Translation describes what the process does (FP6: rule-based conversion between two grammars). Reconciliation is what happens inside each step (aligning individual artifacts with the prototype).
+**Rationale**: Crystallize is the brand name for the process. Translation describes what the process does (FP6: rule-based conversion between projections). Reconciliation is what happens inside each step (aligning individual artifacts with the prototype).
 
 ### Preview vs Prototype
 
 | Term | Scope | Meaning |
 |------|-------|---------|
 | **Preview** | Directory name (`preview/`), generated deliverable state | The draft deliverable shown at JP2 for review and iteration |
-| **Prototype** | Conceptual status, Crystallize input | The JP2-approved preview. Becomes "prototype" at the moment of [S] Confirm Prototype. The target state expressed in user grammar |
+| **Prototype** | Conceptual status, Crystallize input | The JP2-approved preview. Becomes "prototype" at the moment of [S] Confirm Prototype. The target state in the Experience projection |
 
 `preview/` directory is NOT renamed to `prototype/`. The directory holds a preview that becomes a prototype upon approval. Crystallize reads `preview/` as its prototype input.
 
@@ -241,7 +241,7 @@ Users see the calculated cost alongside the options.
 
 ## Crystallize Flow (Conditional Translation Step)
 
-After JP2 approval, Crystallize translates the finalized prototype into development grammar and computes the delta against brownfield baseline. Creates `reconciled/` directory with the definitive artifact set + delta manifest.
+After JP2 approval, Crystallize translates the finalized prototype (Experience projection) into the Code projection and computes the delta against brownfield baseline. Creates `reconciled/` directory with the definitive artifact set + delta manifest.
 
 **This step is conditional** — execution mode depends on JP2 outcome:
 - 0 modifications + no CP HIGH: skip entirely (original specs used)

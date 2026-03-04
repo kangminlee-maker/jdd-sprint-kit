@@ -38,11 +38,14 @@ Promotion: `planning-artifacts/ → specs/` at JP1. `specs/ → reconciled/` at 
 | Term | Usage | NOT |
 |------|-------|-----|
 | Crystallize | process name ("Crystallize phase") | verb for general conversion |
-| Translate | verb ("translate user grammar to dev grammar") | process/phase name |
+| Translate | verb ("translate Experience projection to Code projection") | process/phase name |
 | Reconcile | internal step within Crystallize | user-facing term |
 | Delta | the scoped change set | generic "diff" |
 | Brownfield | existing system context | "legacy" or "current" |
 | Judgment Point | JP1/JP2 decision gates | "review" or "approval" |
+| Canonical | the complete service definition (not directly observable) | generic "standard" or "official" |
+| Projection | named view of canonical definition (Code, Policy, Experience) | generic mathematical term |
+| Convergence | pipeline stages as gap-measure-iterate-zero processes | generic "coming together" |
 
 ## Abbreviation Registry
 `JP` (Judgment Point), `DDD` (Delta-Driven Design), `PRD`, `BMad`, `QA`

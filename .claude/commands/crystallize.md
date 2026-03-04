@@ -17,7 +17,7 @@ description: "Reconcile all artifacts from finalized prototype"
 
 ## Purpose
 
-Translate the JP2-approved prototype into development grammar and compute the delta between target state and brownfield baseline. Creates a `reconciled/` directory with the definitive artifact set + delta manifest for execution.
+Translate the JP2-approved prototype (Experience projection) into the Code projection and compute the delta between target state and brownfield baseline. Creates a `reconciled/` directory with the definitive artifact set + delta manifest for execution.
 
 When modifications exist or CP constraints require validation, this step is necessary before /parallel — without translation, Workers would implement pre-JP2 specs instead of the approved prototype's delta. On Sprint route, execution is conditional (see When to Use). The prototype is the source of truth for product behavior. Existing artifacts are preserved untouched.
 

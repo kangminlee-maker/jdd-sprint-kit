@@ -333,13 +333,14 @@ Not a theoretical ideal, but finding the working balance point in actual product
 
 ### Delta-Driven Design
 
-Sprint Kit's 3-pass pattern (Answer Discovery → Translation & Delta Extraction → Delta Execution) reframes the pipeline's purpose: **defining the delta between the current system (brownfield) and the target state (user-validated prototype)**, not generating specs.
+Sprint Kit models a service as a **canonical definition** observed through three **projections**: Code, Policy, and Experience. The pipeline's purpose is **defining the delta between the current system (brownfield) and the target state (user-validated prototype)**, not generating specs.
 
-The prototype is the target state expressed in the system's actual user's grammar — visual UI for human users, API mocks for service consumers, structured documents for AI consumers. Crystallize translates this target into development grammar using rule-based mapping, not open-ended abstraction. The delta between translated target and brownfield baseline is what needs to be built.
+The prototype is the target state in the Experience projection — visual UI for human users, API mocks for service consumers, structured documents for AI consumers. Crystallize translates this Experience projection into the Code projection using rule-based mapping, not open-ended abstraction. The delta between translated target and brownfield baseline is what needs to be built.
 
 Spec completeness controls AI non-determinism: more complete specs produce more consistent output. Sprint Kit accepts a trade-off — high specification where contracts matter (API, DB schema), lower specification where variation is acceptable (UI layout, internal naming) — and uses contract testing and BDD to verify functional correctness regardless of variation.
 
-> Full theory, core principles (FP1-FP6), design judgments (DJ1-DJ10), translation rules, and methodology comparison: [`docs/delta-driven-design.md`](delta-driven-design.md)
+> Conceptual foundation (canonical definition, 3 projections, convergence): [`docs/canonical-projection-model.md`](canonical-projection-model.md)
+> Design theory, core principles (FP1-FP6), design judgments (DJ1-DJ10), translation rules, and methodology comparison: [`docs/delta-driven-design.md`](delta-driven-design.md)
 
 ---
 
