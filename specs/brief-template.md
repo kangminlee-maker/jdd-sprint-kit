@@ -38,3 +38,15 @@ policy_docs:
 
 ## Feature Description
 (Describe the specific feature to build)
+
+## KPI
+| Metric | As-Is | To-Be |
+|--------|-------|-------|
+| (metric name) | (current value) | (target value) |
+
+## Expected Impact
+(Quantified business impact this feature delivers)
+
+Example:
+- +150 monthly active users → 450 active users over 3 months (Apr–Jun)
+- Cost per retained payment < cost per new user acquisition
